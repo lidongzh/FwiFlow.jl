@@ -1,0 +1,75 @@
+para_fname = ../Par/Par_file.json
+{"nz": 224, "nx": 448, "dz": 24.0, "dx": 24.0, "nSteps": 2001, "dt": 0.0025, "f0": 4.5, "nPoints_pml": 32, "nPad": 26, "Cp_fname": "../Models/Model_Cp.bin", "Cs_fname": "../Models/Model_Cs.bin", "Den_fname": "../Models/Model_Den.bin", "data_dir_name": "../Data/", "isAc": true, "withAdj": false, "if_res": false}
+----------Reading Parameter File------------
+	nz = 224
+	nx = 448
+	dz = 24
+	dx = 24
+	nSteps = 2001
+	nPml = 32
+	nPad = 26
+	dt = 0.0025
+	f0 = 4.5
+	Cp_fname = ../Models/Model_Cp.bin
+	Cs_fname = ../Models/Model_Cs.bin
+	Den_fname = ../Models/Model_Den.bin
+	data_dir_name = ../Data/
+	Acoustic = 1
+	With Adjoint Computation = 0
+	With Residual Computation = 0
+	nShots = 48
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	Src_fname = ../Models/Mar_source_2001.bin
+	vec_source number = 48
+Src_Rec time: 0.133721 second(s)
+number of shots 48
+number of d_data 48
+Courant_number = 0.810227
+Initialization time: 1.54793 second(s)
+Elapsed time: 4.64422 second(s).

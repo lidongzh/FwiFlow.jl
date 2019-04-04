@@ -1,0 +1,98 @@
+% This file was created by matplotlib2tikz v0.6.18.
+\begin{tikzpicture}
+
+\definecolor{color0}{rgb}{0.12156862745098,0.466666666666667,0.705882352941177}
+\definecolor{color1}{rgb}{1,0.498039215686275,0.0549019607843137}
+\definecolor{color2}{rgb}{0.172549019607843,0.627450980392157,0.172549019607843}
+\definecolor{color3}{rgb}{0.83921568627451,0.152941176470588,0.156862745098039}
+
+\begin{axis}[
+legend cell align={left},
+legend entries={{finite difference},{automatic differentiation},{$\mathcal{O}(\gamma^2)$},{$\mathcal{O}(\gamma)$}},
+legend style={draw=white!80.0!black},
+tick align=outside,
+tick pos=left,
+x grid style={white!69.01960784313725!black},
+xlabel={$\gamma$},
+xmin=3.54813389233576e-11, xmax=0.281838293126445,
+xmode=log,
+xtick={1e-13,1e-11,1e-09,1e-07,1e-05,0.001,0.1,10,1000},
+xticklabels={$\mathdefault{10^{-13}}$,$\mathdefault{10^{-11}}$,$\mathdefault{10^{-9}}$,$\mathdefault{10^{-7}}$,$\mathdefault{10^{-5}}$,$\mathdefault{10^{-3}}$,$\mathdefault{10^{-1}}$,$\mathdefault{10^{1}}$,$\mathdefault{10^{3}}$},
+y grid style={white!69.01960784313725!black},
+ylabel={Error},
+ymin=1.09228797113622e-17, ymax=1477.30492689352,
+ymode=log,
+ytick={1e-20,1e-17,1e-14,1e-11,1e-08,1e-05,0.01,10,10000,10000000},
+yticklabels={$\mathdefault{10^{-20}}$,$\mathdefault{10^{-17}}$,$\mathdefault{10^{-14}}$,$\mathdefault{10^{-11}}$,$\mathdefault{10^{-8}}$,$\mathdefault{10^{-5}}$,$\mathdefault{10^{-2}}$,$\mathdefault{10^{1}}$,$\mathdefault{10^{4}}$,$\mathdefault{10^{7}}$}
+]
+\addlegendimage{no markers, color0}
+\addlegendimage{no markers, color1}
+\addlegendimage{no markers, color2}
+\addlegendimage{no markers, color3}
+\addplot [semithick, color0, mark=asterisk*, mark size=3, mark options={solid}]
+table [row sep=\\]{%
+0.1	99.7681427001953 \\
+0.01	6.06711196899414 \\
+0.001	0.780120849609375 \\
+0.0001	0.0792617797851562 \\
+1e-05	0.00774765014648438 \\
+1e-06	0.0007476806640625 \\
+1e-07	0 \\
+1e-08	0 \\
+1e-09	0 \\
+1e-10	0 \\
+};
+\addplot [semithick, color1, mark=+, mark size=3, mark options={solid}]
+table [row sep=\\]{%
+0.1	179.646452864846 \\
+0.01	1.9207190474709 \\
+0.001	0.0186622520371291 \\
+0.0001	0.000616530379494162 \\
+1e-05	0.000240180869980667 \\
+1e-06	5.11024375840042e-05 \\
+1e-07	7.98783101646504e-05 \\
+1e-08	7.98783101646504e-06 \\
+1e-09	7.98783101646504e-07 \\
+1e-10	7.98783101646504e-08 \\
+};
+\addplot [semithick, color2, dashed]
+table [row sep=\\]{%
+0.1	89.8232264324229 \\
+0.01	0.898232264324229 \\
+0.001	0.00898232264324229 \\
+0.0001	8.98232264324229e-05 \\
+1e-05	8.98232264324229e-07 \\
+1e-06	8.98232264324229e-09 \\
+1e-07	8.98232264324229e-11 \\
+1e-08	8.98232264324229e-13 \\
+1e-09	8.98232264324229e-15 \\
+1e-10	8.98232264324229e-17 \\
+};
+\addplot [semithick, color3, dashed]
+table [row sep=\\]{%
+0.1	49.8840713500977 \\
+0.01	4.98840713500977 \\
+0.001	0.498840713500977 \\
+0.0001	0.0498840713500977 \\
+1e-05	0.00498840713500977 \\
+1e-06	0.000498840713500977 \\
+1e-07	4.98840713500977e-05 \\
+1e-08	4.98840713500977e-06 \\
+1e-09	4.98840713500977e-07 \\
+1e-10	4.98840713500977e-08 \\
+};
+\path [draw=black, fill opacity=0] (axis cs:0,1.09228797113622e-17)
+--(axis cs:0,1477.30492689352);
+
+\path [draw=black, fill opacity=0] (axis cs:1,1.09228797113622e-17)
+--(axis cs:1,1477.30492689352);
+
+\path [draw=black, fill opacity=0] (axis cs:0.281838293126445,0)
+--(axis cs:3.54813389233576e-11,0);
+
+\path [draw=black, fill opacity=0] (axis cs:0.281838293126445,1)
+--(axis cs:3.54813389233576e-11,1);
+
+\end{axis}
+
+\end{tikzpicture}
