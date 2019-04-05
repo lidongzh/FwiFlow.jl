@@ -11,7 +11,7 @@ n = 20
 h = 1.0 # 50 meters
 T = 0.01 # 100 days
 NT = 1000
-Δt = T/NT 
+Δt = T/NT
 x = (1:m)*h|>collect
 z = (1:n)*h|>collect
 X, Z = np.meshgrid(x, z)
@@ -75,6 +75,7 @@ function G(f, p)
     else
         q = constant(zeros(m, n))
         q = scatter_add(q, 2:m-1, 2:n-1, rhs/h^2)
+        # q[2:m-1, 2:n-1] += rhs/h^2
     end
     q
 end
@@ -94,9 +95,9 @@ function onestep(sw, qw, qo)
 
 
     # step 2: update u, v
-    rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
-    rhs_v = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 0, 1) - geto(p, 0, 0)) +
-            geto(K, 0, 0).*geto(λw*ρw+λo*ρo, 0, 0)*g
+    rhs_u = -(geto(K, 0, 0)+geto(K,1,0))/2.0 .* (geto(λ, 0, 0) + get(λ, 1, 0))/2h .* (geto(p, 1, 0) - geto(p, 0, 0))
+    rhs_v = -(geto(K, 0, 0)+geto(K,0,1))/2.0 .* (geto(λ, 0, 0) + get(λ, 0, 1))/2h .* (geto(p, 0, 1) - geto(p, 0, 0)) +
+            (geto(K, 0, 0)+geto(K,0,1))/2.0 .* (geto(λw*ρw+λo*ρo, 0, 0)+geto(λw*ρw+λo*ρo, 0, 1))/2 * g
     u = constant(zeros(m, n))
     v = constant(zeros(m, n))
     u = scatter_add(u, 2:m-1, 2:n-1, rhs_u)
@@ -105,8 +106,10 @@ function onestep(sw, qw, qo)
     # step 3: update sw
     rhs = geto(qw, 0, 0) - (geto(f, 1, 0)-geto(f, 0, 0))/h.*geto(u, 0, 0) -
             (geto(f, 0, 1)-geto(f, 0, 0))/h.*geto(v, 0, 0) -
-            geto(f, 0, 0) .* ( (geto(u, 0, 0)-geto(u, -1, 0))/h + (geto(v, 0, 0)-geto(v, 0, -1))/h) -
-            geto(G(K.*f*λo*(ρw-ρo)*g, Z), 0, 0)
+            geto(f, 0, 0) .* ( 
+                (geto(u, 0, 0)-geto(u, -1, 0))/h + (geto(v, 0, 0)-geto(v, 0, -1))/h
+            ) -
+            geto(G(K.*f.*λo*(ρw-ρo)*g, Z), 0, 0)
     rhs = Δt*rhs/geto(ϕ, 0, 0)
     sw = scatter_add(sw, 2:m-1, 2:n-1, rhs)
     return sw, p
