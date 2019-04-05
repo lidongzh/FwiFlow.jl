@@ -66,20 +66,20 @@ end
 tf_coef = constant(coef)
 tf_rhs = constant(rhs)
 function scalar_function(m)
-    return sum(tanh(poisson_op(tf_coef,m,tf_h)))
-    # return sum(tanh(poisson_op(m,tf_rhs,tf_h)))
+    # return sum(tanh(poisson_op(tf_coef,m,tf_h)))
+    return sum(tanh(poisson_op(m,tf_rhs,tf_h)))
 end
 
-# m_ = constant(rand(nz, nx))
-m_ = tf_rhs
-v_ = 1. .+ rand(nz, nx)
+# m_ = tf_rhs
+m_  = tf_coef
+v_ = 0.01*rand(nz, nx)
 y_ = scalar_function(m_)
 dy_ = gradients(y_, m_)
 ms_ = Array{Any}(undef, 5)
 ys_ = Array{Any}(undef, 5)
 s_ = Array{Any}(undef, 5)
 w_ = Array{Any}(undef, 5)
-gs_ =  @. 1 / 10^(1:5)
+gs_ =  @. 1 / 20^(1:5)
 
 for i = 1:5
     g_ = gs_[i]
