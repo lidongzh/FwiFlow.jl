@@ -142,10 +142,11 @@ end
 
 function vis(val, args...;kwargs...)
     close("all")
-    ns = Int64.(round.(LinRange(1,NT+1,9)))
-    for i = 1:ns
+    ns = Int64.(round.(LinRange(1,size(val,1),9)))
+    for i = 1:9
         subplot(330+i)
-        imshow(val[i,:,:], args...;kwargs...)
+        imshow(val[ns[i],:,:], args...;kwargs...)
+        colorbar()
     end
 end
 
@@ -158,6 +159,9 @@ out_sw, out_p = solve(qw, qo, sw0)
 
 sess = Session(); init(sess)
 S, P = run(sess, [out_sw, out_p])
+vis(S)
+# figure()
+# vis(P)
 error("stop")
 
 
