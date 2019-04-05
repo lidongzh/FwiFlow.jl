@@ -17,6 +17,7 @@ Ops/PML/Ops5/build
 Ops/PML/Ops6/build
 Ops/PML/Ops7/build
 *.jld2
+*.bin
 
 *build*
 log
