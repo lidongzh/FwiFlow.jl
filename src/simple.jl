@@ -8,8 +8,8 @@ include("poisson_op.jl")
 # Solver parameters
 m = 20
 n = 20
-h = 0.01
-T = 1
+h = 50.0 # 50 meters
+T = 8640000 # 100 days
 NT = 100
 Δt = T/NT 
 x = (1:m)*h|>collect
@@ -26,6 +26,13 @@ K -- scalar
 g -- constant ≈ 9.8?
 ϕ -- known mxn
 =#
+ρw = constant(1014.0)
+ρo = constant(787.3075)
+μw = constant(0.001)
+μo = constant(0.002)
+K = Variable(5.9215e-14 .*ones(m,n))
+g = constant(9.8)
+ϕ = Variable(0.25 .* ones(m,n))
 
 function Base.:get(o::Union{Array,PyObject}, i::Int64, j::Int64)
     if i==-1
@@ -95,7 +102,6 @@ end
 
 """
 solve(qw, qo, sw0, p0)
-
 Solve the two phase flow equation. 
 `qw` and `qo` -- `NT x m x n` numerical array, `qw[i,:,:]` the corresponding value of qw at i*Δt
 `sw0` and `p0` -- initial value for `sw` and `p`. `m x n` numerical array.
@@ -135,6 +141,11 @@ end
 # qo = 
 # sw0 = 
 # p0 = 
+qw = zeros(NT, m, n)
+qw[:,15,5] .= 0.0018
+qo = zeros(NT, m, n)
+sw0 = zeros(m, n)
+p0 = 3.0337e+07*ones(m,n)
 
 # Step 2: Construct Graph
 out_sw, out_p = solve(qw, qo, sw0, p0)
