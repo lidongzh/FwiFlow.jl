@@ -11,7 +11,7 @@ n = 20
 h = 0.01
 T = 1
 NT = 100
-Δt = T/Δt 
+Δt = T/NT 
 x = (1:m)*h|>collect
 z = (1:n)*h|>collect
 X, Z = np.meshgrid(x, z)
@@ -19,11 +19,12 @@ X, Z = np.meshgrid(x, z)
 
 # todo 
 #=
-Krw, Kro -- function 
-μw, μo -- known
-ρw, ρo -- known 
+Krw, Kro -- function mxn tensor to mxn tensor
+μw, μo -- known mxn
+ρw, ρo -- known mxn
 K -- scalar
-g -- constant
+g -- constant ≈ 9.8?
+ϕ -- known mxn
 =#
 
 function Base.:get(o::Union{Array,PyObject}, i::Int64, j::Int64)
