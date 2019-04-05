@@ -22,8 +22,8 @@ REGISTER_OP("PoissonOp")
     shape_inference::ShapeHandle h_shape;
     TF_RETURN_IF_ERROR(c->WithRank(c->input(2), 0, &h_shape));
 
-    c->set_output(0, c->Matrix(-1, -1));
-    // c->set_output(0, c->Matrix(c->Dim(coef_shape, 0), c->Dim(coef_shape, 1)));
+    // c->set_output(0, c->Matrix(-1, -1));
+    c->set_output(0, c->Matrix(c->Dim(coef_shape, 0), c->Dim(coef_shape, 1)));
     return Status::OK();
 });
 class PoissonOpOp : public OpKernel {
