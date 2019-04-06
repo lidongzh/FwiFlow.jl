@@ -119,7 +119,7 @@ function onestep(sw, qw, qo)
     rhs = geto(qw, 0, 0) - (geto(f, 1, 0)-geto(f, 0, 0))/h.*geto(u, 0, 0) -
             (geto(f, 0, 1)-geto(f, 0, 0))/h.*geto(v, 0, 0) -
             geto(f, 0, 0) .* ( (geto(u, 0, 0)-geto(u, -1, 0))/h + (geto(v, 0, 0)-geto(v, 0, -1))/h) -
-            geto(G(K.*f*λo*(ρw-ρo)*g, Z), 0, 0)
+            geto(G(K.*f.*λo*(ρw-ρo)*g, Z), 0, 0)
     rhs = Δt*rhs/geto(ϕ, 0, 0)
     sw = scatter_add(sw, 2:m-1, 2:n-1, rhs)
     return sw, p, u, v, f
