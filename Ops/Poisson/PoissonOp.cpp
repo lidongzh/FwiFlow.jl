@@ -12,6 +12,8 @@ REGISTER_OP("PoissonOp")
 .Input("coef : double")
 .Input("g : double")
 .Input("h : double")
+.Input("rhograv : double")
+.Input("index : int64")
 .Output("p : double")
 .SetShapeFn([](::tensorflow::shape_inference::InferenceContext *c) {
 
@@ -21,9 +23,13 @@ REGISTER_OP("PoissonOp")
     TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &g_shape));
     shape_inference::ShapeHandle h_shape;
     TF_RETURN_IF_ERROR(c->WithRank(c->input(2), 0, &h_shape));
+    shape_inference::ShapeHandle rhograv_shape;
+    TF_RETURN_IF_ERROR(c->WithRank(c->input(3), 0, &h_shape));
+    shape_inference::ShapeHandle index_shape;
+    TF_RETURN_IF_ERROR(c->WithRank(c->input(4), 0, &h_shape));
 
-    // c->set_output(0, c->Matrix(-1, -1));
-    c->set_output(0, c->Matrix(c->Dim(coef_shape, 0), c->Dim(coef_shape, 1)));
+    c->set_output(0, c->Matrix(-1, -1));
+    // c->set_output(0, c->Matrix(c->Dim(coef_shape, 0), c->Dim(coef_shape, 1)));
     return Status::OK();
 });
 class PoissonOpOp : public OpKernel {
@@ -35,22 +41,28 @@ class PoissonOpOp : public OpKernel {
     }
 
     void Compute(OpKernelContext *context) override {
-        DCHECK_EQ(3, context->num_inputs());
+        DCHECK_EQ(5, context->num_inputs());
 
 
         const Tensor &coef = context->input(0);
         const Tensor &g = context->input(1);
         const Tensor &h = context->input(2);
+        const Tensor &rhograv = context->input(3);
+        const Tensor &index = context->input(4);
 
 
         const TensorShape &coef_shape = coef.shape();
         const TensorShape &g_shape = g.shape();
         const TensorShape &h_shape = h.shape();
+        const TensorShape &rhograv_shape = rhograv.shape();
+        const TensorShape &index_shape = index.shape();
 
 
         DCHECK_EQ(coef_shape.dims(), 2);
         DCHECK_EQ(g_shape.dims(), 2);
         DCHECK_EQ(h_shape.dims(), 0);
+        DCHECK_EQ(rhograv_shape.dims(), 0);
+        DCHECK_EQ(index_shape.dims(), 0);
 
         // extra check
 
@@ -71,13 +83,15 @@ class PoissonOpOp : public OpKernel {
         auto coef_tensor = coef.flat<double>().data();
         auto g_tensor = g.flat<double>().data();
         auto h_tensor = h.flat<double>().data();
+        auto rhograv_tensor = rhograv.flat<double>().data();
+        auto index_tensor = index.flat<int64>().data();
         auto p_tensor = p->flat<double>().data();
 
 
         // implement your forward function here
 
         // TODO:
-        forward(p_tensor, coef_tensor, g_tensor, *h_tensor, nz, nx);
+        forward(p_tensor, coef_tensor, g_tensor, *h_tensor, *rhograv_tensor, *index_tensor, nz, nx);
 
     }
 };
@@ -91,9 +105,13 @@ REGISTER_OP("PoissonOpGrad")
 .Input("coef : double")
 .Input("g : double")
 .Input("h : double")
+.Input("rhograv : double")
+.Input("index : int64")
 .Output("grad_coef : double")
 .Output("grad_g : double")
-.Output("grad_h : double");
+.Output("grad_h : double")
+.Output("grad_rhograv : double")
+.Output("grad_index : int64");
 class PoissonOpGradOp : public OpKernel {
   private:
 
@@ -110,6 +128,8 @@ class PoissonOpGradOp : public OpKernel {
         const Tensor &coef = context->input(2);
         const Tensor &g = context->input(3);
         const Tensor &h = context->input(4);
+        const Tensor &rhograv = context->input(5);
+        const Tensor &index = context->input(6);
 
 
         const TensorShape &grad_p_shape = grad_p.shape();
@@ -117,6 +137,8 @@ class PoissonOpGradOp : public OpKernel {
         const TensorShape &coef_shape = coef.shape();
         const TensorShape &g_shape = g.shape();
         const TensorShape &h_shape = h.shape();
+        const TensorShape &rhograv_shape = rhograv.shape();
+        const TensorShape &index_shape = index.shape();
 
 
         DCHECK_EQ(grad_p_shape.dims(), 2);
@@ -124,6 +146,8 @@ class PoissonOpGradOp : public OpKernel {
         DCHECK_EQ(coef_shape.dims(), 2);
         DCHECK_EQ(g_shape.dims(), 2);
         DCHECK_EQ(h_shape.dims(), 0);
+        DCHECK_EQ(rhograv_shape.dims(), 0);
+        DCHECK_EQ(index_shape.dims(), 0);
 
         // extra check
         // int m = Example.dim_size(0);
@@ -134,6 +158,8 @@ class PoissonOpGradOp : public OpKernel {
         TensorShape grad_coef_shape(coef_shape);
         TensorShape grad_g_shape(g_shape);
         TensorShape grad_h_shape(h_shape);
+        TensorShape grad_rhograv_shape(rhograv_shape);
+        TensorShape grad_index_shape(index_shape);
 
         // create output tensor
 
@@ -143,22 +169,30 @@ class PoissonOpGradOp : public OpKernel {
         OP_REQUIRES_OK(context, context->allocate_output(1, grad_g_shape, &grad_g));
         Tensor *grad_h = NULL;
         OP_REQUIRES_OK(context, context->allocate_output(2, grad_h_shape, &grad_h));
+        Tensor *grad_rhograv = NULL;
+        OP_REQUIRES_OK(context, context->allocate_output(3, grad_rhograv_shape, &grad_rhograv));
+        Tensor *grad_index = NULL;
+        OP_REQUIRES_OK(context, context->allocate_output(4, grad_index_shape, &grad_index));
 
         // get the corresponding Eigen tensors for data access
 
         auto coef_tensor = coef.flat<double>().data();
         auto g_tensor = g.flat<double>().data();
         auto h_tensor = h.flat<double>().data();
+        auto rhograv_tensor = rhograv.flat<double>().data();
+        auto index_tensor = index.flat<int64>().data();
         auto grad_p_tensor = grad_p.flat<double>().data();
         auto p_tensor = p.flat<double>().data();
         auto grad_coef_tensor = grad_coef->flat<double>().data();
         auto grad_g_tensor = grad_g->flat<double>().data();
         auto grad_h_tensor = grad_h->flat<double>().data();
+        auto grad_rhograv_tensor = grad_rhograv->flat<double>().data();
+        auto grad_index_tensor = grad_index->flat<int64>().data();
 
         // implement your backward function here
 
         // TODO:
-        backward(grad_p_tensor, p_tensor, coef_tensor, g_tensor, *h_tensor, nz, nx,
+        backward(grad_p_tensor, p_tensor, coef_tensor, g_tensor, *h_tensor, *rhograv_tensor, *index_tensor, nz, nx,
                  grad_coef_tensor, grad_g_tensor);
 
     }

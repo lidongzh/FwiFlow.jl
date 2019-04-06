@@ -3,7 +3,7 @@
 #define POISSONOP_H__
 
 #define RHO_o 1000.0
-#define GRAV 9.8
+#define GRAV 0.0
 // double array row major
 // double array uninitialized
 #define coef(z,x)  		coef[(z)*(nx)+(x)] // row major
@@ -21,15 +21,17 @@ void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
                  const double *coef,
                  const double *g,
                  double h,
+                 double rhograv,
                  int nz,
                  int nx);
 
-void forward(double *pres, const double *coef, const double *g, double h, int nz, int nx) {
+void forward(double *pres, const double *coef, const double *g, double h, \
+             double rhograv, int index, int nz, int nx) {
 	Eigen::SparseMatrix<double, Eigen::RowMajor> Amat(nz * nx, nz * nx);
 	Eigen::VectorXd rhs(nz * nx), pvec(nz * nx);
 
 	// assemble matrix
-	assembleMat(Amat, rhs, coef, g, h, nz, nx);
+	assembleMat(Amat, rhs, coef, g, h, rhograv, nz, nx);
 
 	Eigen::SparseLU<Eigen::SparseMatrix<double> > solver;
 	// Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>  solver;
@@ -49,6 +51,7 @@ void forward(double *pres, const double *coef, const double *g, double h, int nz
 	// std::cout << "#iterations: " << solver.iterations() << std::endl;
 	// std::cout << "estimated error: " << solver.error() << std::endl;
 
+	std::cout << "Forward: solving Poisson equation. Step: " << index << std::endl;
 	for (int i = 0; i < nz; i++) {
 		for (int j = 0; j < nx; j++) {
 			pres[ij2ind(i, j)] = pvec(ij2ind(i, j));
@@ -59,7 +62,8 @@ void forward(double *pres, const double *coef, const double *g, double h, int nz
 
 
 
-void backward(const double *grad_p, const double *pres, const double *coef, const double *g, double h, int nz, int nx,
+void backward(const double *grad_p, const double *pres, const double *coef, \
+              const double *g, double h, double rhograv, int index, int nz, int nx, \
               double *grad_coef, double *grad_g) {
 	// F_p * p_v + F_v = 0
 	// J_v = J_p * p_v = -J_p * F^{-1}_p * F_v = - s * F_v
@@ -71,7 +75,7 @@ void backward(const double *grad_p, const double *pres, const double *coef, cons
 	Eigen::VectorXd rhs(nz * nx), s(nz * nx);
 
 	// assemble matrix
-	assembleMat(Amat, rhs, coef, g, h, nz, nx);
+	assembleMat(Amat, rhs, coef, g, h, rhograv, nz, nx);
 	for (int i = 0; i < nz * nx; i++) {
 		rhs(i) = grad_p[i];
 	}
@@ -108,7 +112,6 @@ void backward(const double *grad_p, const double *pres, const double *coef, cons
 	tripletList.reserve(5);
 
 	int idRow = 0;
-	double dCoef_r = 0.0, dCoef_l = 0.0, dCoef_d = 0.0, dCoef_u = 0.0;
 	double h2 = h * h;
 	for (int i = 0; i < nz; i++) {
 		for (int j = 0; j < nx; j++) {
@@ -129,8 +132,8 @@ void backward(const double *grad_p, const double *pres, const double *coef, cons
 				tripletList.push_back(T(idRow, ij2ind(i + 1, j), 0.5 * (pres(i, j) - pres(i + 1, j))));
 
 			} else {
-				tripletList.push_back(T(idRow, ij2ind(i, j), -1.5 * h * RHO_o * GRAV));
-				tripletList.push_back(T(idRow, ij2ind(i - 1, j), 0.5 * h * RHO_o * GRAV));
+				tripletList.push_back(T(idRow, ij2ind(i, j), -1.5 * h * rhograv));
+				tripletList.push_back(T(idRow, ij2ind(i - 1, j), 0.5 * h * rhograv));
 			}
 
 			if (i - 1 >= 0) {
@@ -138,8 +141,8 @@ void backward(const double *grad_p, const double *pres, const double *coef, cons
 				tripletList.push_back(T(idRow, ij2ind(i - 1, j), 0.5 * (pres(i, j) - pres(i - 1, j))));
 
 			} else {
-				tripletList.push_back(T(idRow, ij2ind(i, j), 1.5 * h * RHO_o * GRAV));
-				tripletList.push_back(T(idRow, ij2ind(i + 1, j), -0.5 * h * RHO_o * GRAV));
+				tripletList.push_back(T(idRow, ij2ind(i, j), 1.5 * h * rhograv));
+				tripletList.push_back(T(idRow, ij2ind(i + 1, j), -0.5 * h * rhograv));
 			}
 		}
 	}
@@ -151,6 +154,7 @@ void backward(const double *grad_p, const double *pres, const double *coef, cons
 	Trans_F_coef = F_coef.transpose();
 	Trans_J_coef	= -Trans_F_coef * s;
 
+	std::cout << "Backward: solving Poisson equation. Step: " << index << std::endl;
 	for (int i = 0; i < nz * nx; i++) {
 		grad_coef[i] = Trans_J_coef(i);
 	}
@@ -162,10 +166,11 @@ void backward(const double *grad_p, const double *pres, const double *coef, cons
 
 
 void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
-                 Eigen::VectorXd & rhs,
-                 const double * coef,
-                 const double * g,
+                 Eigen::VectorXd &rhs,
+                 const double *coef,
+                 const double *g,
                  double h,
+                 double rhograv,
                  int nz,
                  int nx) {
 
@@ -209,10 +214,11 @@ void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
 
 			tripletList.push_back(T(idRow, ij2ind(i, j), T_r + T_l + T_d + T_u));
 
-			rhs(idRow) = h2 * g(i, j) - exT_u * RHO_o * GRAV * h + exT_d * RHO_o * GRAV * h;
+			rhs(idRow) = h2 * g(i, j) - exT_u * rhograv * h + exT_d * rhograv * h;
 		}
 	}
 	tripletList.push_back(T(0, ij2ind(0, 0), 1.0));
+	// tripletList.push_back(T(0, ij2ind(0, 0), coef(0, 0)));
 
 	Amat.setFromTriplets(tripletList.begin(), tripletList.end()); // row-major
 }

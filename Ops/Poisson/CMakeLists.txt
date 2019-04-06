@@ -5,26 +5,16 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 # https://github.com/tensorflow/tensorflow/issues/1569
 # if GCC > 5
-
+if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 5.0)
+  set(CMAKE_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=1 ${CMAKE_CXX_FLAGS}")
+endif()
 
 # import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))
 # import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))
-if($ENV{USER} MATCHES "lidongzh" AND LINUX)
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 5.0)
-    set(CMAKE_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=1 ${CMAKE_CXX_FLAGS}")
-  endif()
-  include_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/site-packages/tensorflow/include /home/lidongzh/Library/PyTensorFlow.jl/src/../examples/custom_op/template/../../../deps/ADEL/ADEL)
-  link_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/site-packages/tensorflow)
-endif()
-if($ENV{USER} MATCHES "kailaix" AND APPLE)
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 5.0)
-    set(CMAKE_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0 ${CMAKE_CXX_FLAGS}")
-  endif()
-  include_directories(/anaconda3/envs/py36/lib/python3.6/site-packages/tensorflow/include)
-  link_directories(/anaconda3/envs/py36/lib/python3.6/site-packages/tensorflow)
-endif()
 
-include_directories(../../eigen)
+include_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/site-packages/tensorflow/include /home/lidongzh/Library/PyTensorFlow.jl/src/../examples/custom_op/template/../../../deps/ADEL/ADEL)
+include_directories(/home/lidongzh/TwoPhaseFlowFWI/eigen)
+link_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/site-packages/tensorflow)
 
 add_library(PoissonOp SHARED PoissonOp.cpp)
 set_property(TARGET PoissonOp PROPERTY POSITION_INDEPENDENT_CODE ON)

@@ -15,14 +15,28 @@ include("poisson_op.jl")
 # x = (1:m)*h|>collect
 # z = (1:n)*h|>collect
 # X, Z = np.meshgrid(x, z)
+
+# m = 20
+# n = 20
+# h = 1.0
+# # T = 100 # 100 days
+# # NT = 100
+# # Δt = T/(NT+1)
+# NT = 20
+# Δt = 10
+# # T = NT() # 100 days
+# z = (1:m)*h|>collect
+# x = (1:n)*h|>collect
+# X, Z = np.meshgrid(x, z)
+
 m = 20
 n = 20
 h = 20.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
-NT = 20
-Δt = 1
+NT = 200
+Δt = 0.1
 # T = NT() # 100 days
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
@@ -40,8 +54,16 @@ end
 μw = constant(1e-3)
 μo = constant(1e-3)
 K = Variable(9.8692e-14*ones(m,n))
-g = constant(0.0)
+g = constant(9.8)
 ϕ = Variable(0.25*ones(m,n))
+
+# ρw = constant(1.0)
+# ρo = constant(1.0)
+# μw = constant(1.0)
+# μo = constant(1.0)
+# K = Variable(ones(m,n))
+# g = constant(0.0)
+# ϕ = Variable(1.0*ones(m,n))
 
 function geto(o::Union{Array,PyObject}, i::Int64, j::Int64)
     if i==-1
@@ -95,7 +117,7 @@ end
 
 # variables : sw, u, v, p
 # (time dependent) parameters: qw, qo, ϕ
-function onestep(sw, qw, qo)
+function onestep(sw, qw, qo, Δt_dyn)
     # step 1: update p
     λw = Krw(sw)/μw
     λo = Kro(1-sw)/μo
@@ -104,7 +126,7 @@ function onestep(sw, qw, qo)
     q = qw + qo
     Θ = G(K.*(λw*ρw+λo*ρo)*g, Z)
     load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
-    p = poisson_op(λ.*K, load_normal, constant(h))
+    p = poisson_op(λ.*K, load_normal, constant(h), ρw*g, constant(1))
 
     # step 2: update u, v
     rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
@@ -116,13 +138,24 @@ function onestep(sw, qw, qo)
     v = scatter_add(v, 2:m-1, 2:n-1, rhs_v)
 
     # step 3: update sw
-    rhs = geto(qw, 0, 0) - (geto(f, 1, 0)-geto(f, 0, 0))/h.*geto(u, 0, 0) -
-            (geto(f, 0, 1)-geto(f, 0, 0))/h.*geto(v, 0, 0) -
-            geto(f, 0, 0) .* ( (geto(u, 0, 0)-geto(u, -1, 0))/h + (geto(v, 0, 0)-geto(v, 0, -1))/h) -
-            geto(G(K.*f*λo*(ρw-ρo)*g, Z), 0, 0)
-    rhs = Δt*rhs/geto(ϕ, 0, 0)
+    # rhs = geto(qw, 0, 0) - (geto(f, 1, 0)-geto(f, 0, 0))/h.*geto(u, 0, 0) -
+    #         (geto(f, 0, 1)-geto(f, 0, 0))/h.*geto(v, 0, 0) -
+    #         geto(f, 0, 0) .* ( (geto(u, 0, 0)-geto(u, -1, 0))/h + (geto(v, 0, 0)-geto(v, 0, -1))/h) -
+    #         geto(G(K.*f*λo*(ρw-ρo)*g, Z), 0, 0)
+
+    # DL
+    temp_fu = scatter_add(constant(zeros(m,n)), 2:m-1, 2:n-1, (geto(f, 0, 0)+geto(f, 1, 0))/2.0 .* geto(u, 0, 0))
+    temp_fv = scatter_add(constant(zeros(m,n)), 2:m-1, 2:n-1, (geto(f, 0, 0)+geto(f, 0, 1))/2.0 .* geto(v, 0, 0))
+    rhs = geto(qw, 0, 0) - (geto(temp_fu, 0, 0)-geto(temp_fu, -1, 0))/h -
+        (geto(temp_fv, 0, 0)-geto(temp_fv, 0, -1))/h -
+        geto(G(K.*f*λo*(ρw-ρo)*g, Z), 0, 0)
+    max_rhs = maximum(abs(rhs))
+    Δt_dyn =  0.01/max_rhs
+
+
+    rhs = Δt_dyn*rhs/geto(ϕ, 0, 0)
     sw = scatter_add(sw, 2:m-1, 2:n-1, rhs)
-    return sw, p, u, v, f
+    return sw, p, u, v, f, Δt_dyn
 end
 
 
@@ -140,22 +173,22 @@ function solve(qw, qo, sw0)
         i <= NT
     end
     function body(i, tas...)
-        println(i)
-        ta_sw, ta_p, ta_u, ta_v, ta_f = tas
-        sw, p, u, v, f = onestep(read(ta_sw, i), qw_arr[i], qo_arr[i])
+        ta_sw, ta_p, ta_u, ta_v, ta_f, Δt_array = tas
+        sw, p, u, v, f, Δt_dyn = onestep(read(ta_sw, i), qw_arr[i], qo_arr[i], read(Δt_array, i))
         ta_sw = write(ta_sw, i+1, sw)
         ta_p = write(ta_p, i+1, p)
         ta_u = write(ta_u, i+1, u)
         ta_v = write(ta_v, i+1, v)
         ta_f = write(ta_f, i+1, f)
-        i+1, ta_sw, ta_p, ta_u, ta_v, ta_f
+        Δt_array = write(Δt_array, i, Δt_dyn)
+        i+1, ta_sw, ta_p, ta_u, ta_v, ta_f, Δt_array
     end
     ta_sw, ta_p = TensorArray(NT+1), TensorArray(NT+1)
-    ta_u, ta_v, ta_f = TensorArray(NT+1), TensorArray(NT+1), TensorArray(NT+1)
+    ta_u, ta_v, ta_f, Δt_array = TensorArray(NT+1), TensorArray(NT+1), TensorArray(NT+1), TensorArray(NT+1)
     ta_sw = write(ta_sw, 1, constant(sw0))
     i = constant(1, dtype=Int32)
-    _, ta_sw, ta_p, ta_u, ta_v, ta_f = while_loop(condition, body, [i; ta_sw; ta_p; ta_u; ta_v; ta_f])
-    out_sw, out_p, out_u, out_v, ta_f = stack(ta_sw), stack(ta_p), stack(ta_u), stack(ta_v), stack(ta_f)
+    _, ta_sw, ta_p, ta_u, ta_v, ta_f, Δt_array = while_loop(condition, body, [i; ta_sw; ta_p; ta_u; ta_v; ta_f; Δt_array])
+    out_sw, out_p, out_u, out_v, out_f, out_Δt = stack(ta_sw), stack(ta_p), stack(ta_u), stack(ta_v), stack(ta_f), stack(Δt_array)
 end
 
 function vis(val, args...;kwargs...)
@@ -169,15 +202,17 @@ function vis(val, args...;kwargs...)
 end
 
 qw = zeros(NT, m, n)
-qw[:,5, 5] .= 0.0026
+qw[:,15, 5] .= 0.0026
+# qw[:,5, 5] .= 1.0
 qo = zeros(NT, m, n)
 qo[:,5, 15] .= -0.004
+# qo[:,5, 15] .= -1.0
 sw0 = zeros(m, n)
-out_sw, out_p, out_u, out_v, out_f = solve(qw, qo, sw0)
+out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
 
 sess = Session(); init(sess)
-S, P, U, V, F = run(sess, [out_sw, out_p, out_u, out_v, out_f])
+S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
 vis(S)
 # vis(U)
 # figure()

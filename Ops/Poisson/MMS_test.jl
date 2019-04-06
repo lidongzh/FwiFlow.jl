@@ -10,10 +10,10 @@ py"""
 import tensorflow as tf
 libPoissonOp = tf.load_op_library('build/libPoissonOp.so')
 @tf.custom_gradient
-def poisson_op(coef,g,h):
-    p = libPoissonOp.poisson_op(coef,g,h)
+def poisson_op(coef,g,h,rhograv,index):
+    p = libPoissonOp.poisson_op(coef,g,h,rhograv,index)
     def grad(dy):
-        return libPoissonOp.poisson_op_grad(dy, p, coef,g,h)
+        return libPoissonOp.poisson_op_grad(dy, p, coef, g, h, rhograv, index)
     return p, grad
 """
 elseif Sys.isapple()
@@ -21,10 +21,10 @@ py"""
 import tensorflow as tf
 libPoissonOp = tf.load_op_library('build/libPoissonOp.dylib')
 @tf.custom_gradient
-def poisson_op(coef,g,h):
-    p = libPoissonOp.poisson_op(coef,g,h)
+def poisson_op(coef,g,h,rhograv,index):
+    p = libPoissonOp.poisson_op(coef,g,h,rhograv,index)
     def grad(dy):
-        return libPoissonOp.poisson_op_grad(dy, p, coef,g,h)
+        return libPoissonOp.poisson_op_grad(dy, p, coef, g, h, rhograv, index)
     return p, grad
 """
 elseif Sys.iswindows()
@@ -32,10 +32,10 @@ py"""
 import tensorflow as tf
 libPoissonOp = tf.load_op_library('build/libPoissonOp.dll')
 @tf.custom_gradient
-def poisson_op(coef,g,h):
-    p = libPoissonOp.poisson_op(coef,g,h)
+def poisson_op(coef,g,h,rhograv,index):
+    p = libPoissonOp.poisson_op(coef,g,h,rhograv,index)
     def grad(dy):
-        return libPoissonOp.poisson_op_grad(dy, p, coef,g,h)
+        return libPoissonOp.poisson_op_grad(dy, p, coef, g, h, rhograv, index)
     return p, grad
 """
 end
@@ -81,7 +81,7 @@ for iScale = 1:nScale
     tf_g[iScale] = constant(g)
     tf_coef[iScale] = constant(coef)
     tf_h[iScale] = constant(h)
-    tf_p[iScale] = poisson_op(tf_coef[iScale], tf_g[iScale], tf_h[iScale])
+    tf_p[iScale] = poisson_op(tf_coef[iScale], tf_g[iScale], tf_h[iScale], constant(rho*G), constant(1))
 end
 
 sess = Session()
