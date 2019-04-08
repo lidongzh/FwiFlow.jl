@@ -64,10 +64,10 @@ function G(f, p)
     f2 = (geto(f, -1, 0) + geto(f, 0, 0))/2
     f3 = (geto(f,0,1) + geto(f,0,0))/2
     f4 = (geto(f,0,-1) + geto(f,0,0))/2
-    rhs = -f1*(geto(p,1,0)-geto(p,0,0)) +
-            f2*(geto(p,0,0)-geto(p,-1,0)) -
-            f3*(geto(p,0,1)-geto(p,0,0)) +
-            f4*(geto(p,0,0)-geto(p,0,-1))
+    rhs = -f1.*(geto(p,1,0)-geto(p,0,0)) +
+            f2.*(geto(p,0,0)-geto(p,-1,0)) -
+            f3.*(geto(p,0,1)-geto(p,0,0)) +
+            f4.*(geto(p,0,0)-geto(p,0,-1))
     local q
     if isa(rhs, Array)
         q = zeros(m, n)
