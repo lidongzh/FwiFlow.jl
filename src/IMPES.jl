@@ -8,13 +8,13 @@ include("laplacian_op.jl")
 
 # Solver parameters
 
-m = 15
-n = 30
+m = 150
+n = 300
 h = 20.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
-NT =2000
+NT = 2000
 Δt = 3000
 # T = NT() # 100 days
 z = (1:m)*h|>collect
@@ -40,14 +40,6 @@ K = constant(K_np)
 g = constant(9.8)
 ϕ = Variable(0.25*ones(m,n))
 
-# ρw = constant(1.0)
-# ρo = constant(1.0)
-# μw = constant(1.0)
-# μo = constant(1.0)
-# K = Variable(ones(m,n))
-# g = constant(0.0)
-# ϕ = Variable(1.0*ones(m,n))
-
 function geto(o::Union{Array,PyObject}, i::Int64, j::Int64)
     if i==-1
         ii = 1:m-2
@@ -65,27 +57,6 @@ function geto(o::Union{Array,PyObject}, i::Int64, j::Int64)
     end
     return o[ii,jj]
 end
-
-function G(f, p)
-    f1 = (geto(f, 0, 0) + geto(f, 1, 0))/2
-    f2 = (geto(f, -1, 0) + geto(f, 0, 0))/2
-    f3 = (geto(f,0,1) + geto(f,0,0))/2
-    f4 = (geto(f,0,-1) + geto(f,0,0))/2
-    rhs = -f1.*(geto(p,1,0)-geto(p,0,0)) +
-            f2.*(geto(p,0,0)-geto(p,-1,0)) -
-            f3.*(geto(p,0,1)-geto(p,0,0)) +
-            f4.*(geto(p,0,0)-geto(p,0,-1))
-    local q
-    if isa(rhs, Array)
-        q = zeros(m, n)
-        q[2:m-1, 2:n-1] = rhs/h^2
-    else
-        q = constant(zeros(m, n))
-        q = scatter_add(q, 2:m-1, 2:n-1, rhs/h^2)
-    end
-    q
-end
-
 
 function ave_normal(quantity, m, n)
     aa = 0.0
@@ -108,7 +79,6 @@ function onestep(sw, qw, qo, Δt_dyn)
     λo = (1-sw).*(1-sw)/μo
     λ = λw + λo
     f = λw/λ
-    # q = qw + qo + λw/λo.*qo
     q = qw + qo
     # Θ = G(K.*(λw*ρw+λo*ρo)*g, Z)
     Θ = -laplacian_op(K.*(λw*ρw+λo*ρo)*g, tf_Z, constant(h), g)
@@ -131,8 +101,8 @@ function onestep(sw, qw, qo, Δt_dyn)
     rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, constant(h), ρo*g) - upwlap_op(K, f.*λ.*ρw.*g, tf_Z, constant(h), constant(h))
     max_rhs = maximum(abs(rhs/ϕ))
     Δt_dyn =  0.001/max_rhs
-    # NT_local = Δt/NT_local
-    for i= 1:1
+    # NT_local = Δt/Δt_dyn
+    # for i= 1:1
         λw = sw.*sw/μw
         λo = (1-sw).*(1-sw)/μo
         λ = λw + λo
@@ -140,10 +110,10 @@ function onestep(sw, qw, qo, Δt_dyn)
         rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, constant(h), ρo*g) - upwlap_op(K, f.*λ.*ρw.*g, tf_Z, constant(h), constant(h))
         rhs = Δt*rhs/ϕ
         sw = sw + rhs
-    end
+    # end
 
     # sw = clamp(sw, 1e-6, 1.0-1e-6)
-    return sw, p, u, rhs, f, Δt_dyn
+    return sw, p, u, v, f, Δt_dyn
 end
 
 
@@ -193,15 +163,14 @@ xx, yy = np.meshgrid(1:n, 1:m)
 Gaussian1 = exp.(-1.0.*((xx.-5).^2+(yy.-7).^2))
 Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
-# qw[:,1, 1] .= LinRange(1,0.1,NT)
-qw[:,7,5] .= 0.0026/400
+
+qw[:,7,5] .= 0.0026/h^2
 qo = zeros(NT, m, n)
 # for id = 1:NT
-#     qw[id,:,:] = Gaussian1*0.0026/400
-#     qo[id,:,:] = -Gaussian2*0.0004/400
+#     qw[id,:,:] = Gaussian1*0.0026/h^2
+#     qo[id,:,:] = -Gaussian2*0.0004/h^2
 # end
-# qo[:,20,20] .= LinRange(-1,-0.1,NT)
-qo[:,7,25] .= -0.004/400
+qo[:,7,25] .= -0.004/h^2
 sw0 = zeros(m, n)
 # sw0[15:19,2:6] .= 0.3
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
@@ -209,33 +178,11 @@ out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
 sess = Session(); init(sess)
 S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
+
+
 vis(S)
-# vis(U)
-# figure()
+
+# quiver(x, z, V[80,:,:],U[80,:,:])
+# title("velocity field")
+
 # vis(P)
-error("stop")
-
-
-#=
-# Step 1: Assign numerical values to qw, qo, sw0, p0
-# qw = 
-# qo = 
-# sw0 = 
-# p0 = 
-qw = zeros(NT, m, n)
-qw[:,15,5] .= 0.0018
-qo = zeros(NT, m, n)
-sw0 = zeros(m, n)
-p0 = 3.0337e+07*ones(m,n)
-
-# # Step 2: Construct Graph
-out_sw, out_p = solve(qw, qo, sw0, p0)
-
-# # Step 3: Run
-sess = Session()
-init(sess)
-sw, p = run(sess, [out_sw, out_p])
-
-# # Step 4: Visualize
-# vis(sw)
-=#

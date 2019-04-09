@@ -16,6 +16,11 @@ include_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/si
 include_directories(/home/lidongzh/TwoPhaseFlowFWI/eigen)
 link_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/site-packages/tensorflow)
 
+# --- Find AMGCL ------------------------------------------------------------
+include_directories("../../amgcl")
+include_directories(../../eigen)
+include_directories(/usr/local/include)
+
 add_library(PoissonOp SHARED PoissonOp.cpp)
 set_property(TARGET PoissonOp PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(PoissonOp tensorflow_framework)
