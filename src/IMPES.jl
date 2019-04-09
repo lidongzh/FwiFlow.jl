@@ -14,8 +14,8 @@ h = 20.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
-NT =200
-Δt = 1.0
+NT =2000
+Δt = 0.1
 # T = NT() # 100 days
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
@@ -155,7 +155,7 @@ function onestep(sw, qw, qo, Δt_dyn)
         λo = (1-sw).*(1-sw)/μo
         λ = λw + λo
         f = λw/λ
-        rhs = qw + laplacian_op(f.*K.*λ*1000, p, constant(h), ρo*g) - laplacian_op(f.*K.*λ.*ρw.*g, tf_Z, constant(h), g)
+        rhs = qw + laplacian_op(f.*K.*λ, p, constant(h), ρo*g) - laplacian_op(f.*K.*λ.*ρw.*g, tf_Z, constant(h), g)
         rhs = Δt*rhs/ϕ
         sw = sw + rhs
     end
@@ -206,12 +206,19 @@ function vis(val, args...;kwargs...)
     end
 end
 
+xx, yy = np.meshgrid(1:nx, 1:nz)
+Gaussian1 = exp.(-1.0.*((xx.-5).^2+(yy.-7).^2))
+Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 # qw[:,1, 1] .= LinRange(1,0.1,NT)
-qw[:,7,5] .= 0.0026/400
+# qw[:,7,5] .= 0.0026/400
 qo = zeros(NT, m, n)
+for id = 1:NT
+    qw[id,:,:] = Gaussian1*0.0026/400
+    qo[id,:,:] = -Gaussian2*0.0026/400
+end
 # qo[:,20,20] .= LinRange(-1,-0.1,NT)
-qo[:,7,25] .= -0.004/400
+# qo[:,7,25] .= -0.004/400
 sw0 = zeros(m, n)
 # sw0[15:19,2:6] .= 0.3
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
