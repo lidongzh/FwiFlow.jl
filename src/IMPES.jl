@@ -160,6 +160,7 @@ function onestep(sw, qw, qo, Δt_dyn)
         sw = sw + rhs
     end
 
+    sw = clamp(sw, 0.0, 1.0)
     return sw, p, u, rhs, f, Δt_dyn
 end
 
