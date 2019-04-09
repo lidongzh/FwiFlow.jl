@@ -23,3 +23,5 @@ Ops/PML/Ops7/build
 log
 *.tar
 amgcl/
+.vscode/
+*.DS_Store*
