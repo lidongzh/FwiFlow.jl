@@ -178,7 +178,7 @@ sw0 = zeros(m, n)
 # sw0[15:19,2:6] .= 0.3
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
-
+println("Compilation finished.")
 sess = Session(); init(sess)
 S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
 

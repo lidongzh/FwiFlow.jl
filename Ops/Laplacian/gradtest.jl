@@ -8,7 +8,7 @@ Random.seed!(233)
 if Sys.islinux()
 py"""
 import tensorflow as tf
-libLaplacian = tf.load_op_library('build/libLaplacian.so')
+libLaplacian = tf.load_op_library('./build/libLaplacian.so')
 @tf.custom_gradient
 def laplacian_op(coef,func,h,rhograv):
     p = libLaplacian.laplacian(coef,func,h,rhograv)
@@ -19,7 +19,7 @@ def laplacian_op(coef,func,h,rhograv):
 elseif Sys.isapple()
 py"""
 import tensorflow as tf
-libPoissonOp = tf.load_op_library('build/libPoissonOp.dylib')
+libLaplacian = tf.load_op_library('./build/libLaplacian.dylib')
 @tf.custom_gradient
 def laplacian_op(coef,func,h,rhograv):
     p = libLaplacian.laplacian(coef,func,h,rhograv)
@@ -30,7 +30,7 @@ def laplacian_op(coef,func,h,rhograv):
 elseif Sys.iswindows()
 py"""
 import tensorflow as tf
-libPoissonOp = tf.load_op_library('build/libPoissonOp.dll')
+libLaplacian = tf.load_op_library('./build/libLaplacian.dll')
 @tf.custom_gradient
 def laplacian_op(coef,func,h,rhograv):
     p = libLaplacian.laplacian(coef,func,h,rhograv)
