@@ -39,7 +39,7 @@ end
 K_np = 9.8692e-14*ones(m,n)
 # K_np[8:end,:] .= 5e-14
 K = constant(K_np)
-g = constant(9.8)
+g = constant(0.0)
 ϕ = Variable(0.25*ones(m,n))
 
 function geto(o::Union{Array,PyObject}, i::Int64, j::Int64)
@@ -115,7 +115,7 @@ function onestep(sw, qw, qo, Δt_dyn)
         sw = sw + rhs
     end
 
-    # sw = clamp(sw, 1e-16, 1.0-1e-16)
+    sw = clamp(sw, 1e-16, 1.0-1e-16)
     return sw, p, u, v, f, Δt_dyn
 end
 
@@ -178,7 +178,7 @@ sw0 = zeros(m, n)
 # sw0[15:19,2:6] .= 0.3
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
-println("Compilation finished.")
+
 sess = Session(); init(sess)
 S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
 
