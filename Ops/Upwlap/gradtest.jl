@@ -51,7 +51,7 @@ upwlap_op = py"upwlap_op"
 # TODO: 
 h = 1.0
 rho = 1000.0
-G = 0.0
+G = 9.8
 len_z = 16
 len_x = 32
 nz = Int(len_z/h + 1)
@@ -72,14 +72,14 @@ tf_func = constant(func)
 # gradient check -- v
 function scalar_function(m)
     # return sum(tanh(upwlap_op(m, tf_mobi, tf_func, tf_h, constant(rho*G))))
-    return sum(tanh(upwlap_op(tf_perm, m, tf_func, tf_h, constant(rho*G))))
-    # return sum(tanh(upwlap_op(tf_perm, tf_mobi, m, tf_h, constant(rho*G))))
+    # return sum(tanh(upwlap_op(tf_perm, m, tf_func, tf_h, constant(rho*G))))
+    return sum(tanh(upwlap_op(tf_perm, tf_mobi, m, tf_h, constant(rho*G))))
 end
 
 # m_ = constant(rand(10,20))
 # m_ = tf_perm
-m_ = tf_mobi
-# m_ = tf_func
+# m_ = tf_mobi
+m_ = tf_func
 v_ = rand(nz, nx)
 y_ = scalar_function(m_)
 dy_ = gradients(y_, m_)

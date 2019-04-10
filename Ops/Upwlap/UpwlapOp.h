@@ -35,6 +35,17 @@ double grad_harAve(double a, double b, bool isLeft) {
 		return 2.0 * (a * (a + b + EPSILON) - a * b) / pow((a + b + EPSILON), 2.0);
 }
 
+double bndAve(double a, double b) {
+	return a * b / (2 * b - a + EPSILON);
+}
+
+double grad_bndAve(double a, double b, bool isLeft) {
+	if (isLeft)
+		return (2 * pow(b, 2.0) + EPSILON * b) / pow((2 * b - a + EPSILON), 2.0);
+	else
+		return (-pow(a, 2.0) + EPSILON * a) / pow((2 * b - a + EPSILON), 2.0);
+}
+
 void forward(double *out, const double *perm, const double *mobi, \
              const double *func, double h, double rhograv, int nz, int nx) {
 	double perm_r = 0.0, perm_l = 0.0, perm_d = 0.0, perm_u = 0.0;
@@ -77,7 +88,7 @@ void forward(double *out, const double *perm, const double *mobi, \
 				F_d = (func(i + 1, j) - func(i, j));
 			} else {
 				F_d = rhograv * h;
-				// perm_d = harmonicAve(perm(i, j), perm(i, j) * perm(i - 1, j) / (2 * perm(i - 1, j) - perm(i, j) + EPSILON)) / h2;
+				// perm_d = harmonicAve(perm(i, j), bndAve(perm(i, j), perm(i - 1, j))) / h2;
 				perm_d = perm(i, j) / h2;
 				mobi_d = mobi(i, j);
 			}
@@ -92,7 +103,7 @@ void forward(double *out, const double *perm, const double *mobi, \
 				F_u = (func(i, j) - func(i - 1, j));
 			} else {
 				F_u = rhograv * h;
-				// perm_u = harmonicAve(perm(i, j), perm(i, j) * perm(i + 1, j) / (2 * perm(i + 1, j) - perm(i, j) + EPSILON)) / h2;
+				// perm_u = harmonicAve(perm(i, j), bndAve(perm(i, j), perm(i + 1, j))) / h2;
 				perm_u = perm(i, j) / h2;
 				mobi_u = mobi(i, j);
 			}
@@ -173,7 +184,7 @@ void backward(const double *grad_out, const double *perm, const double *mobi, \
 				grad_func(i + 1, j) += grad_out(i, j) * perm_d * mobi_d;
 			} else {
 				F_d = rhograv * h;
-				// perm_d = harmonicAve(perm(i, j), perm(i, j) * perm(i - 1, j) / (2 * perm(i - 1, j) - perm(i, j) + EPSILON)) / h2;
+				// perm_d = harmonicAve(perm(i, j), bndAve(perm(i, j), perm(i - 1, j))) / h2;
 				perm_d = perm(i, j) / h2;
 				mobi_d = mobi(i, j);
 				grad_mobi(i, j) += grad_out(i, j) * perm_d * F_d;
@@ -197,7 +208,7 @@ void backward(const double *grad_out, const double *perm, const double *mobi, \
 
 			} else {
 				F_u = rhograv * h;
-				// perm_u = harmonicAve(perm(i, j), perm(i, j) * perm(i + 1, j) / (2 * perm(i + 1, j) - perm(i, j) + 1e-16)) / h2;
+				// perm_u = harmonicAve(perm(i, j), bndAve(perm(i, j), perm(i + 1, j))) / h2;
 				perm_u = perm(i, j) / h2;
 				mobi_u = mobi(i, j);
 				grad_mobi(i, j) += -grad_out(i, j) * perm_u * F_u;

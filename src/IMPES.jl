@@ -8,20 +8,21 @@ include("laplacian_op.jl")
 
 # Solver parameters
 
-m = 150
-n = 300
+m = 50
+n = 100
 h = 20.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
-NT = 10
-Δt = 3000
+NT = 200
+Δt = 5000
 # T = NT() # 100 days
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
 X, Z = np.meshgrid(x, z)
 
 tf_Z = constant(Z)
+tf_h = constant(h)
 
 function Krw(Sw)
     return Sw ^ 1.5
@@ -36,6 +37,7 @@ end
 μw = constant(1e-3)
 μo = constant(3e-3)
 K_np = 9.8692e-14*ones(m,n)
+# K_np[8:end,:] .= 5e-14
 K = constant(K_np)
 g = constant(9.8)
 ϕ = Variable(0.25*ones(m,n))
@@ -81,9 +83,10 @@ function onestep(sw, qw, qo, Δt_dyn)
     f = λw/λ
     q = qw + qo
     # Θ = G(K.*(λw*ρw+λo*ρo)*g, Z)
-    Θ = -laplacian_op(K.*(λw*ρw+λo*ρo)*g, tf_Z, constant(h), g)
+    Θ = -laplacian_op(K.*(λw*ρw+λo*ρo)*g, tf_Z, tf_h, tf_h)
+    # Θ = -upwlap_op(K, (λw*ρw+λo*ρo)*g, tf_Z, tf_h, tf_h)
     load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
-    p = poisson_op(λ.*K, load_normal, constant(h), ρo*g, constant(1))
+    p = poisson_op(λ.*K, load_normal, tf_h, ρo*g, constant(0))
     # p = constant(ones(m,n))
 
     # step 2: update u, v
@@ -98,21 +101,21 @@ function onestep(sw, qw, qo, Δt_dyn)
     # # step 3: update sw
 
     # rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, constant(h), ρo*g) - laplacian_op(f.*K.*λ.*ρw.*g, tf_Z, constant(h), constant(h))
-    rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, constant(h), ρo*g) - upwlap_op(K, f.*λ.*ρw.*g, tf_Z, constant(h), constant(h))
+    rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, tf_h, ρo*g) - upwlap_op(K, f.*λ.*ρw.*g, tf_Z, tf_h, tf_h)
     max_rhs = maximum(abs(rhs/ϕ))
     Δt_dyn =  0.001/max_rhs
     # NT_local = Δt/Δt_dyn
-    # for i= 1:1
+    for i= 1:10
         λw = sw.*sw/μw
         λo = (1-sw).*(1-sw)/μo
         λ = λw + λo
         f = λw/λ
-        rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, constant(h), ρo*g) - upwlap_op(K, f.*λ.*ρw.*g, tf_Z, constant(h), constant(h))
+        rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, tf_h, ρo*g) - upwlap_op(K, f.*λ.*ρw.*g, tf_Z, tf_h, tf_h)
         rhs = Δt*rhs/ϕ
         sw = sw + rhs
-    # end
+    end
 
-    # sw = clamp(sw, 1e-6, 1.0-1e-6)
+    # sw = clamp(sw, 1e-16, 1.0-1e-16)
     return sw, p, u, v, f, Δt_dyn
 end
 
