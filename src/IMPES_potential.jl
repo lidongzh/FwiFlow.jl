@@ -8,13 +8,13 @@ include("laplacian_op.jl")
 
 # Solver parameters
 
-m = 15
+m = 20
 n = 30
 h = 20.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
-NT = 150
+NT = 500
 Δt = 8640
 # T = NT() # 100 days
 z = (1:m)*h|>collect
@@ -37,6 +37,7 @@ end
 μw = constant(1e-3)
 μo = constant(3e-3)
 K_np = 9.8692e-14*ones(m,n)
+K_np[16,:] .= 5e-14
 # K_np[8:10,:] .= 5e-13
 K = constant(K_np)
 g = constant(9.8)
@@ -81,12 +82,12 @@ function onestep(sw, qw, qo, Δt_dyn)
     λo = (1-sw).*(1-sw)/μo
     λ = λw + λo
     f = λw/λ
-    q = qw + qo
-    potential_c = -(ρo-ρw)*g .* tf_Z
-    Θ = laplacian_op(K.*λo, potential_c, tf_h, -(ρo-ρw)*g)
-    # Θ = upwlap_op(K, λo*(ρw-ρo)*g, tf_Z, tf_h, tf_h)
+    q = qw + qo + λw/λo.*qo
+    potential_c = (ρw-ρo)*g .* tf_Z
+    Θ = laplacian_op(K.*λo, potential_c, tf_h, constant(0.0))
+    # Θ = upwlap_op(K, λo*(ρw-ρo)*g, tf_Z, tf_h, constant(1.0))
     load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
-    p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0))
+    p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
     # p = constant(ones(m,n))
 
     # step 2: update u, v
@@ -167,11 +168,12 @@ Gaussian1 = exp.(-1.0.*((xx.-5).^2+(yy.-7).^2))
 Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 
-qw[:,7,5] .= (0.0026/h^2)/h
+qw[:,12,5] .= (0.0026/h^3)
 qo = zeros(NT, m, n)
 
-qo[:,7,25] .= -(0.004/h^2)/h
+qo[:,12,25] .= -(0.004/h^3)
 sw0 = zeros(m, n)
+# sw0[10:12,16:18] .= 0.3
 
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
