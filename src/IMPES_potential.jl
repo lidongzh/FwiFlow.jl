@@ -8,8 +8,8 @@ include("laplacian_op.jl")
 
 # Solver parameters
 
-m = 20
-n = 30
+m = 200
+n = 300
 h = 20.0
 # T = 100 # 100 days
 # NT = 100
@@ -62,12 +62,13 @@ function geto(o::Union{Array,PyObject}, i::Int64, j::Int64)
 end
 
 function ave_normal(quantity, m, n)
-    aa = 0.0
-    for i = 1:m
-        for j = 1:n
-            aa = aa + quantity[i,j]
-        end
-    end
+    # aa = 0.0
+    # for i = 1:m
+    #     for j = 1:n
+    #         aa = aa + quantity[i,j]
+    #     end
+    # end
+    aa = sum(quantity)
     return aa/(m*n)
 end
 
@@ -84,32 +85,20 @@ function onestep(sw, qw, qo, Δt_dyn)
     f = λw/λ
     q = qw + qo + λw/λo.*qo
     potential_c = (ρw-ρo)*g .* tf_Z
-    # @show K 
-    # @show λo
-    # @show tf.multiply(K,λo)
-    # @show potential_c
-    # @show tf_h
-    # error("stop")
     # Θ = laplacian_op(K.*λo, potential_c, tf_h, constant(0.0))
     Θ = upwlap_op(K, λo, potential_c, tf_h, constant(0.0))
-    # Θ = constant(zeros(20,30))
-    # Θ = upwlap_op(K, λo*(ρw-ρo)*g, tf_Z, tf_h, constant(1.0))
     load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
-    @show Θ, q, load_normal, λ, K
-    
     p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-    # error("stop")
-    # p = constant(zeros(20,30))
     # p = constant(ones(m,n))
 
     # step 2: update u, v
-    rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
-    rhs_v = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 0, 1) - geto(p, 0, 0)) +
-            geto(K, 0, 0).*geto(λw*ρw+λo*ρo, 0, 0)*g
+    # rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
+    # rhs_v = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 0, 1) - geto(p, 0, 0)) +
+    #         geto(K, 0, 0).*geto(λw*ρw+λo*ρo, 0, 0)*g
     u = constant(zeros(m, n))
     v = constant(zeros(m, n))
-    u = scatter_add(u, 2:m-1, 2:n-1, rhs_u)
-    v = scatter_add(v, 2:m-1, 2:n-1, rhs_v)
+    # u = scatter_add(u, 2:m-1, 2:n-1, rhs_u)
+    # v = scatter_add(v, 2:m-1, 2:n-1, rhs_v)
 
     # # step 3: update sw
 
@@ -190,11 +179,11 @@ sw0 = zeros(m, n)
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
 
-sess = Session(); init(sess)
-S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
+# sess = Session(); init(sess)
+# S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
 
 
-vis(S)
+# vis(S)
 
 # quiver(x, z, V[80,:,:],U[80,:,:])
 # title("velocity field")
