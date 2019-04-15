@@ -28,7 +28,8 @@ REGISTER_OP("PoissonOp")
     shape_inference::ShapeHandle index_shape;
     TF_RETURN_IF_ERROR(c->WithRank(c->input(4), 0, &h_shape));
 
-    c->set_output(0, c->Matrix(-1, -1));
+    // c->set_output(0, c->Matrix(-1, -1));
+    c->set_output(0, c->Matrix(c->Dim(c->input(0),0), c->Dim(c->input(0),1)));
     // c->set_output(0, c->Matrix(c->Dim(coef_shape, 0), c->Dim(coef_shape, 1)));
     return Status::OK();
 });

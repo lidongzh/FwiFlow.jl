@@ -27,8 +27,7 @@ REGISTER_OP("UpwlapOp")
   TF_RETURN_IF_ERROR(c->WithRank(c->input(3), 0, &h_shape));
   shape_inference::ShapeHandle rhograv_shape;
   TF_RETURN_IF_ERROR(c->WithRank(c->input(4), 0, &rhograv_shape));
-
-  c->set_output(0, c->Matrix(-1, -1));
+  c->set_output(0, c->Matrix(c->Dim(c->input(0),0), c->Dim(c->input(0),1)));
   return Status::OK();
 });
 class UpwlapOpOp : public OpKernel {

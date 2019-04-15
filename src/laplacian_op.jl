@@ -19,7 +19,7 @@ def laplacian_op(coef,func,h,rhograv):
 elseif Sys.isapple()
 py"""
 import tensorflow as tf
-libPoissonOp = tf.load_op_library('../Ops/Laplacian/build/libPoissonOp.dylib')
+libPoissonOp = tf.load_op_library('../Ops/Laplacian/build/libLaplacian.dylib')
 @tf.custom_gradient
 def laplacian_op(coef,func,h,rhograv):
     p = libLaplacian.laplacian(coef,func,h,rhograv)
@@ -30,7 +30,7 @@ def laplacian_op(coef,func,h,rhograv):
 elseif Sys.iswindows()
 py"""
 import tensorflow as tf
-libPoissonOp = tf.load_op_library('../Ops/Laplacian/build/libPoissonOp.dll')
+libPoissonOp = tf.load_op_library('../Ops/Laplacian/build/libLaplacian.dll')
 @tf.custom_gradient
 def laplacian_op(coef,func,h,rhograv):
     p = libLaplacian.laplacian(coef,func,h,rhograv)
@@ -41,13 +41,6 @@ def laplacian_op(coef,func,h,rhograv):
 end
 
 laplacian_op = py"laplacian_op"
-
-
-
-
-
-
-
 
 if Sys.islinux()
 py"""
@@ -63,7 +56,7 @@ def upwlap_op(perm,mobi,func,h,rhograv):
 elseif Sys.isapple()
 py"""
 import tensorflow as tf
-libUpwlapOp = tf.load_op_library('./Ops/Upwlap/build/libUpwlapOp.dylib')
+libUpwlapOp = tf.load_op_library('../Ops/Upwlap/build/libUpwlapOp.dylib')
 @tf.custom_gradient
 def upwlap_op(perm,mobi,func,h,rhograv):
     out = libUpwlapOp.upwlap_op(perm,mobi,func,h,rhograv)

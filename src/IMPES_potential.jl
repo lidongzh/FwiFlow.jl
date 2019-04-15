@@ -84,10 +84,22 @@ function onestep(sw, qw, qo, Δt_dyn)
     f = λw/λ
     q = qw + qo + λw/λo.*qo
     potential_c = (ρw-ρo)*g .* tf_Z
-    Θ = laplacian_op(K.*λo, potential_c, tf_h, constant(0.0))
+    # @show K 
+    # @show λo
+    # @show tf.multiply(K,λo)
+    # @show potential_c
+    # @show tf_h
+    # error("stop")
+    # Θ = laplacian_op(K.*λo, potential_c, tf_h, constant(0.0))
+    Θ = upwlap_op(K, λo, potential_c, tf_h, constant(0.0))
+    # Θ = constant(zeros(20,30))
     # Θ = upwlap_op(K, λo*(ρw-ρo)*g, tf_Z, tf_h, constant(1.0))
     load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
+    @show Θ, q, load_normal, λ, K
+    
     p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+    # error("stop")
+    # p = constant(zeros(20,30))
     # p = constant(ones(m,n))
 
     # step 2: update u, v

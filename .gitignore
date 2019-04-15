@@ -18,6 +18,8 @@ Ops/PML/Ops6/build
 Ops/PML/Ops7/build
 *.jld2
 *.bin
+*sublime-project
+*sublime-workspace
 
 *build*
 log
