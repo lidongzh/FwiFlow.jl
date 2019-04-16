@@ -109,7 +109,8 @@ void backward(const double *grad_p, const double *pres, const double *coef, \
 
 	Eigen::SparseMatrix<double, Eigen::RowMajor> Amat(nz * nx, nz * nx);
 	Eigen::SparseMatrix<double, Eigen::RowMajor> Trans_Amat(nz * nx, nz * nx);
-	Eigen::VectorXd rhs(nz * nx), s(nz * nx);
+	Eigen::VectorXd rhs(nz * nx);
+	Eigen::VectorXd s = Eigen::VectorXd::Zero(Trans_Amat.rows());
 
 	// assemble matrix
 	assembleMat(Amat, rhs, coef, g, h, rhograv, nz, nx);
@@ -118,20 +119,45 @@ void backward(const double *grad_p, const double *pres, const double *coef, \
 	}
 	Trans_Amat = Amat.transpose();
 
-	Eigen::SparseLU<Eigen::SparseMatrix<double> > solver;
-	// Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>  solver;
-	solver.analyzePattern(Trans_Amat);
-	solver.compute(Trans_Amat);
-	if (solver.info() != Eigen::Success) {
-		// decomposition failed
-		std::cout << "!!!decomposition failed" << std::endl;
-		exit(1);
-	}
-	s = solver.solve(rhs);
-	if (solver.info() != Eigen::Success) {
-		// solving failed
-		std::cout << "!!!solving failed" << std::endl;
-		exit(1);
+	if (index == 1) {
+		Eigen::SparseLU<Eigen::SparseMatrix<double> > solver;
+		// Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>  solver;
+		solver.analyzePattern(Trans_Amat);
+		solver.compute(Trans_Amat);
+		if (solver.info() != Eigen::Success) {
+			// decomposition failed
+			std::cout << "!!!decomposition failed" << std::endl;
+			exit(1);
+		}
+		s = solver.solve(rhs);
+		if (solver.info() != Eigen::Success) {
+			// solving failed
+			std::cout << "!!!solving failed" << std::endl;
+			exit(1);
+		}
+	} else {
+		// ================ AMG ====================
+		// Setup the solver:
+		typedef amgcl::make_solver <
+		amgcl::amg <
+		amgcl::backend::eigen<double>,
+		      amgcl::coarsening::smoothed_aggregation,
+		      amgcl::relaxation::spai0
+		      >,
+		      amgcl::solver::bicgstab<amgcl::backend::eigen<double> >
+		      > Solver;
+
+		Solver solve(Trans_Amat);
+		std::cout << solve << std::endl;
+
+		// Solve the system for the given RHS:
+		int    iters;
+		double error;
+		// Eigen::VectorXd x0 = Eigen::VectorXd::Zero(Amat.rows());
+		std::tie(iters, error) = solve(rhs, s);
+
+		std::cout << iters << " " << error << std::endl;
+		// =============================================
 	}
 
 	s = s * h * h;

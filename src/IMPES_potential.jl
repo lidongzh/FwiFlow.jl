@@ -8,8 +8,8 @@ include("laplacian_op.jl")
 
 # Solver parameters
 
-m = 200
-n = 300
+m = 20
+n = 30
 h = 20.0
 # T = 100 # 100 days
 # NT = 100
@@ -35,10 +35,10 @@ end
 ρw = constant(996.9571)
 ρo = constant(640.7385)
 μw = constant(1e-3)
-μo = constant(3e-3)
+μo = constant(1e-3)
 K_np = 9.8692e-14*ones(m,n)
-K_np[16,:] .= 5e-14
-# K_np[8:10,:] .= 5e-13
+# K_np[16,:] .= 5e-14
+K_np[8:10,:] .= 5e-18
 K = constant(K_np)
 g = constant(9.8)
 ϕ = Variable(0.25*ones(m,n))
@@ -75,7 +75,7 @@ end
 
 # variables : sw, u, v, p
 # (time dependent) parameters: qw, qo, ϕ
-function onestep(sw, qw, qo, Δt_dyn)
+function onestep(sw, p, qw, qo, Δt_dyn)
     # step 1: update p
     # λw = Krw(sw)/μw
     # λo = Kro(1-sw)/μo
@@ -85,11 +85,14 @@ function onestep(sw, qw, qo, Δt_dyn)
     f = λw/λ
     q = qw + qo + λw/λo.*qo
     potential_c = (ρw-ρo)*g .* tf_Z
+
     # Θ = laplacian_op(K.*λo, potential_c, tf_h, constant(0.0))
     Θ = upwlap_op(K, λo, potential_c, tf_h, constant(0.0))
+
     load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
-    p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-    # p = constant(ones(m,n))
+
+    # p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+    p = upwps_op(K, λ, load_normal, p, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
 
     # step 2: update u, v
     # rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
@@ -101,8 +104,6 @@ function onestep(sw, qw, qo, Δt_dyn)
     # v = scatter_add(v, 2:m-1, 2:n-1, rhs_v)
 
     # # step 3: update sw
-
-    # rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, constant(h), ρo*g) - laplacian_op(f.*K.*λ.*ρw.*g, tf_Z, constant(h), constant(h))
     rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, tf_h, constant(0.0))
     max_rhs = maximum(abs(rhs/ϕ))
     Δt_dyn =  0.001/max_rhs
@@ -137,7 +138,7 @@ function solve(qw, qo, sw0)
     end
     function body(i, tas...)
         ta_sw, ta_p, ta_u, ta_v, ta_f, Δt_array = tas
-        sw, p, u, v, f, Δt_dyn = onestep(read(ta_sw, i), qw_arr[i], qo_arr[i], read(Δt_array, i))
+        sw, p, u, v, f, Δt_dyn = onestep(read(ta_sw, i), read(ta_p, i), qw_arr[i], qo_arr[i], read(Δt_array, i))
         ta_sw = write(ta_sw, i+1, sw)
         ta_p = write(ta_p, i+1, p)
         ta_u = write(ta_u, i+1, u)
@@ -149,6 +150,7 @@ function solve(qw, qo, sw0)
     ta_sw, ta_p = TensorArray(NT+1), TensorArray(NT+1)
     ta_u, ta_v, ta_f, Δt_array = TensorArray(NT+1), TensorArray(NT+1), TensorArray(NT+1), TensorArray(NT+1)
     ta_sw = write(ta_sw, 1, constant(sw0))
+    ta_p = write(ta_p, 1, constant(zeros(m,n)))
     i = constant(1, dtype=Int32)
     _, ta_sw, ta_p, ta_u, ta_v, ta_f, Δt_array = while_loop(condition, body, [i; ta_sw; ta_p; ta_u; ta_v; ta_f; Δt_array])
     out_sw, out_p, out_u, out_v, out_f, out_Δt = stack(ta_sw), stack(ta_p), stack(ta_u), stack(ta_v), stack(ta_f), stack(Δt_array)
@@ -179,11 +181,11 @@ sw0 = zeros(m, n)
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
 
-# sess = Session(); init(sess)
-# S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
+sess = Session(); init(sess)
+S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
 
 
-# vis(S)
+vis(S)
 
 # quiver(x, z, V[80,:,:],U[80,:,:])
 # title("velocity field")

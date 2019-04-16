@@ -16,6 +16,15 @@
 #include <Eigen/SparseLU>
 #include<Eigen/IterativeLinearSolvers>
 
+// #include <unsupported/Eigen/SparseExtra> // For reading MatrixMarket files
+
+#include <amgcl/backend/eigen.hpp>
+#include <amgcl/make_solver.hpp>
+#include <amgcl/solver/bicgstab.hpp>
+#include <amgcl/amg.hpp>
+#include <amgcl/coarsening/smoothed_aggregation.hpp>
+#include <amgcl/relaxation/spai0.hpp>
+
 void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
                  Eigen::VectorXd &rhs,
                  const double *coef,
@@ -28,30 +37,58 @@ void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
 void forward(double *pres, const double *coef, const double *g, double h, \
              double rhograv, int index, int nz, int nx) {
 	Eigen::SparseMatrix<double, Eigen::RowMajor> Amat(nz * nx, nz * nx);
-	Eigen::VectorXd rhs(nz * nx), pvec(nz * nx);
+	Eigen::VectorXd rhs(nz * nx);
+	Eigen::VectorXd pvec = Eigen::VectorXd::Zero(Amat.rows());
 
 	// assemble matrix
 	assembleMat(Amat, rhs, coef, g, h, rhograv, nz, nx);
 
-	Eigen::SparseLU<Eigen::SparseMatrix<double> > solver;
-	// Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>  solver;
-	solver.analyzePattern(Amat);
-	solver.compute(Amat);
-	if (solver.info() != Eigen::Success) {
-		// decomposition failed
-		std::cout << "!!!decomposition failed" << std::endl;
-		exit(1);
-	}
-	pvec = solver.solve(rhs);
-	if (solver.info() != Eigen::Success) {
-		// solving failed
-		std::cout << "!!!solving failed" << std::endl;
-		exit(1);
-	}
-	// std::cout << "#iterations: " << solver.iterations() << std::endl;
-	// std::cout << "estimated error: " << solver.error() << std::endl;
-
 	std::cout << "Forward: solving Poisson equation. Step: " << index << std::endl;
+
+	if (index == 1) {
+		Eigen::SparseLU<Eigen::SparseMatrix<double> > solver;
+		// Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>  solver;
+		solver.analyzePattern(Amat);
+		solver.compute(Amat);
+		if (solver.info() != Eigen::Success) {
+			// decomposition failed
+			std::cout << "!!!decomposition failed" << std::endl;
+			exit(1);
+		}
+		pvec = solver.solve(rhs);
+		if (solver.info() != Eigen::Success) {
+			// solving failed
+			std::cout << "!!!solving failed" << std::endl;
+			exit(1);
+		}
+		// std::cout << "#iterations: " << solver.iterations() << std::endl;
+		// std::cout << "estimated error: " << solver.error() << std::endl;
+	} else {
+
+		// ================ AMG ====================
+		// Setup the solver:
+		typedef amgcl::make_solver <
+		amgcl::amg <
+		amgcl::backend::eigen<double>,
+		      amgcl::coarsening::smoothed_aggregation,
+		      amgcl::relaxation::spai0
+		      >,
+		      amgcl::solver::bicgstab<amgcl::backend::eigen<double> >
+		      > Solver;
+
+		Solver solve(Amat);
+		std::cout << solve << std::endl;
+
+		// Solve the system for the given RHS:
+		int    iters;
+		double error;
+		// Eigen::VectorXd x0 = Eigen::VectorXd::Zero(Amat.rows());
+		std::tie(iters, error) = solve(rhs, pvec);
+
+		std::cout << iters << " " << error << std::endl;
+		// =============================================
+	}
+
 	for (int i = 0; i < nz; i++) {
 		for (int j = 0; j < nx; j++) {
 			pres[ij2ind(i, j)] = pvec(ij2ind(i, j));
