@@ -13,13 +13,23 @@ endif()
 # import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))
 
 include_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/site-packages/tensorflow/include /home/lidongzh/Library/PyTensorFlow.jl/src/../examples/custom_op/template/../../../deps/ADEL/ADEL)
-include_directories(/home/lidongzh/TwoPhaseFlowFWI/eigen)
 link_directories(/home/lidongzh/Library/anaconda3/envs/julia/lib/python3.6/site-packages/tensorflow)
 
 # --- Find AMGCL ------------------------------------------------------------
 include_directories("../../amgcl")
 include_directories(../../eigen)
 include_directories(/usr/local/include)
+# target_compile_options(eigen_target INTERFACE
+#     $<$<CXX_COMPILER_ID:GNU>:-Wno-int-in-bool-context>
+#     $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>
+#     $<$<CXX_COMPILER_ID:Clang>:-Wno-c++11-long-long>
+#     )
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 add_library(UpwpsOp SHARED UpwpsOp.cpp)
 set_property(TARGET UpwpsOp PROPERTY POSITION_INDEPENDENT_CODE ON)

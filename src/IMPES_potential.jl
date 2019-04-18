@@ -92,7 +92,7 @@ function onestep(sw, p, qw, qo, Δt_dyn)
     load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
 
     # p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-    p = upwps_op(K, λ, load_normal, p, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+    p = upwps_op(K, λ, load_normal, p, tf_h, constant(0.0), constant(2)) # potential p = pw - ρw*g*h 
 
     # step 2: update u, v
     # rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
@@ -181,7 +181,10 @@ sw0 = zeros(m, n)
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
 
-sess = Session(); init(sess)
+config = tf.ConfigProto()
+config.intra_op_parallelism_threads = 4
+config.inter_op_parallelism_threads = 4
+sess = Session(config=config); init(sess)
 S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
 
 

@@ -25,12 +25,15 @@
 
 // #include <unsupported/Eigen/SparseExtra> // For reading MatrixMarket files
 
+#include <amgcl/adapter/eigen.hpp>  // DL 04/17/2019 use builtin
 #include <amgcl/amg.hpp>
-#include <amgcl/backend/eigen.hpp>
+#include <amgcl/backend/builtin.hpp>  // DL 04/17/2019 use builtin
+// #include <amgcl/backend/eigen.hpp> // DL commented
 #include <amgcl/coarsening/smoothed_aggregation.hpp>
 #include <amgcl/make_solver.hpp>
 #include <amgcl/relaxation/spai0.hpp>
 #include <amgcl/solver/bicgstab.hpp>
+AMGCL_USE_EIGEN_VECTORS_WITH_BUILTIN_BACKEND()  // DL 04/17/2019 use builtin
 
 void intialArray(double *ip, int size, double value) {
   for (int i = 0; i < size; i++) {
@@ -65,8 +68,8 @@ void forward(double *pres, const double *permi, const double *mobi,
   // assemble matrix
   assembleMat(Amat, rhs, permi, mobi, src, funcref, h, rhograv, nz, nx);
 
-  std::cout << "Forward: solving Poisson equation. Step: " << index
-            << std::endl;
+  // std::cout << "Forward: solving Poisson equation. Step: " << index
+  // << std::endl;
 
   if (index == 1) {
     Eigen::SparseLU<Eigen::SparseMatrix<double> > solver;
@@ -89,15 +92,22 @@ void forward(double *pres, const double *permi, const double *mobi,
   } else {
     // ================ AMG ====================
     // Setup the solver:
+    // typedef amgcl::make_solver<
+    //     amgcl::amg<amgcl::backend::eigen<double>,
+    //                amgcl::coarsening::smoothed_aggregation,
+    //                amgcl::relaxation::spai0>,
+    //     amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
+    //     Solver;
+    // DL 04/17/2019 builtin
     typedef amgcl::make_solver<
-        amgcl::amg<amgcl::backend::eigen<double>,
+        amgcl::amg<amgcl::backend::builtin<double>,
                    amgcl::coarsening::smoothed_aggregation,
                    amgcl::relaxation::spai0>,
-        amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
+        amgcl::solver::bicgstab<amgcl::backend::builtin<double> > >
         Solver;
 
     Solver solve(Amat);
-    std::cout << solve << std::endl;
+    if (index == 2) std::cout << solve << std::endl;
 
     // Solve the system for the given RHS:
     int iters;
@@ -105,7 +115,7 @@ void forward(double *pres, const double *permi, const double *mobi,
     // Eigen::VectorXd x0 = Eigen::VectorXd::Zero(Amat.rows());
     std::tie(iters, error) = solve(rhs, pvec);
 
-    std::cout << iters << " " << error << std::endl;
+    if (index == 2) std::cout << iters << " " << error << std::endl;
     // =============================================
   }
 
@@ -156,15 +166,22 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
   } else {
     // ================ AMG ====================
     // Setup the solver:
+    // typedef amgcl::make_solver<
+    //     amgcl::amg<amgcl::backend::eigen<double>,
+    //                amgcl::coarsening::smoothed_aggregation,
+    //                amgcl::relaxation::spai0>,
+    //     amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
+    //     Solver;
+    // DL 04/17/2019 builtin
     typedef amgcl::make_solver<
-        amgcl::amg<amgcl::backend::eigen<double>,
+        amgcl::amg<amgcl::backend::builtin<double>,
                    amgcl::coarsening::smoothed_aggregation,
                    amgcl::relaxation::spai0>,
-        amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
+        amgcl::solver::bicgstab<amgcl::backend::builtin<double> > >
         Solver;
 
     Solver solve(Trans_Amat);
-    std::cout << solve << std::endl;
+    if (index == 2) std::cout << solve << std::endl;
 
     // Solve the system for the given RHS:
     int iters;
@@ -172,7 +189,7 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
     // Eigen::VectorXd x0 = Eigen::VectorXd::Zero(Amat.rows());
     std::tie(iters, error) = solve(rhs, s);
 
-    std::cout << iters << " " << error << std::endl;
+    if (index == 2) std::cout << iters << " " << error << std::endl;
     // =============================================
   }
 

@@ -7,6 +7,7 @@ Ops/AdvectionDiffusion/build
 Ops/FWI/ops/build
 Ops/FWI/ops/__pycache__
 src/data/*.txt
+src/flow_fit_result/*.txt
 *.txt
 Ops/FWI/CUFD/Phase*
 Ops/FWI/CUFD/Src/*.o
