@@ -9,8 +9,8 @@
 #define NEWTON_TOL 1e-6
 // #define DEBUG
 // #define OUTPUT_AMG
-// #define ALPHA 0.006323996017182
-#define ALPHA 0.001127
+#define ALPHA 0.006323996017182
+// #define ALPHA 0.001127
 
 #define s0(z, x) s0[(z) * (nx) + (x)]      // row major
 #define sref(z, x) sref[(z) * (nx) + (x)]  // row major
