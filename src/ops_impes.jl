@@ -77,16 +77,16 @@ function onestep(sw, p, Δt_dyn, m,n,h,Δt,Z,ρw,ρo,μw,μo,K,g,ϕ,qw,qo)
     λo = (1-sw).*(1-sw)/μo
     λ = λw + λo
     f = λw/λ
-    q = qw + qo + λw/λo.*qo
+    q = qw + qo + λw/(λo+1e-16).*qo
     potential_c = (ρw - ρo)*g .* Z
 
     # Θ = laplacian_op(K.*λo, potential_c, h, constant(0.0))
     Θ = upwlap_op(K, λo, potential_c, h, constant(0.0))
 
-    load_normal = (Θ+q) - ave_normal(Θ+q, m, n)
+    load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, m, n)
 
     # p = poisson_op(λ.*K, load_normal, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-    p = upwps_op(K, λ, load_normal, p, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+    p = upwps_op(K, λ, load_normal, p, h, constant(0.0), constant(2)) # potential p = pw - ρw*g*h 
 
     # step 2: update u, v
     # rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
@@ -98,21 +98,26 @@ function onestep(sw, p, Δt_dyn, m,n,h,Δt,Z,ρw,ρo,μw,μo,K,g,ϕ,qw,qo)
     # v = scatter_add(v, 2:m-1, 2:n-1, rhs_v)
 
     # # step 3: update sw
-    rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, h, constant(0.0))
-    max_rhs = maximum(abs(rhs/ϕ))
-    Δt_dyn =  0.001/max_rhs
-    # NT_local = Δt/Δt_dyn
+    # rhs = qw + λw/λo.*qo + ALPHA * upwlap_op(K, f.*λ, p, h, constant(0.0))
+    # max_rhs = maximum(abs(rhs/ϕ))
+    # Δt_dyn =  0.001/max_rhs
+    # # NT_local = Δt/Δt_dyn
     for i= 1:10
         λw = sw.*sw/μw
         λo = (1-sw).*(1-sw)/μo
         λ = λw + λo
         f = λw/λ
-        rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, h, constant(0.0))
+        rhs = qw + λw/(λo+1e-16).*qo + ALPHA * upwlap_op(K, f.*λ, p, h, constant(0.0))
         rhs = Δt*rhs/ϕ
         sw = sw + rhs
     end
 
-    sw = clamp(sw, 1e-16, 1.0-1e-16)
+    # rhs = qw + λw/λo.*qo + ALPHA * upwlap_op(K, f.*λ, p, h, constant(0.0))
+    # # rhs = qw + λw/λo.*qo + ALPHA * laplacian_op(K.*f.*λ, p, h, constant(0.0))
+    # sw = sw + Δt*rhs/ϕ
+    Δt_dyn = constant(0.0)
+
+    # sw = clamp(sw, 1e-16, 1.0-1e-16)
     return sw, p, u, v, f, Δt_dyn
 end
 

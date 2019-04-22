@@ -166,15 +166,15 @@ Gaussian1 = exp.(-1.0.*((xx.-5).^2+(yy.-7).^2))
 Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 
-# qw[:,7,5] .= 0.0026/h^3
+qw[:,7,5] .= 0.0026/h^3
 qo = zeros(NT, m, n)
 # for id = 1:NT
 #     qw[id,:,:] = Gaussian1*0.0026/h^2
 #     qo[id,:,:] = -Gaussian2*0.0004/h^2
 # end
-# qo[:,7,25] .= -0.004/h^3
+qo[:,7,25] .= -0.004/h^3
 sw0 = zeros(m, n)
-sw0[15:19,:] .= 0.3
+# sw0[15:19,:] .= 0.3
 out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0)
 
 

@@ -12,7 +12,6 @@
 #define src(z, x) src[(z) * (nx) + (x)]          // row major
 #define funcref(z, x) funcref[(z) * (nx) + (x)]  // row major
 #define ij2ind(z, x) ((z) * (nx) + (x))
-#define grad_pres(z, x) grad_out[(z) * (nx) + (x)]
 #define grad_permi(z, x) grad_permi[(z) * (nx) + (x)]
 #define grad_mobi(z, x) grad_mobi[(z) * (nx) + (x)]
 #define grad_src(z, x) grad_src[(z) * (nx) + (x)]
@@ -25,15 +24,15 @@
 
 // #include <unsupported/Eigen/SparseExtra> // For reading MatrixMarket files
 
-#include <amgcl/adapter/eigen.hpp>  // DL 04/17/2019 use builtin
+// #include <amgcl/adapter/eigen.hpp>  // DL 04/17/2019 use builtin
 #include <amgcl/amg.hpp>
-#include <amgcl/backend/builtin.hpp>  // DL 04/17/2019 use builtin
-// #include <amgcl/backend/eigen.hpp> // DL commented
+// #include <amgcl/backend/builtin.hpp>  // DL 04/17/2019 use builtin
+#include <amgcl/backend/eigen.hpp>  // DL commented
 #include <amgcl/coarsening/smoothed_aggregation.hpp>
 #include <amgcl/make_solver.hpp>
 #include <amgcl/relaxation/spai0.hpp>
 #include <amgcl/solver/bicgstab.hpp>
-AMGCL_USE_EIGEN_VECTORS_WITH_BUILTIN_BACKEND()  // DL 04/17/2019 use builtin
+// AMGCL_USE_EIGEN_VECTORS_WITH_BUILTIN_BACKEND()  // DL 04/17/2019 use builtin
 
 void intialArray(double *ip, int size, double value) {
   for (int i = 0; i < size; i++) {
@@ -92,19 +91,19 @@ void forward(double *pres, const double *permi, const double *mobi,
   } else {
     // ================ AMG ====================
     // Setup the solver:
-    // typedef amgcl::make_solver<
-    //     amgcl::amg<amgcl::backend::eigen<double>,
-    //                amgcl::coarsening::smoothed_aggregation,
-    //                amgcl::relaxation::spai0>,
-    //     amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
-    //     Solver;
-    // DL 04/17/2019 builtin
     typedef amgcl::make_solver<
-        amgcl::amg<amgcl::backend::builtin<double>,
+        amgcl::amg<amgcl::backend::eigen<double>,
                    amgcl::coarsening::smoothed_aggregation,
                    amgcl::relaxation::spai0>,
-        amgcl::solver::bicgstab<amgcl::backend::builtin<double> > >
+        amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
         Solver;
+    // // DL 04/17/2019 builtin
+    // typedef amgcl::make_solver <
+    // amgcl::amg<amgcl::backend::builtin<double>,
+    //       amgcl::coarsening::smoothed_aggregation,
+    //       amgcl::relaxation::spai0>,
+    //       amgcl::solver::bicgstab<amgcl::backend::builtin<double> > >
+    //       Solver;
 
     Solver solve(Amat);
     if (index == 2) std::cout << solve << std::endl;
@@ -166,19 +165,19 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
   } else {
     // ================ AMG ====================
     // Setup the solver:
-    // typedef amgcl::make_solver<
-    //     amgcl::amg<amgcl::backend::eigen<double>,
-    //                amgcl::coarsening::smoothed_aggregation,
-    //                amgcl::relaxation::spai0>,
-    //     amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
-    //     Solver;
-    // DL 04/17/2019 builtin
     typedef amgcl::make_solver<
-        amgcl::amg<amgcl::backend::builtin<double>,
+        amgcl::amg<amgcl::backend::eigen<double>,
                    amgcl::coarsening::smoothed_aggregation,
                    amgcl::relaxation::spai0>,
-        amgcl::solver::bicgstab<amgcl::backend::builtin<double> > >
+        amgcl::solver::bicgstab<amgcl::backend::eigen<double> > >
         Solver;
+    // // DL 04/17/2019 builtin
+    // typedef amgcl::make_solver <
+    // amgcl::amg<amgcl::backend::builtin<double>,
+    //       amgcl::coarsening::smoothed_aggregation,
+    //       amgcl::relaxation::spai0>,
+    //       amgcl::solver::bicgstab<amgcl::backend::builtin<double> > >
+    //       Solver;
 
     Solver solve(Trans_Amat);
     if (index == 2) std::cout << solve << std::endl;
@@ -235,11 +234,11 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
         permi_r = harmonicAve(permi(i, j), permi(i, j + 1));
         F_r = pres(i, j) - pres(i, j + 1);
         // if (funcref(i, j + 1) > funcref(i, j)) {
-        // 	mobi_r = mobi(i, j + 1);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i, j + 1), permi_r * F_r));
+        //  mobi_r = mobi(i, j + 1);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i, j + 1), permi_r * F_r));
         // } else {
-        // 	mobi_r = mobi(i, j);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_r * F_r));
+        //  mobi_r = mobi(i, j);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_r * F_r));
         // }
         mobi_r = (mobi(i, j) + mobi(i, j + 1)) / 2.0;
         tL_mobi.push_back(T(idRow, ij2ind(i, j), 0.5 * permi_r * F_r));
@@ -256,11 +255,11 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
         permi_l = harmonicAve(permi(i, j), permi(i, j - 1));
         F_l = pres(i, j) - pres(i, j - 1);
         // if (funcref(i, j - 1) > funcref(i, j)) {
-        // 	mobi_l = mobi(i, j - 1);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i, j - 1), permi_l * F_l));
+        //  mobi_l = mobi(i, j - 1);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i, j - 1), permi_l * F_l));
         // } else {
-        // 	mobi_l = mobi(i, j);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_l * F_l));
+        //  mobi_l = mobi(i, j);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_l * F_l));
         // }
         mobi_l = (mobi(i, j) + mobi(i, j - 1)) / 2.0;
         tL_mobi.push_back(T(idRow, ij2ind(i, j), 0.5 * permi_l * F_l));
@@ -277,11 +276,11 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
         permi_d = harmonicAve(permi(i, j), permi(i + 1, j));
         F_d = pres(i, j) - pres(i + 1, j);
         // if (funcref(i + 1, j) > funcref(i, j)) {
-        // 	mobi_d = mobi(i + 1, j);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i + 1, j), permi_d * F_d));
+        //  mobi_d = mobi(i + 1, j);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i + 1, j), permi_d * F_d));
         // } else {
-        // 	mobi_d = mobi(i, j);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_d * F_d));
+        //  mobi_d = mobi(i, j);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_d * F_d));
         // }
         mobi_d = (mobi(i, j) + mobi(i + 1, j)) / 2.0;
         tL_mobi.push_back(T(idRow, ij2ind(i, j), 0.5 * permi_d * F_d));
@@ -307,11 +306,11 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
         permi_u = harmonicAve(permi(i, j), permi(i - 1, j));
         F_u = pres(i, j) - pres(i - 1, j);
         // if (funcref(i - 1, j) > funcref(i, j)) {
-        // 	mobi_u = mobi(i - 1, j);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i - 1, j), permi_u * F_u));
+        //  mobi_u = mobi(i - 1, j);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i - 1, j), permi_u * F_u));
         // } else {
-        // 	mobi_u = mobi(i, j);
-        // 	tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_u * F_u));
+        //  mobi_u = mobi(i, j);
+        //  tL_mobi.push_back(T(idRow, ij2ind(i, j), permi_u * F_u));
         // }
         mobi_u = (mobi(i, j) + mobi(i - 1, j)) / 2.0;
         tL_mobi.push_back(T(idRow, ij2ind(i, j), 0.5 * permi_u * F_u));
@@ -384,9 +383,9 @@ void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
 
       if (j + 1 <= nx - 1) {
         // if (funcref(i, j + 1) > funcref(i, j)) {
-        // 	mobi_r = mobi(i, j + 1);
+        //  mobi_r = mobi(i, j + 1);
         // } else {
-        // 	mobi_r = mobi(i, j);
+        //  mobi_r = mobi(i, j);
         // }
         mobi_r = (mobi(i, j) + mobi(i, j + 1)) / 2.0;
         permi_r = harmonicAve(permi(i, j), permi(i, j + 1));
@@ -396,9 +395,9 @@ void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
 
       if (j - 1 >= 0) {
         // if (funcref(i, j - 1) > funcref(i, j)) {
-        // 	mobi_l = mobi(i, j - 1);
+        //  mobi_l = mobi(i, j - 1);
         // } else {
-        // 	mobi_l = mobi(i, j);
+        //  mobi_l = mobi(i, j);
         // }
         mobi_l = (mobi(i, j) + mobi(i, j - 1)) / 2.0;
         permi_l = harmonicAve(permi(i, j), permi(i, j - 1));
@@ -408,9 +407,9 @@ void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
 
       if (i + 1 <= nz - 1) {
         // if (funcref(i + 1, j) > funcref(i, j)) {
-        // 	mobi_d = mobi(i + 1, j);
+        //  mobi_d = mobi(i + 1, j);
         // } else {
-        // 	mobi_d = mobi(i, j);
+        //  mobi_d = mobi(i, j);
         // }
         mobi_d = (mobi(i, j) + mobi(i + 1, j)) / 2.0;
         permi_d = harmonicAve(permi(i, j), permi(i + 1, j));
@@ -423,9 +422,9 @@ void assembleMat(Eigen::SparseMatrix<double, Eigen::RowMajor> &Amat,
 
       if (i - 1 >= 0) {
         // if (funcref(i - 1, j) > funcref(i, j)) {
-        // 	mobi_u = mobi(i - 1, j);
+        //  mobi_u = mobi(i - 1, j);
         // } else {
-        // 	mobi_u = mobi(i, j);
+        //  mobi_u = mobi(i, j);
         // }
         mobi_u = (mobi(i, j) + mobi(i - 1, j)) / 2.0;
         permi_u = harmonicAve(permi(i, j), permi(i - 1, j));
