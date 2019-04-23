@@ -5,7 +5,7 @@
 #include <math.h>
 #include <algorithm>
 #define EPSILON 1e-16
-#define MAX_LINE_SEARCH 100
+#define MAX_LINE_SEARCH 10000
 #define NEWTON_TOL 1e-6
 // #define DEBUG
 // #define OUTPUT_AMG
@@ -362,7 +362,7 @@ void forward(double *sat, const double *s0, const double *pt,
     printf("res_norm = %f\n", res_norm);
 #endif
   }
-  std::cout << "Finish one step" << std::endl;
+  // std::cout << "Finish one step" << std::endl;
   for (int i = 0; i < nz; i++) {
     for (int j = 0; j < nx; j++) {
       sat(i, j) = sEg(i, j);

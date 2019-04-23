@@ -104,86 +104,96 @@ q2[10,25] = -2200.0 /100.0^3 * SRC_CONST
 qw = constant(q1)
 qo = constant(q2)
 
-# λw = sw.*sw
-# λo = (1-sw).*(1-sw)
-# λ = λw + λo
-# f = λw/λ
-# q = qw + qo + λw/(λo+1e-16).*qo
+λw = sw.*sw
+λo = (1-sw).*(1-sw)
+λ = λw + λo
+f = λw/λ
+q = qw + qo + λw/(λo+1e-16).*qo
 
-# # Θ = laplacian_op(K.*λo, potential_c, h, constant(0.0))
-# Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
+# Θ = laplacian_op(K.*λo, potential_c, h, constant(0.0))
+Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
 
-# load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, nz, nx)
+load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, nz, nx)
 
-# p0 = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(2))
-# s = sat_op(sw,p0,K,ϕ,qw,qo,sw,dt,h)
-
-function step(sw)
-    λw = sw.*sw
-    λo = (1-sw).*(1-sw)
-    λ = λw + λo
-    f = λw/λ
-    q = qw + qo + λw/(λo+1e-16).*qo
-
-    # Θ = laplacian_op(K.*λo, constant(zeros(nz,nx)), h, constant(0.0))
-    Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
-    # Θ = constant(zeros(nz,nx))
-
-    load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, nz, nx)
-
-    p = poisson_op(λ.*K, load_normal, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-    # p = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(0))
-    sw = sat_op(sw,p,K,ϕ,qw,qo,sw,dt,h)
-    return sw
-end
-
-NT=100
-function evolve(sw, NT, qw, qo)
-    # qw_arr = constant(qw) # qw: NT x m x n array
-    # qo_arr = constant(qo)
-    tf_sw = TensorArray(NT+1)
-    function condition(i, ta)
-        tf.less(i, NT+1)
-    end
-    function body(i, tf_sw)
-        sw_local = step(read(tf_sw, i))
-        i+1, write(tf_sw, i+1, sw_local)
-    end
-    tf_sw = write(tf_sw, 1, sw)
-    i = constant(1, dtype=Int32)
-    _, out = while_loop(condition, body, [i;tf_sw])
-    read(out, NT+1)
-end
-
-s = evolve(sw, NT, qw, qo)
-
-
-
-J = tf.nn.l2_loss(s)
-tf_grad_K = gradients(J, K)
+tf_comp_p0 = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(2))
 sess = Session()
 init(sess)
-# P = run(sess,p0)
+p0 = run(sess, tf_comp_p0)
+tf_p0 = constant(p0)
+
+# s = sat_op(sw,p0,K,ϕ,qw,qo,sw,dt,h)
+
+# function step(sw)
+#     λw = sw.*sw
+#     λo = (1-sw).*(1-sw)
+#     λ = λw + λo
+#     f = λw/λ
+#     q = qw + qo + λw/(λo+1e-16).*qo
+
+#     # Θ = laplacian_op(K.*λo, constant(zeros(nz,nx)), h, constant(0.0))
+#     Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
+#     # Θ = constant(zeros(nz,nx))
+
+#     load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, nz, nx)
+
+#     p = poisson_op(λ.*K, load_normal, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+#     # p = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(0))
+#     sw = sat_op(sw,p,K,ϕ,qw,qo,sw,dt,h)
+#     return sw
+# end
+
+# NT=100
+# function evolve(sw, NT, qw, qo)
+#     # qw_arr = constant(qw) # qw: NT x m x n array
+#     # qo_arr = constant(qo)
+#     tf_sw = TensorArray(NT+1)
+#     function condition(i, ta)
+#         tf.less(i, NT+1)
+#     end
+#     function body(i, tf_sw)
+#         sw_local = step(read(tf_sw, i))
+#         i+1, write(tf_sw, i+1, sw_local)
+#     end
+#     tf_sw = write(tf_sw, 1, sw)
+#     i = constant(1, dtype=Int32)
+#     _, out = while_loop(condition, body, [i;tf_sw])
+#     read(out, NT+1)
+# end
+
+# s = evolve(sw, NT, qw, qo)
+
+
+
+# J = tf.nn.l2_loss(s)
+# tf_grad_K = gradients(J, K)
+# sess = Session()
+# init(sess)
+# # P = run(sess,p0)
+
+# # error("")
+# S=run(sess, s)
+# imshow(S);colorbar();
 
 # error("")
-S=run(sess, s)
-imshow(S);colorbar();
 
-error("")
-
-grad_K = run(sess, tf_grad_K)
-imshow(grad_K);colorbar();
-error("")
+# grad_K = run(sess, tf_grad_K)
+# imshow(grad_K);colorbar();
+# error("")
 # TODO: 
-
 
 # gradient check -- v
 function scalar_function(m)
-    return sum(tanh(sat_op(s0,p,permi,poro,qw,qo,dt,h)))
+    # return sum(tanh(sat_op(m,tf_p0,K,ϕ,qw,qo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(sw,m,K,ϕ,qw,qo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(sw,tf_p0,m,ϕ,qw,qo,constant(zeros(nz,nx)),dt,h)))
+    return sum(tanh(sat_op(sw,tf_p0,K,m,qw,qo,constant(zeros(nz,nx)),dt,h)))
 end
 
-m_ = constant(rand(10,20))
-v_ = rand(10,20)
+# m_ = sw
+# m_ = tf_p0
+# m_ = K
+m_ = ϕ
+v_ = rand(nz,nx)
 y_ = scalar_function(m_)
 dy_ = gradients(y_, m_)
 ms_ = Array{Any}(undef, 5)

@@ -188,11 +188,16 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
     int iters;
     double error;
     // Eigen::VectorXd x0 = Eigen::VectorXd::Zero(Amat.rows());
-    std::tie(iters, error) = solve(grad_presEg, s);
+    std::tie(iters, error) = solve(gerd_presEg, s);
 
     if (index == 2) std::cout << iters << " " << error << std::endl;
     // =============================================
   }
+
+  // a = Variable(1.0, trainable=false)
+  // a = constant(1.0)
+  // var_list
+  // get_collection(TRAINABLE_VARIABLES)
 
   // s = s * h * h;
 

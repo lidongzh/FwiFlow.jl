@@ -72,8 +72,8 @@ tf_funcref = constant(rand(nz, nx))
 tf_ones = constant(ones_cons)
 function scalar_function(m)
     # return sum(tanh(upwps_op(tf_coef, tf_ones, m, tf_funcref, tf_h, constant(rho*G), constant(0))))
-    return sum(tanh(upwps_op(m, tf_ones, tf_rhs, tf_ones, tf_h, constant(rho*G), constant(0))))
-    # return sum(tanh(upwps_op(tf_ones, m, tf_rhs, tf_ones, tf_h, constant(rho*G), constant(0))))
+    # return sum(tanh(upwps_op(m, tf_ones, tf_rhs, tf_ones, tf_h, constant(rho*G), constant(0))))
+    return sum(tanh(upwps_op(tf_ones, m, tf_rhs, tf_ones, tf_h, constant(rho*G), constant(0))))
 end
 
 # m_ = tf_rhs

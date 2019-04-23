@@ -86,7 +86,7 @@ function onestep(sw, p, Δt_dyn, m,n,h,Δt,Z,ρw,ρo,μw,μo,K,g,ϕ,qw,qo)
     load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, m, n)
 
     # p = poisson_op(λ.*K, load_normal, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-    p = upwps_op(K, λ, load_normal, p, h, constant(0.0), constant(2)) # potential p = pw - ρw*g*h 
+    p = upwps_op(K, λ, load_normal, p, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
 
     # step 2: update u, v
     # rhs_u = -geto(K, 0, 0).*geto(λ, 0, 0)/h.*(geto(p, 1, 0) - geto(p, 0, 0))
