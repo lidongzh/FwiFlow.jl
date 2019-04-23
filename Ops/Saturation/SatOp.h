@@ -46,11 +46,14 @@
 #include <amgcl/solver/bicgstab.hpp>
 // AMGCL_USE_EIGEN_VECTORS_WITH_BUILTIN_BACKEND()  // DL 04/17/2019 use builtin
 
-double compMobiW(double s) { return s * s; }
-double gradMobiW(double s) { return 2.0 * s; }
+// viscosities are global variables;
+double mu_w;
+double mu_o;
+double compMobiW(double s) { return s * s / mu_w; }
+double gradMobiW(double s) { return 2.0 * s / mu_w; }
 
-double compMobiO(double s) { return (1.0 - s) * (1.0 - s); }
-double gradMobiO(double s) { return 2.0 * s - 2.0; }
+double compMobiO(double s) { return (1.0 - s) * (1.0 - s) / mu_o; }
+double gradMobiO(double s) { return (2.0 * s - 2.0) / mu_o; }
 
 void intialArray(double *ip, int size, double value) {
   for (int i = 0; i < size; i++) {
@@ -329,7 +332,8 @@ void forward(double *sat, const double *s0, const double *pt,
   //     Solver;
 
   // start Newton iterations
-  while (abs(res_norm - res_norm_old) / res_norm_old > NEWTON_TOL) {
+  // prevent division by zero
+  while (abs(res_norm - res_norm_old) > NEWTON_TOL * res_norm_old) {
     // while (res_norm > NEWTON_TOL) {
     res_norm_old = res_norm;
 

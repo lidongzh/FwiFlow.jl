@@ -17,7 +17,7 @@ X, Z = np.meshgrid(x, z)
 ρw = 62.238 # lbm/scf (pound/ft^3)
 ρo = 40.0 # lbm/scf (pound/ft^3)
 μw = 1.0 # centi poise
-μo = 1.0
+μo = 3.0
 K = 20.0 .* ones(m,n) # millidarcy
 K[8:10,:] .= 100.0
 # K[10:18, 14:18] .= 100.0
@@ -99,7 +99,7 @@ function print_loss(l, invK)
     writedlm("./flow_fit_results/K_$(__iter).txt", invK)
     # writedlm("./flow_fit_results/b1_$(__iter).txt", b1)
     # writedlm("./flow_fit_results/b2_$(__iter).txt", b2)
-    # writedlm("./flow_fit_results/l_$(__iter).txt", l)
+    writedlm("./flow_fit_results/loss_$(__iter).txt", l)
     __cnt += 1
 end
 
@@ -107,8 +107,7 @@ end
 # config.intra_op_parallelism_threads = 24
 # config.inter_op_parallelism_threads = 24
 sess = Session(); init(sess);
-opt = ScipyOptimizerInterface(J, var_list=[tfCtxInit.K], 
-    var_to_bounds={tfCtxInit.K: (20.0, 100.0)}, method="L-BFGS-B", 
+opt = ScipyOptimizerInterface(J, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (20.0, 100.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[J, tfCtxInit.K])
 

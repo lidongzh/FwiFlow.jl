@@ -8,35 +8,35 @@ Random.seed!(233)
 if Sys.islinux()
 py"""
 import tensorflow as tf
-libSatOp = tf.load_op_library('build/libSatOp.so')
+libSatOp = tf.load_op_library('./build/libSatOp.so')
 @tf.custom_gradient
-def sat_op(s0,p,permi,poro,qw,qo,sref,dt,h):
-    s = libSatOp.sat_op(s0,p,permi,poro,qw,qo,sref,dt,h)
+def sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h):
+    sat = libSatOp.sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
     def grad(dy):
-        return libSatOp.sat_op_grad(dy, s, s0,p,permi,poro,qw,qo,sref,dt,h)
-    return s, grad
+        return libSatOp.sat_op_grad(dy, sat, s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
+    return sat, grad
 """
 elseif Sys.isapple()
 py"""
 import tensorflow as tf
-libSatOp = tf.load_op_library('build/libSatOp.dylib')
+libSatOp = tf.load_op_library('./build/libSatOp.dylib')
 @tf.custom_gradient
-def sat_op(s0,p,permi,poro,qw,qo,sref,dt,h):
-    s = libSatOp.sat_op(s0,p,permi,poro,qw,qo,sref,dt,h)
+def sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h):
+    sat = libSatOp.sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
     def grad(dy):
-        return libSatOp.sat_op_grad(dy, s, s0,p,permi,poro,qw,qo,sref,dt,h)
-    return s, grad
+        return libSatOp.sat_op_grad(dy, sat, s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
+    return sat, grad
 """
 elseif Sys.iswindows()
 py"""
 import tensorflow as tf
-libSatOp = tf.load_op_library('build/libSatOp.dll')
+libSatOp = tf.load_op_library('./build/libSatOp.dll')
 @tf.custom_gradient
-def sat_op(s0,p,permi,poro,qw,qo,sref,dt,h):
-    s = libSatOp.sat_op(s0,p,permi,poro,qw,qo,sref,dt,h)
+def sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h):
+    sat = libSatOp.sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
     def grad(dy):
-        return libSatOp.sat_op_grad(dy, s, s0,p,permi,poro,qw,qo,sref,dt,h)
-    return s, grad
+        return libSatOp.sat_op_grad(dy, sat, s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
+    return sat, grad
 """
 end
 
@@ -93,6 +93,8 @@ nz=20
 nx=30
 sw = constant(zeros(nz, nx))
 swref = constant(zeros(nz,nx))
+μw = constant(1.0)
+μo = constant(1.0)
 K = constant(100.0 .* ones(nz, nx))
 ϕ = constant(0.25 .* ones(nz, nx))
 dt = constant(30.0)
@@ -104,8 +106,8 @@ q2[10,25] = -2200.0 /100.0^3 * SRC_CONST
 qw = constant(q1)
 qo = constant(q2)
 
-λw = sw.*sw
-λo = (1-sw).*(1-sw)
+λw = sw.*sw/μw
+λo = (1-sw).*(1-sw)/μo
 λ = λw + λo
 f = λw/λ
 q = qw + qo + λw/(λo+1e-16).*qo
@@ -138,7 +140,7 @@ tf_p0 = constant(p0)
 
 #     p = poisson_op(λ.*K, load_normal, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
 #     # p = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(0))
-#     sw = sat_op(sw,p,K,ϕ,qw,qo,sw,dt,h)
+    # sw = sat_op(sw,p,K,ϕ,qw,qo,μw,μo,sw,dt,h)
 #     return sw
 # end
 
@@ -183,16 +185,17 @@ tf_p0 = constant(p0)
 
 # gradient check -- v
 function scalar_function(m)
-    # return sum(tanh(sat_op(m,tf_p0,K,ϕ,qw,qo,constant(zeros(nz,nx)),dt,h)))
-    # return sum(tanh(sat_op(sw,m,K,ϕ,qw,qo,constant(zeros(nz,nx)),dt,h)))
-    # return sum(tanh(sat_op(sw,tf_p0,m,ϕ,qw,qo,constant(zeros(nz,nx)),dt,h)))
-    return sum(tanh(sat_op(sw,tf_p0,K,m,qw,qo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(m,tf_p0,K,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(sw,m,K,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(sw,tf_p0,m,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    return sum(tanh(sat_op(sw,tf_p0,K,m,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
 end
 
 # m_ = sw
 # m_ = tf_p0
 # m_ = K
 m_ = ϕ
+
 v_ = rand(nz,nx)
 y_ = scalar_function(m_)
 dy_ = gradients(y_, m_)

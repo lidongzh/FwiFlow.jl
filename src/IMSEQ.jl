@@ -152,7 +152,7 @@ function onestep2(sw, p, qw, qo, sw_ref, Δt_dyn)
 
     # # step 3: update sw
 
-    sw_new = sat_op(sw, p, K, ϕ, qw, qo, sw_ref, constant(Δt), tf_h)
+    sw_new = sat_op(sw, p, K, ϕ, qw, qo, μw, μo, sw_ref, constant(Δt), tf_h)
 
     return sw_new, p, u, v, f, Δt_dyn
 end
@@ -209,11 +209,11 @@ Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 
 # qw[:,12,5] .= (0.0026/h^3)
-qw[:,7,5] .= 1400 * (1/h^2)/20 * SRC_CONST
+qw[:,7,5] .= 1400 * (1/h^2)/10 * SRC_CONST
 qo = zeros(NT, m, n)
 
 # qo[:,12,25] .= -(0.004/h^3)
-qo[:,7,25] .= -2200 * (1/h^2)/20 * SRC_CONST
+qo[:,7,25] .= -2200 * (1/h^2)/10 * SRC_CONST
 sw0 = zeros(m,n)
 # sw0[10:12,16:18] .= 0.3
 

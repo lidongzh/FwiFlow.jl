@@ -75,7 +75,7 @@ function onestep(sw, p, m, n, h, Δt, Z, ρw, ρo, μw, μo, K, g, ϕ, qw, qo)
     p = upwps_op(K, λ, load_normal, p, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
 
     # step 2: implicit transport
-    sw = sat_op(sw, p, K, ϕ, qw, qo, sw, Δt, h)
+    sw = sat_op(sw, p, K, ϕ, qw, qo, μw, μo, sw, Δt, h)
     return sw, p
 end
 
