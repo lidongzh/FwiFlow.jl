@@ -182,6 +182,7 @@ class SatOpGradOp : public OpKernel {
     // int m = Example.dim_size(0);
 
     // create output shape
+    int nz = s0_shape.dim_size(0), nx = s0_shape.dim_size(1);
 
     TensorShape grad_s0_shape(s0_shape);
     TensorShape grad_pt_shape(pt_shape);
@@ -248,6 +249,18 @@ class SatOpGradOp : public OpKernel {
     // implement your backward function here
 
     // TODO:
+    backward(grad_sat_tensor, sat_tensor, s0_tensor, pt_tensor, permi_tensor,
+             poro_tensor, qw_tensor, qo_tensor, *dt_tensor, *h_tensor, nz, nx,
+             grad_s0_tensor, grad_pt_tensor, grad_permi_tensor,
+             grad_poro_tensor);
+    // set other not-used gradident to zeros
+    for (int i = 0; i < nz * nx; i++) {
+      grad_qw_tensor[i] = 0.0;
+      grad_qo_tensor[i] = 0.0;
+      grad_sref_tensor[i] = 0.0;
+    }
+    *grad_dt_tensor = 0.0;
+    *grad_h_tensor = 0.0;
   }
 };
 REGISTER_KERNEL_BUILDER(Name("SatOpGrad").Device(DEVICE_CPU), SatOpGradOp);

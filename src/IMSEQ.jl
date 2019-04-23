@@ -9,14 +9,14 @@ include("sat_op.jl")
 
 
 # Solver parameters
-m = 50
-n = 100
-h = 100.0
+m = 15
+n = 30
+h = 110.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
-NT = 50
-Δt = 40.0
+NT = 92
+Δt = 20.
 # T = NT() # 100 days
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
@@ -27,18 +27,21 @@ tf_h = constant(h)
 tf_t = constant(Δt)
 
 const ALPHA = 0.006323996017182
+# const ALPHA = 0.001127
 const SRC_CONST = 5.6146
-const GRAV_CONST = 1/144.0
+# const SRC_CONST = 1.0
+const GRAV_CONST = 1.0/144.0
 ρw = constant(62.238)
 ρo = constant(40.0)
 μw = constant(1.0)
 μo = constant(3.0)
-K_np = ones(m,n)
+K_np = 80.0 .* ones(m,n)
 # K_np[16,:] .= 5e-14
-# K_np[8:10,:] .= 5e-18
+# K_np[12:14,:] .= 100.0
 K = constant(K_np)
 g = constant(9.8*GRAV_CONST)
 ϕ = constant(0.25 .* ones(m,n))
+
 
 function Krw(Sw)
     return Sw ^ 1.5
@@ -206,11 +209,11 @@ Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 
 # qw[:,12,5] .= (0.0026/h^3)
-qw[:,12,5] .= 1400 * (1/h^3) * SRC_CONST
+qw[:,7,5] .= 1400 * (1/h^2)/20 * SRC_CONST
 qo = zeros(NT, m, n)
 
 # qo[:,12,25] .= -(0.004/h^3)
-qo[:,12,25] .= -2200 * (1/h^3) * SRC_CONST
+qo[:,7,25] .= -2200 * (1/h^2)/20 * SRC_CONST
 sw0 = zeros(m,n)
 # sw0[10:12,16:18] .= 0.3
 

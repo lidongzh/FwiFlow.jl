@@ -66,6 +66,20 @@ def upwlap_op(perm,mobi,func,h,rhograv):
 """
 upwlap_op = py"upwlap_op"
 
+py"""
+import tensorflow as tf
+libPoissonOp = tf.load_op_library('../Poisson/build/libPoissonOp.so')
+@tf.custom_gradient
+def poisson_op(coef,g,h,rhograv,index):
+    p = libPoissonOp.poisson_op(coef,g,h,rhograv,index)
+    def grad(dy):
+        return libPoissonOp.poisson_op_grad(dy, p, coef, g, h, rhograv, index)
+    return p, grad
+"""
+poisson_op = py"poisson_op"
+
+
+
 function ave_normal(quantity, m, n)
     aa = sum(quantity)
     return aa/(m*n)
@@ -73,78 +87,92 @@ end
 
 
 # TODO: 
+const ALPHA = 0.006323996017182
+const SRC_CONST = 5.6146
 nz=20
 nx=30
 sw = constant(zeros(nz, nx))
-swref = constant(zeros(nz,nx) .+ 0.1)
-K = constant(ones(nz, nx))
+swref = constant(zeros(nz,nx))
+K = constant(100.0 .* ones(nz, nx))
 ϕ = constant(0.25 .* ones(nz, nx))
+dt = constant(30.0)
+h = constant(100.0)
 q1 = zeros(nz,nx)
 q2 = zeros(nz,nx)
-q1[10,5] =1.
-q2[10,25] = -1.
+q1[10,5] = 1400.0 / 100.0^3 * SRC_CONST
+q2[10,25] = -2200.0 /100.0^3 * SRC_CONST
 qw = constant(q1)
 qo = constant(q2)
-dt = constant(1.0)
-h = constant(1.0)
 
-# function step(sw)
-#     λw = sw.*sw
-#     λo = (1-sw).*(1-sw)
-#     λ = λw + λo
-#     f = λw/λ
-#     q = qw + qo + λw/(λo+1e-16).*qo
+# λw = sw.*sw
+# λo = (1-sw).*(1-sw)
+# λ = λw + λo
+# f = λw/λ
+# q = qw + qo + λw/(λo+1e-16).*qo
 
-#     # Θ = laplacian_op(K.*λo, potential_c, h, constant(0.0))
-#     Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
+# # Θ = laplacian_op(K.*λo, potential_c, h, constant(0.0))
+# Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
 
-#     load_normal = (Θ+q) - ave_normal(Θ+q, nz, nx)
+# load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, nz, nx)
 
-#     p = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(2))
-#     sw = sat_op(sw,p,K,ϕ,qw,qo,dt,h)
-# end
+# p0 = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(2))
+# s = sat_op(sw,p0,K,ϕ,qw,qo,sw,dt,h)
 
-# NT=20
-# function evolve(sw, NT)
-#     # qw_arr = constant(qw) # qw: NT x m x n array
-#     # qo_arr = constant(qo)
-#     tf_sw = TensorArray(NT+1)
-#     function condition(i, ta)
-#         tf.less(i, NT+1)
-#     end
-#     function body(i, tf_sw)
-#         sw_local = step(read(tf_sw, i))
-#         i+1, write(tf_sw, i+1, sw_local)
-#     end
-#     tf_sw = write(tf_sw, 1, sw)
-#     i = constant(1, dtype=Int32)
-#     _, out = while_loop(condition, body, [i;tf_sw])
-#     read(out, NT+1)
-# end
+function step(sw)
+    λw = sw.*sw
+    λo = (1-sw).*(1-sw)
+    λ = λw + λo
+    f = λw/λ
+    q = qw + qo + λw/(λo+1e-16).*qo
 
-# u = evolve(sw, NT)
+    # Θ = laplacian_op(K.*λo, constant(zeros(nz,nx)), h, constant(0.0))
+    Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
+    # Θ = constant(zeros(nz,nx))
 
-λw = sw.*sw
-λo = (1-sw).*(1-sw)
-λ = λw + λo
-f = λw/λ
-q = qw + qo + λw/(λo+1e-16).*qo
+    load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, nz, nx)
 
-# Θ = laplacian_op(K.*λo, potential_c, h, constant(0.0))
-Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
+    p = poisson_op(λ.*K, load_normal, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+    # p = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(0))
+    sw = sat_op(sw,p,K,ϕ,qw,qo,sw,dt,h)
+    return sw
+end
 
-load_normal = (Θ+q) - ave_normal(Θ+q, nz, nx)
+NT=100
+function evolve(sw, NT, qw, qo)
+    # qw_arr = constant(qw) # qw: NT x m x n array
+    # qo_arr = constant(qo)
+    tf_sw = TensorArray(NT+1)
+    function condition(i, ta)
+        tf.less(i, NT+1)
+    end
+    function body(i, tf_sw)
+        sw_local = step(read(tf_sw, i))
+        i+1, write(tf_sw, i+1, sw_local)
+    end
+    tf_sw = write(tf_sw, 1, sw)
+    i = constant(1, dtype=Int32)
+    _, out = while_loop(condition, body, [i;tf_sw])
+    read(out, NT+1)
+end
 
-p = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(2))
-s = sat_op(sw,p,K,ϕ,qw,qo,swref,dt,h)
+s = evolve(sw, NT, qw, qo)
 
+
+
+J = tf.nn.l2_loss(s)
+tf_grad_K = gradients(J, K)
 sess = Session()
 init(sess)
+# P = run(sess,p0)
+
+# error("")
 S=run(sess, s)
 imshow(S);colorbar();
-# J = tf.nn.l2_loss(s)
-# tf_grad_K = gradients(J, K)
-# grad_K = run(sess, tf_grad_K)
+
+error("")
+
+grad_K = run(sess, tf_grad_K)
+imshow(grad_K);colorbar();
 error("")
 # TODO: 
 

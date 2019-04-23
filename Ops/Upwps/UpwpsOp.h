@@ -137,12 +137,14 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
   Eigen::SparseMatrix<double, Eigen::RowMajor> Amat(nz * nx, nz * nx);
   Eigen::SparseMatrix<double, Eigen::RowMajor> Trans_Amat(nz * nx, nz * nx);
   Eigen::VectorXd rhs(nz * nx);
+  Eigen::VectorXd grad_presEg(nz * nx);
   Eigen::VectorXd s = Eigen::VectorXd::Zero(Trans_Amat.rows());
+  double h2 = h * h;
 
   // assemble matrix
   assembleMat(Amat, rhs, permi, mobi, src, funcref, h, rhograv, nz, nx);
   for (int i = 0; i < nz * nx; i++) {
-    rhs(i) = grad_pres[i];
+    grad_presEg(i) = grad_pres[i];
   }
   Trans_Amat = Amat.transpose();
 
@@ -156,7 +158,7 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
       std::cout << "!!!decomposition failed" << std::endl;
       exit(1);
     }
-    s = solver.solve(rhs);
+    s = solver.solve(grad_presEg);
     if (solver.info() != Eigen::Success) {
       // solving failed
       std::cout << "!!!solving failed" << std::endl;
@@ -186,17 +188,17 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
     int iters;
     double error;
     // Eigen::VectorXd x0 = Eigen::VectorXd::Zero(Amat.rows());
-    std::tie(iters, error) = solve(rhs, s);
+    std::tie(iters, error) = solve(grad_presEg, s);
 
     if (index == 2) std::cout << iters << " " << error << std::endl;
     // =============================================
   }
 
-  s = s * h * h;
+  // s = s * h * h;
 
   // grad_g is actually s
   for (int i = 0; i < nz * nx; i++) {
-    grad_src[i] = s(i);
+    grad_src[i] = s(i) * h2;
   }
 
   // now compute grad_permi and grad_mobi
@@ -209,7 +211,6 @@ void backward(const double *grad_pres, const double *pres, const double *permi,
   tL_mobi.reserve(5);
 
   int idRow = 0;
-  double h2 = h * h;
   double permi_r = 0.0, permi_l = 0.0, permi_d = 0.0, permi_u = 0.0;
   double mobi_r = 0.0, mobi_l = 0.0, mobi_d = 0.0, mobi_u = 0.0;
   double F_r = 0.0, F_l = 0.0, F_d = 0.0, F_u = 0.0;

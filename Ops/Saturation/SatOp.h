@@ -105,7 +105,7 @@ void compRes(Eigen::VectorXd &resEg, Eigen::MatrixXd &sEg, const double *s0,
         } else {
           mobi_r = compMobiW(sEg(i, j));
         }
-        permi_r = harmonicAve(permi(i, j), permi(i, j + 1)) / h2;
+        permi_r = harmonicAve(permi(i, j), permi(i, j + 1));
         F_r = (pt(i, j + 1) - pt(i, j));
       }
 
@@ -115,7 +115,7 @@ void compRes(Eigen::VectorXd &resEg, Eigen::MatrixXd &sEg, const double *s0,
         } else {
           mobi_l = compMobiW(sEg(i, j));
         }
-        permi_l = harmonicAve(permi(i, j), permi(i, j - 1)) / h2;
+        permi_l = harmonicAve(permi(i, j), permi(i, j - 1));
         F_l = (pt(i, j) - pt(i, j - 1));
       }
 
@@ -125,7 +125,7 @@ void compRes(Eigen::VectorXd &resEg, Eigen::MatrixXd &sEg, const double *s0,
         } else {
           mobi_d = compMobiW(sEg(i, j));
         }
-        permi_d = harmonicAve(permi(i, j), permi(i + 1, j)) / h2;
+        permi_d = harmonicAve(permi(i, j), permi(i + 1, j));
         F_d = (pt(i + 1, j) - pt(i, j));
       }
 
@@ -135,17 +135,16 @@ void compRes(Eigen::VectorXd &resEg, Eigen::MatrixXd &sEg, const double *s0,
         } else {
           mobi_u = compMobiW(sEg(i, j));
         }
-        permi_u = harmonicAve(permi(i, j), permi(i - 1, j)) / h2;
+        permi_u = harmonicAve(permi(i, j), permi(i - 1, j));
         F_u = (pt(i, j) - pt(i - 1, j));
       }
 
-      resEg(idRow) = sEg(i, j) - s0(i, j) -
-                     dt / poro(i, j) * ALPHA *
+      resEg(idRow) = poro(i, j) * (sEg(i, j) - s0(i, j)) -
+                     dt * ALPHA / h2 *
                          (permi_d * mobi_d * F_d - permi_u * mobi_u * F_u +
                           permi_r * mobi_r * F_r - permi_l * mobi_l * F_l) -
-                     dt / poro(i, j) *
-                         (qw(i, j) + qo(i, j) * compMobiW(sEg(i, j)) /
-                                         (compMobiO(sEg(i, j)) + EPSILON));
+                     dt * (qw(i, j) + qo(i, j) * compMobiW(sEg(i, j)) /
+                                          (compMobiO(sEg(i, j)) + EPSILON));
     }
   }
 }
@@ -182,10 +181,10 @@ void assembleJ(Eigen::SparseMatrix<double, Eigen::RowMajor> &Jac,
       F_l = 0.0;
       F_d = 0.0;
       F_u = 0.0;
-      coef = -ALPHA * dt / poro(i, j);
+      coef = -ALPHA * dt / h2;
 
       if (j + 1 <= nx - 1) {
-        permi_r = harmonicAve(permi(i, j), permi(i, j + 1)) / h2;
+        permi_r = harmonicAve(permi(i, j), permi(i, j + 1));
         F_r = (pt(i, j + 1) - pt(i, j));
         if (pt(i, j + 1) > pt(i, j)) {
           tripletList.push_back(
@@ -198,7 +197,7 @@ void assembleJ(Eigen::SparseMatrix<double, Eigen::RowMajor> &Jac,
       }
 
       if (j - 1 >= 0) {
-        permi_l = harmonicAve(permi(i, j), permi(i, j - 1)) / h2;
+        permi_l = harmonicAve(permi(i, j), permi(i, j - 1));
         F_l = (pt(i, j) - pt(i, j - 1));
         if (pt(i, j - 1) > pt(i, j)) {
           tripletList.push_back(
@@ -212,7 +211,7 @@ void assembleJ(Eigen::SparseMatrix<double, Eigen::RowMajor> &Jac,
       }
 
       if (i + 1 <= nz - 1) {
-        permi_d = harmonicAve(permi(i, j), permi(i + 1, j)) / h2;
+        permi_d = harmonicAve(permi(i, j), permi(i + 1, j));
         F_d = (pt(i + 1, j) - pt(i, j));
         if (pt(i + 1, j) > pt(i, j)) {
           tripletList.push_back(
@@ -225,7 +224,7 @@ void assembleJ(Eigen::SparseMatrix<double, Eigen::RowMajor> &Jac,
       }
 
       if (i - 1 >= 0) {
-        permi_u = harmonicAve(permi(i, j), permi(i - 1, j)) / h2;
+        permi_u = harmonicAve(permi(i, j), permi(i - 1, j));
         F_u = (pt(i, j) - pt(i - 1, j));
         if (pt(i - 1, j) > pt(i, j)) {
           tripletList.push_back(
@@ -239,12 +238,12 @@ void assembleJ(Eigen::SparseMatrix<double, Eigen::RowMajor> &Jac,
       }
 
       // coefficient before s(n+1)
-      tripletList.push_back(T(idRow, ij2ind(i, j), 1.0));
+      tripletList.push_back(T(idRow, ij2ind(i, j), poro(i, j)));
 
       // coefficient before qo
       tripletList.push_back(
           T(idRow, ij2ind(i, j),
-            -dt / poro(i, j) * qo(i, j) *
+            -dt * qo(i, j) *
                 (compMobiO(sEg(i, j)) * gradMobiW(sEg(i, j)) -
                  compMobiW(sEg(i, j)) * gradMobiO(sEg(i, j))) /
                 pow((compMobiO(sEg(i, j)) + EPSILON), 2)));
@@ -369,6 +368,202 @@ void forward(double *sat, const double *s0, const double *pt,
       sat(i, j) = sEg(i, j);
     }
   }
+}
+
+/*
+Backward computation of gradients
+*/
+void backward(const double *grad_sat, const double *sat, const double *s0,
+              const double *pt, const double *permi, const double *poro,
+              const double *qw, const double *qo, double dt, double h, int nz,
+              int nx, double *grad_s0, double *grad_pt, double *grad_permi,
+              double *grad_poro) {
+  Eigen::MatrixXd sEg(nz, nx);
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Jac(nz * nx, nz * nx);
+  Eigen::SparseMatrix<double, Eigen::RowMajor> Trans_Jac(nz * nx, nz * nx);
+  Eigen::VectorXd rhs(nz * nx);
+  Eigen::VectorXd adjoint = Eigen::VectorXd::Zero(nz * nx);
+  for (int i = 0; i < nz; i++) {
+    for (int j = 0; j < nx; j++) {
+      sEg(i, j) = sat(i, j);
+    }
+  }
+  for (int i = 0; i < nz * nx; i++) {
+    rhs(i) = grad_sat[i];
+  }
+  assembleJ(Jac, sEg, pt, permi, poro, qo, dt, h, nz, nx);
+  // Setup the solver:
+  typedef amgcl::make_solver<
+      amgcl::amg<amgcl::backend::eigen<double>, amgcl::coarsening::ruge_stuben,
+                 amgcl::relaxation::spai0>,
+      amgcl::solver::bicgstab<amgcl::backend::eigen<double>>>
+      Solver;
+  // // DL 04/17/2019 builtin
+  // typedef amgcl::make_solver<
+  //     amgcl::amg<amgcl::backend::builtin<double>,
+  //                amgcl::coarsening::ruge_stuben, amgcl::relaxation::spai0>,
+  //     amgcl::solver::bicgstab<amgcl::backend::builtin<double> > >
+  //     Solver;
+  Trans_Jac = Jac.transpose();
+  Solver solve(Trans_Jac);
+#ifdef OUTPUT_AMG
+  std::cout << solve << std::endl;
+#endif
+  int iters;
+  double error;
+  rhs = -rhs;
+  std::tie(iters, error) = solve(rhs, adjoint);
+#ifdef OUTPUT_AMG
+  std::cout << iters << " " << error << std::endl;
+#endif
+
+  // compute gradient with respect to s0
+  for (int i = 0; i < nz; i++) {
+    for (int j = 0; j < nx; j++) {
+      grad_s0[i * nx + j] = -poro(i, j) * adjoint(i * nx + j);
+      grad_poro[i * nx + j] = (sat(i, j) - s0(i, j)) * adjoint(i * nx + j);
+    }
+  }
+
+#ifdef DEBUG
+  std::cout << "SatOpBackward--" << __LINE__ << std::endl;
+#endif
+  // assemble R_pt and R_permi (gradient of R w.r.t pt and permi)
+  Eigen::SparseMatrix<double, Eigen::RowMajor> R_pt(nz * nx, nz * nx);
+  Eigen::SparseMatrix<double, Eigen::RowMajor> R_permi(nz * nx, nz * nx);
+  typedef Eigen::Triplet<double> T;
+  std::vector<T> tL_pt, tL_permi;
+  tL_pt.reserve(5);
+  tL_permi.reserve(5);
+
+  int idRow = 0;
+  double permi_r = 0.0, permi_l = 0.0, permi_d = 0.0, permi_u = 0.0;
+  double mobi_r = 0.0, mobi_l = 0.0, mobi_d = 0.0, mobi_u = 0.0;
+  double F_r = 0.0, F_l = 0.0, F_d = 0.0, F_u = 0.0;
+  double h2 = h * h;
+  double coef = 0.0;
+  for (int i = 0; i < nz; i++) {
+    for (int j = 0; j < nx; j++) {
+      idRow = i * nx + j;  // row-major
+      permi_r = 0.0;
+      permi_l = 0.0;
+      permi_d = 0.0;
+      permi_u = 0.0;
+      mobi_r = 0.0;
+      mobi_l = 0.0;
+      mobi_d = 0.0;
+      mobi_u = 0.0;
+      F_r = 0.0;
+      F_l = 0.0;
+      F_d = 0.0;
+      F_u = 0.0;
+      coef = -ALPHA * dt / h2;
+
+      if (j + 1 <= nx - 1) {
+        permi_r = harmonicAve(permi(i, j), permi(i, j + 1));
+        F_r = (pt(i, j + 1) - pt(i, j));
+        if (pt(i, j + 1) > pt(i, j)) {
+          mobi_r = compMobiW(sEg(i, j + 1));
+        } else {
+          mobi_r = compMobiW(sEg(i, j));
+        }
+        tL_pt.push_back(T(idRow, ij2ind(i, j + 1), coef * mobi_r * permi_r));
+        tL_pt.push_back(T(idRow, ij2ind(i, j), -coef * mobi_r * permi_r));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i, j),
+              coef * mobi_r * F_r *
+                  grad_harAve(permi(i, j), permi(i, j + 1), true)));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i, j + 1),
+              coef * mobi_r * F_r *
+                  grad_harAve(permi(i, j), permi(i, j + 1), false)));
+      }
+
+      if (j - 1 >= 0) {
+        permi_l = harmonicAve(permi(i, j), permi(i, j - 1));
+        F_l = (pt(i, j) - pt(i, j - 1));
+        if (pt(i, j - 1) > pt(i, j)) {
+          mobi_l = compMobiW(sEg(i, j - 1));
+        } else {
+          mobi_l = compMobiW(sEg(i, j));
+        }
+        tL_pt.push_back(T(idRow, ij2ind(i, j - 1), coef * mobi_l * permi_l));
+        tL_pt.push_back(T(idRow, ij2ind(i, j), -coef * mobi_l * permi_l));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i, j),
+              -coef * mobi_l * F_l *
+                  grad_harAve(permi(i, j), permi(i, j - 1), true)));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i, j - 1),
+              -coef * mobi_l * F_l *
+                  grad_harAve(permi(i, j), permi(i, j - 1), false)));
+      }
+
+      if (i + 1 <= nz - 1) {
+        permi_d = harmonicAve(permi(i, j), permi(i + 1, j));
+        F_d = (pt(i + 1, j) - pt(i, j));
+        if (pt(i + 1, j) > pt(i, j)) {
+          mobi_d = compMobiW(sEg(i + 1, j));
+        } else {
+          mobi_d = compMobiW(sEg(i, j));
+        }
+        tL_pt.push_back(T(idRow, ij2ind(i + 1, j), coef * mobi_d * permi_d));
+        tL_pt.push_back(T(idRow, ij2ind(i, j), -coef * mobi_d * permi_d));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i, j),
+              coef * mobi_d * F_d *
+                  grad_harAve(permi(i, j), permi(i + 1, j), true)));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i + 1, j),
+              coef * mobi_d * F_d *
+                  grad_harAve(permi(i, j), permi(i + 1, j), false)));
+      }
+
+      if (i - 1 >= 0) {
+        permi_u = harmonicAve(permi(i, j), permi(i - 1, j));
+        F_u = (pt(i, j) - pt(i - 1, j));
+        if (pt(i - 1, j) > pt(i, j)) {
+          mobi_u = compMobiW(sEg(i - 1, j));
+        } else {
+          mobi_u = compMobiW(sEg(i, j));
+        }
+        tL_pt.push_back(T(idRow, ij2ind(i - 1, j), coef * mobi_u * permi_u));
+        tL_pt.push_back(T(idRow, ij2ind(i, j), -coef * mobi_u * permi_u));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i, j),
+              -coef * mobi_u * F_u *
+                  grad_harAve(permi(i, j), permi(i - 1, j), true)));
+        tL_permi.push_back(
+            T(idRow, ij2ind(i - 1, j),
+              -coef * mobi_u * F_u *
+                  grad_harAve(permi(i, j), permi(i - 1, j), false)));
+      }
+    }
+  }
+
+#ifdef DEBUG
+  std::cout << "SatOpBackward--" << __LINE__ << std::endl;
+#endif
+  R_pt.setFromTriplets(tL_pt.begin(), tL_pt.end());
+  R_permi.setFromTriplets(tL_permi.begin(), tL_permi.end());
+
+#ifdef DEBUG
+  std::cout << "SatOpBackward--" << __LINE__ << std::endl;
+#endif
+  Eigen::VectorXd Trans_J_pt(nz * nx);
+  Eigen::VectorXd Trans_J_permi(nz * nx);
+  Trans_J_pt = R_pt.transpose() * adjoint;
+  Trans_J_permi = R_permi.transpose() * adjoint;
+#ifdef DEBUG
+  std::cout << "SatOpBackward--" << __LINE__ << std::endl;
+#endif
+  for (int i = 0; i < nz * nx; i++) {
+    grad_pt[i] = Trans_J_pt(i);
+    grad_permi[i] = Trans_J_permi(i);
+  }
+#ifdef DEBUG
+  std::cout << "SatOpBackward--" << __LINE__ << std::endl;
+#endif
 }
 
 #endif
