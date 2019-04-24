@@ -1,3 +1,4 @@
+# IMSEQ.jl run forward simulation
 using PyPlot
 using LinearAlgebra
 using PyTensorFlow
@@ -26,11 +27,11 @@ tf_Z = constant(Z)
 tf_h = constant(h)
 tf_t = constant(Δt)
 
-const ALPHA = 0.006323996017182
+const ALPHA = 0.006323996017182  # conversion coefficient for field unit
 # const ALPHA = 0.001127
-const SRC_CONST = 5.6146
+const SRC_CONST = 5.6146  # conversion from stb to standard cubic feet
 # const SRC_CONST = 1.0
-const GRAV_CONST = 1.0/144.0
+const GRAV_CONST = 1.0/144.0 # conversion to psi
 ρw = constant(62.238)
 ρo = constant(40.0)
 μw = constant(1.0)
@@ -51,77 +52,10 @@ function Kro(So)
     return So ^1.5
 end
 
-function geto(o::Union{Array,PyObject}, i::Int64, j::Int64)
-    if i==-1
-        ii = 1:m-2
-    elseif i==0
-        ii = 2:m-1
-    else
-        ii = 3:m
-    end
-    if j==-1
-        jj = 1:n-2
-    elseif j==0
-        jj = 2:n-1
-    else
-        jj = 3:n
-    end
-    return o[ii,jj]
-end
-
 function ave_normal(quantity, m, n)
-    # aa = 0.0
-    # for i = 1:m
-    #     for j = 1:n
-    #         aa = aa + quantity[i,j]
-    #     end
-    # end
     aa = sum(quantity)
     return aa/(m*n)
 end
-
-
-# variables : sw, u, v, p
-# (time dependent) parameters: qw, qo, ϕ
-function onestep(sw, p, qw, qo, Δt_dyn)
-    # step 1: update p
-    # λw = Krw(sw)/μw
-    # λo = Kro(1-sw)/μo
-    λw = sw.*sw/μw
-    λo = (1-sw).*(1-sw)/μo
-    λ = λw + λo
-    f = λw/λ
-    q = qw + qo + λw/λo.*qo
-    potential_c = (ρw-ρo)*g .* tf_Z
-
-    # Θ = laplacian_op(K.*λo, potential_c, tf_h, constant(0.0))
-    Θ = upwlap_op(K, λo, potential_c, tf_h, constant(0.0))
-
-    load_normal = (Θ+q) - ave_normal(Θ+q,m,n)
-
-    # p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-    p = upwps_op(K, λ, load_normal, p, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
-
-    # step 2: update u, v
-    u = constant(zeros(m, n))
-    v = constant(zeros(m, n))
-
-    Δt_dyn = constant(0.0)
-
-    # # step 3: update sw
-    for j= 1:10
-        λw = sw.*sw/μw
-        λo = (1-sw).*(1-sw)/μo
-        λ = λw + λo
-        f = λw/λ
-        rhs = qw + λw/λo.*qo + upwlap_op(K, f.*λ, p, tf_h, constant(0.0))
-        rhs = Δt*rhs/ϕ
-        sw = sw + rhs
-    end
-
-    return sw, p
-end
-
 
 # variables : sw, u, v, p
 # (time dependent) parameters: qw, qo, ϕ
@@ -152,7 +86,7 @@ function onestep2(sw, p, qw, qo, sw_ref, Δt_dyn)
 
     # # step 3: update sw
 
-    sw_new = sat_op(sw, p, K, ϕ, qw, qo, μw, μo, sw_ref, constant(Δt), tf_h)
+    sw_new = sat_op(sw, p, K, ϕ, qw, qo, μw, μo, sw_ref, constant(Δt), tf_h) # implicit step
 
     return sw_new, p, u, v, f, Δt_dyn
 end
