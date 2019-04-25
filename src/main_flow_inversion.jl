@@ -61,6 +61,7 @@ function objective_function(out_sw_true, out_sw_syn, nPhase)
 end
 
 J = objective_function(out_sw_true, out_sw_syn, nPhase)
+gradK = gradients(J, tfCtxInit.K)
 # ========================= compute gradient ============================
 # sess = Session(); init(sess)
 # # S, P, U, V, F, T, Obj = run(sess, [out_sw_true, out_p, out_u, out_v, out_f, out_Δt, J])
@@ -78,30 +79,39 @@ J = objective_function(out_sw_true, out_sw_syn, nPhase)
 # colorbar()
 
 # ============================= inversion ===============================
-__iter = 0
-function print_iter(rk)
-    global __iter
-    if mod(__iter,1)==0
-        println("\n************* ITER=$__iter *************\n")
-    end
-    __iter += 1
+if !isdir("flow_fit_results")
+    mkdir("flow_fit_results")
 end
+
 
 __cnt = 0
 # invK = zeros(m,n)
-function print_loss(l, invK)
-    global __cnt
+function print_loss(l, invK, grad)
+    global __cnt, __l, __K, __grad
     if mod(__cnt,1)==0
         println("\niter=$__iter, eval=$__cnt, current loss=",l)
         # println("a=$a, b1=$b1, b2=$b2")
     end
-
-    writedlm("./flow_fit_results/K_$(__iter).txt", invK)
-    # writedlm("./flow_fit_results/b1_$(__iter).txt", b1)
-    # writedlm("./flow_fit_results/b2_$(__iter).txt", b2)
-    writedlm("./flow_fit_results/loss_$(__iter).txt", l)
+    __l = l
+    __K = invK
+    __grad = grad
     __cnt += 1
 end
+
+__iter = 0
+function print_iter(rk)
+    global __iter, __l, __K, __grad
+    if mod(__iter,1)==0
+        println("\n************* ITER=$__iter *************\n")
+    end
+    __iter += 1
+    open("./flow_fit_results/loss.txt", "a") do io 
+        writedlm(io, Any[__iter __l])
+    end
+    writedlm("./flow_fit_results/K$__iter.txt", __K)
+    writedlm("./flow_fit_results/gradK$__iter.txt", __grad)
+end
+# u = readdlm("...") --> plot(u[:,2])
 
 # config = tf.ConfigProto()
 # config.intra_op_parallelism_threads = 24
@@ -109,7 +119,7 @@ end
 sess = Session(); init(sess);
 opt = ScipyOptimizerInterface(J, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (20.0, 100.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
-ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[J, tfCtxInit.K])
+ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[J, tfCtxInit.K, gradK])
 
 
 # function fn(rk) rk --> variables
