@@ -10,33 +10,49 @@
 #include <chrono>
 using std::string;
 
+#define VERBOSE
+
 /*
- calc_id = 0  -- residual
- calc_id = 1  -- gradient
- d_Cp float, res float[nx*nz] should be allocated
+	double res : residual 
+	double *grad_Cp : gradients of Cp (p-wave velocity)
+	double *grad_Cs : gradients of Cs (s-wave velocity)
+	double *grad_Den : gradients of density
+	double *grad_std : gradients of source time function 
+	double *Cp : p-wave velocity
+	double *Cs : s-wave velocity
+	double *Den : density 
+	double *stf : source time function 
+	int calc_id : 
+					calc_id = 0  -- compute residual
+					calc_id = 1  -- compute gradient
+					calc_id = 2  -- compute observation only
+	int gpu_id  :   CUDA_VISIBLE_DEVICES
+	int iShot :   processing shot shot_id
+	string data_dir : data directory
+	string para_dir :  parameter directory
+	string scratch_dir : temporary files
 */
-void cufd(double *res, double *grad_Cp,
-	const double *Cp, const double* Cs, const double* Den, string dir, int calc_id) {
+void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den, double *grad_stf,
+					   const double *Cp, const double* Cs, const double* Den, const double *stf,
+	string data_dir, string para_dir, string scratch_dir, 
+	int calc_id, int gpu_id, int iShot) {
 
-	int deviceCount = 0;
-	CHECK(cudaGetDeviceCount (&deviceCount));
-	printf("number of devices = %d\n", deviceCount);
-	CHECK(cudaSetDevice(3));
-	auto start0 = std::chrono::high_resolution_clock::now();
+	
 
-	std::string para_fname;
-	std::string survey_fname = dir+"survey_file.json";
-  	if(calc_id==0){
-		para_fname = dir+"Par_file_calc_residual.json";
-	}else if(calc_id==1){
-		para_fname = dir+"Par_file_calc_gradient.json";
-	}
-	else{
-		printf("invalid calc_id.");
-		exit(1);
-	}
+	// int deviceCount = 0;
+	// CHECK(cudaGetDeviceCount (&deviceCount));
+	// printf("number of devices = %d\n", deviceCount);
+	// CHECK(cudaSetDevice(0));
+	// auto start0 = std::chrono::high_resolution_clock::now();
+
+	std::string para_fname = para_dir + "/fwi_param.json";  
+	std::string survey_fname = para_dir+"/survey_file.json";
+	if (calc_id <0 || calc_id >2){
+		printf("Invalid calc_id %d\n", calc_id);
+		exit(0);
+	}	
   	
-	// read parameter file
+	// NOTE Read parameter file
 	Parameter para(para_fname);
 	int nz = para.nz();
 	int nx = para.nx();
@@ -46,6 +62,7 @@ void cufd(double *res, double *grad_Cp,
 	float dx = para.dx();
 	float dt = para.dt();
 	float f0 = para.f0();
+
 
 	int iSnap = 0; //400
 	int nrec = 1;
@@ -71,18 +88,17 @@ void cufd(double *res, double *grad_Cp,
 	Bnd boundaries(para);
 
 auto startSrc = std::chrono::high_resolution_clock::now();
-	Src_Rec src_rec(para, survey_fname, dir);
+	// Src_Rec src_rec(para, survey_fname, para_dir);
+	// TODO : Src_Rec src_rec(para, stf)
 	int nShots = src_rec.vec_z_src.size();
 auto finishSrc = std::chrono::high_resolution_clock::now(); 
 std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
+#ifdef VERBOSE
 	std::cout << "Src_Rec time: "<< elapsedSrc.count() <<" second(s)"<< std::endl;
 	std::cout << "number of shots " << src_rec.d_vec_z_rec.size() << std::endl;
 	std::cout << "number of d_data " << src_rec.d_vec_data.size() << std::endl;
-
-	// displayArray("b_z", cpml.b_x_half, 33, 1);
-
-
-
+#endif
+	
 	// compute Courant number
 	compCourantNumber(model.h_Cp, nz*nx, dt, dz, dx);
 
@@ -99,7 +115,6 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 	float *h_l2Obj_temp = NULL;
 	h_l2Obj_temp = (float*)malloc(sizeof(float));
 	float h_l2Obj = 0.0;
-	// float h_l2Obj_cpu = 0.0;
 	CHECK(cudaMalloc((void**)&d_vz, nz * nx * sizeof(float)));
 	CHECK(cudaMalloc((void**)&d_vx, nz * nx * sizeof(float)));
 	CHECK(cudaMalloc((void**)&d_szz, nz * nx * sizeof(float)));
@@ -126,17 +141,6 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 	CHECK(cudaMalloc((void**)&d_l2Obj_temp, 1 * sizeof(float)));
 
 
-	// constant memory coefficients
-	// const float h_coef[] = {9.0/8.0, 1.0/24.0};
-	// cudaMemcpyToSymbol(coef, h_coef, 2*sizeof(float));
-
-	// cudaFuncSetCacheConfig(el_stress, cudaFuncCachePreferL1);
-	// cudaFuncSetCacheConfig(el_velocity, cudaFuncCachePreferL1);
-	// cudaFuncSetCacheConfig(ac_pressure, cudaFuncCachePreferL1);
-	// cudaFuncSetCacheConfig(ac_velocity, cudaFuncCachePreferL1);
-	// cudaFuncSetCacheConfig(ac_pressure_adj, cudaFuncCachePreferL1);
-	// cudaFuncSetCacheConfig(ac_velocity_adj, cudaFuncCachePreferL1);	
-
 
 	float *h_snap, *h_snap_back, *h_snap_adj;
 	h_snap = (float*)malloc(nz*nx*sizeof(float));
@@ -147,13 +151,17 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 
 	auto finish0 = std::chrono::high_resolution_clock::now(); 
 	std::chrono::duration<double> elapsed0 = finish0 - start0;
+#ifdef VERBOSE
 	std::cout << "Initialization time: "<< elapsed0.count() <<" second(s)"<< std::endl;
-
+#endif
 
 	auto start = std::chrono::high_resolution_clock::now();
 
-	for(int iShot=0; iShot<nShots; iShot++) {
-		printf("	Processing shot %d\n", iShot);
+
+// NOTE Processing Shot
+#ifdef VERBOSE
+	printf("	Processing shot %d\n", iShot);
+#endif
 		CHECK(cudaStreamCreate(&streams[iShot]));
 
 // load precomputed presure DL
@@ -183,8 +191,8 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 
 		nrec = src_rec.vec_nrec.at(iShot);
 		if (para.if_res()) {
-			fileBinLoad(src_rec.vec_data_obs.at(iShot), nSteps*nrec, dir+para.data_dir_name() \
-					+ "Shot" + std::to_string(iShot) + ".bin");
+			fileBinLoad(src_rec.vec_data_obs.at(iShot), nSteps*nrec, data_dir \
+					+ "/Shot" + std::to_string(iShot) + ".bin");
 			CHECK(cudaMemcpyAsync(src_rec.d_vec_data_obs.at(iShot), \
 					src_rec.vec_data_obs.at(iShot), nrec * nSteps * sizeof(float), \
 					cudaMemcpyHostToDevice, streams[iShot]));
@@ -460,13 +468,14 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 			}
 		}
 
-	}
+	
 
 	auto finish = std::chrono::high_resolution_clock::now(); 
 	std::chrono::duration<double> elapsed = finish - start;
+#ifdef VERBOSE
 	std::cout << "Elapsed time: "<< elapsed.count() <<" second(s)."<< std::endl;
+#endif 
 
-	// cudaDeviceSynchronize();
 #if 0
 	if (!para.if_res()) {
 		for(int iShot = 0; iShot < nShots; iShot++){
@@ -497,9 +506,7 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 
 	//output residual
 	if (calc_id==0) {
-		// std::cout << "Total l2 residual cpu = " << h_l2Obj_cpu << std::endl;
 		h_l2Obj = 0.5 * h_l2Obj; // DL 02/21/2019 (need to make misfit accurate here rather than in the script)
-		// fileBinWrite(&h_l2Obj, 1, "l2Obj.bin");
 		// fileBinWrite(&h_l2Obj, 1, "l2Obj.bin");
 		std::cout << "Total l2 residual = " << std::to_string(h_l2Obj) << std::endl;
 		*res = h_l2Obj;
@@ -526,8 +533,8 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 	cudaFree(d_mat_dvz_dz); cudaFree(d_mat_dvx_dx);
 	cudaFree(d_l2Obj_temp);
 
+#ifdef VERBOSE
 	std::cout << "Done!" << std::endl;
+#endif
 
-
-	// return 0;
 }
