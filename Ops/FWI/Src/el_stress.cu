@@ -45,8 +45,8 @@ __global__ void el_stress(float *d_vz, float *d_vx, float *d_szz, \
 
 		if(gidz>=2 && gidz<=nz-nPad-3 && gidx>=2 && gidx<=nx-3) {
 
-		  dvz_dz = c1*(d_vz(gidz+1,gidx)-d_vz(gidz,gidx)) - c2*(d_vz(gidz+2,gidx)-d_vz(gidz-1,gidx));
-		  dvx_dx = c1*(d_vx(gidz,gidx)-d_vx(gidz,gidx-1)) - c2*(d_vx(gidz,gidx+1)-d_vx(gidz,gidx-2));
+		  dvz_dz = (c1*(d_vz(gidz+1,gidx)-d_vz(gidz,gidx)) - c2*(d_vz(gidz+2,gidx)-d_vz(gidz-1,gidx)))/dz;
+		  dvx_dx = (c1*(d_vx(gidz,gidx)-d_vx(gidz,gidx-1)) - c2*(d_vx(gidz,gidx+1)-d_vx(gidz,gidx-2)))/dx;
 
 		  if(gidz<nPml || (gidz>nz-nPml-nPad-1)){
 			  d_mem_dvz_dz(gidz,gidx) = d_b_z_half[gidz]*d_mem_dvz_dz(gidz,gidx) + d_a_z_half[gidz]*dvz_dz;
@@ -57,13 +57,13 @@ __global__ void el_stress(float *d_vz, float *d_vx, float *d_szz, \
 			  dvx_dx = dvx_dx / d_K_x[gidx] + d_mem_dvx_dx(gidz,gidx);
 			}
 
-		  d_szz(gidz,gidx) += ((lambda+2.0*mu)*dvz_dz/dz + lambda*dvx_dx/dx) * dt;
-		  d_sxx(gidz,gidx) += (lambda*dvz_dz/dz + (lambda+2.0*mu)*dvx_dx/dx) * dt;
+		  d_szz(gidz,gidx) += ((lambda+2.0*mu)*dvz_dz + lambda*dvx_dx) * dt;
+		  d_sxx(gidz,gidx) += (lambda*dvz_dz + (lambda+2.0*mu)*dvx_dx) * dt;
 
 
 
-		  dvx_dz = c1*(d_vx(gidz,gidx)-d_vx(gidz-1,gidx)) - c2*(d_vx(gidz+1,gidx)-d_vx(gidz-2,gidx));
-		  dvz_dx = c1*(d_vz(gidz,gidx+1)-d_vz(gidz,gidx)) - c2*(d_vz(gidz,gidx+2)-d_vz(gidz,gidx-1));
+		  dvx_dz = (c1*(d_vx(gidz,gidx)-d_vx(gidz-1,gidx)) - c2*(d_vx(gidz+1,gidx)-d_vx(gidz-2,gidx)))/dz;
+		  dvz_dx = (c1*(d_vz(gidz,gidx+1)-d_vz(gidz,gidx)) - c2*(d_vz(gidz,gidx+2)-d_vz(gidz,gidx-1)))/dx;
 
 		  if(gidz<nPml || (gidz>nz-nPml-nPad-1)){
 			  d_mem_dvx_dz(gidz,gidx) = d_b_z[gidz]*d_mem_dvx_dz(gidz,gidx) + d_a_z[gidz]*dvx_dz;
@@ -74,7 +74,7 @@ __global__ void el_stress(float *d_vz, float *d_vx, float *d_szz, \
 			  dvz_dx = dvz_dx / d_K_x_half[gidx] + d_mem_dvz_dx(gidz,gidx);
 			}
 
-		  d_sxz(gidz,gidx) = d_sxz(gidz,gidx) + d_ave_Mu(gidz,gidx) * (dvx_dz/dz + dvz_dx/dx) * dt;
+		  d_sxz(gidz,gidx) = d_sxz(gidz,gidx) + d_ave_Mu(gidz,gidx) * (dvx_dz + dvz_dx) * dt;
 		}
 		else{
 			return;
@@ -86,17 +86,17 @@ __global__ void el_stress(float *d_vz, float *d_vx, float *d_szz, \
 		// ========================================BACKWARD PROPAGATION====================================
 		if(gidz>=2+nPml && gidz<=nz-nPad-3-nPml && gidx>=2+nPml && gidx<=nx-3-nPml) {
 
-		  dvz_dz = c1*(d_vz(gidz+1,gidx)-d_vz(gidz,gidx)) - c2*(d_vz(gidz+2,gidx)-d_vz(gidz-1,gidx));
-		  dvx_dx = c1*(d_vx(gidz,gidx)-d_vx(gidz,gidx-1)) - c2*(d_vx(gidz,gidx+1)-d_vx(gidz,gidx-2));
+		  dvz_dz = (c1*(d_vz(gidz+1,gidx)-d_vz(gidz,gidx)) - c2*(d_vz(gidz+2,gidx)-d_vz(gidz-1,gidx)))/dz;
+		  dvx_dx = (c1*(d_vx(gidz,gidx)-d_vx(gidz,gidx-1)) - c2*(d_vx(gidz,gidx+1)-d_vx(gidz,gidx-2)))/dx;
 
-		  d_szz(gidz,gidx) -= ((lambda+2.0*mu)*dvz_dz/dz + lambda*dvx_dx/dx) * dt;
-		  d_sxx(gidz,gidx) -= (lambda*dvz_dz/dz + (lambda+2.0*mu)*dvx_dx/dx) * dt;
+		  d_szz(gidz,gidx) -= ((lambda+2.0*mu)*dvz_dz + lambda*dvx_dx) * dt;
+		  d_sxx(gidz,gidx) -= (lambda*dvz_dz + (lambda+2.0*mu)*dvx_dx) * dt;
 
 
-		  dvx_dz = c1*(d_vx(gidz,gidx)-d_vx(gidz-1,gidx)) - c2*(d_vx(gidz+1,gidx)-d_vx(gidz-2,gidx));
-		  dvz_dx = c1*(d_vz(gidz,gidx+1)-d_vz(gidz,gidx)) - c2*(d_vz(gidz,gidx+2)-d_vz(gidz,gidx-1));
+		  dvx_dz = (c1*(d_vx(gidz,gidx)-d_vx(gidz-1,gidx)) - c2*(d_vx(gidz+1,gidx)-d_vx(gidz-2,gidx)))/dz;
+		  dvz_dx = (c1*(d_vz(gidz,gidx+1)-d_vz(gidz,gidx)) - c2*(d_vz(gidz,gidx+2)-d_vz(gidz,gidx-1)))/dx;
 
-		  d_sxz(gidz,gidx) -= d_ave_Mu(gidz,gidx) * (dvx_dz/dz + dvz_dx/dx) * dt;
+		  d_sxz(gidz,gidx) -= d_ave_Mu(gidz,gidx) * (dvx_dz + dvz_dx) * dt;
 		}
 		else{
 			return;

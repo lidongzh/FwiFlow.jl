@@ -17,7 +17,7 @@ REGISTER_OP("FwiOp")
     .Input("cp : double")
     .Input("cs : double")
     .Input("den : double")
-    .Input("src: double")
+    .Input("stf: double")
     .Input("prjdir: string")
     .Output("res : double")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {

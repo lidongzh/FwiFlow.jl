@@ -41,7 +41,14 @@ void fileBinWriteDouble(double *h_bin, int size, std::string fname){
     fclose(fp);
 }
 
-void intialArray(float *ip, int size, float value) {
+void initialArray(float *ip, int size, float value) {
+    for(int i=0; i<size; i++){
+        ip[i] = value;
+        // printf("value = %f\n", value);
+    }
+}
+
+void initialArray(double *ip, int size, double value) {
     for(int i=0; i<size; i++){
         ip[i] = value;
         // printf("value = %f\n", value);
@@ -241,16 +248,16 @@ void cpmlInit(float *K, float *a, float *b, float *K_half, \
     damp_half = (float*)malloc(N*sizeof(float));
     alpha = (float*)malloc(N*sizeof(float));
     alpha_half = (float*)malloc(N*sizeof(float));
-    intialArray(damp, N, 0.0);
-    intialArray(damp_half, N, 0.0);
-    intialArray(K, N, 1.0);
-    intialArray(K_half, N, 1.0);
-    intialArray(alpha, N, 0.0);
-    intialArray(alpha_half, N, 0.0);
-    intialArray(a, N, 0.0);
-    intialArray(a_half, N, 0.0);
-    intialArray(b, N, 0.0);
-    intialArray(b_half, N, 0.0);
+    initialArray(damp, N, 0.0);
+    initialArray(damp_half, N, 0.0);
+    initialArray(K, N, 1.0);
+    initialArray(K_half, N, 1.0);
+    initialArray(alpha, N, 0.0);
+    initialArray(alpha_half, N, 0.0);
+    initialArray(a, N, 0.0);
+    initialArray(a_half, N, 0.0);
+    initialArray(b, N, 0.0);
+    initialArray(b_half, N, 0.0);
 
     for(int i=0; i<N; i++) {
         // left edge
@@ -297,6 +304,7 @@ void cpmlInit(float *K, float *a, float *b, float *K_half, \
             K_half[i] = 1.0 + (K_MAX_PML - 1.0) * powf(depth_normalized, NPOWER);
             alpha_half[i] = ALPHA_MAX_PML * (1.0 - depth_normalized);
         }
+
 
         if(alpha[i] < 0.0) {alpha[i] = 0.0;}
         if(alpha_half[i] < 0.0) {alpha_half[i] = 0.0;}
@@ -346,16 +354,16 @@ void cpmlInit(float *K, float *a, float *b, float *K_half, \
 //     damp_half = (float*)malloc(N*sizeof(float));
 //     alpha = (float*)malloc(N*sizeof(float));
 //     alpha_half = (float*)malloc(N*sizeof(float));
-//     intialArray(damp, N, 0.0);
-//     intialArray(damp_half, N, 0.0);
-//     intialArray(K, N, 1.0);
-//     intialArray(K_half, N, 1.0);
-//     intialArray(alpha, N, 0.0);
-//     intialArray(alpha_half, N, 0.0);
-//     intialArray(a, N, 0.0);
-//     intialArray(a_half, N, 0.0);
-//     intialArray(b, N, 0.0);
-//     intialArray(b_half, N, 0.0);
+//     initialArray(damp, N, 0.0);
+//     initialArray(damp_half, N, 0.0);
+//     initialArray(K, N, 1.0);
+//     initialArray(K_half, N, 1.0);
+//     initialArray(alpha, N, 0.0);
+//     initialArray(alpha_half, N, 0.0);
+//     initialArray(a, N, 0.0);
+//     initialArray(a_half, N, 0.0);
+//     initialArray(b, N, 0.0);
+//     initialArray(b_half, N, 0.0);
 
 //     originleft = thickness_PML;
 //     originright = (N-1)*dh - thickness_PML;

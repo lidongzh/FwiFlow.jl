@@ -42,8 +42,8 @@ __global__ void el_velocity(float *d_vz, float *d_vx, float *d_szz, \
 
 	  if(gidz>=2 && gidz<=nz-nPad-3 && gidx>=2 && gidx<=nx-3) {
 		  // update vz
-			dszz_dz = c1*(d_szz(gidz,gidx)-d_szz(gidz-1,gidx)) - c2*(d_szz(gidz+1,gidx)-d_szz(gidz-2,gidx));
-			dsxz_dx = c1*(d_sxz(gidz,gidx)-d_sxz(gidz,gidx-1)) - c2*(d_sxz(gidz,gidx+1)-d_sxz(gidz,gidx-2));
+			dszz_dz = (c1*(d_szz(gidz,gidx)-d_szz(gidz-1,gidx)) - c2*(d_szz(gidz+1,gidx)-d_szz(gidz-2,gidx)))/dz;
+			dsxz_dx = (c1*(d_sxz(gidz,gidx)-d_sxz(gidz,gidx-1)) - c2*(d_sxz(gidz,gidx+1)-d_sxz(gidz,gidx-2)))/dx;
 
 			if(gidz<nPml || (gidz>nz-nPml-nPad-1)){
 				d_mem_dszz_dz(gidz,gidx) = d_b_z[gidz]*d_mem_dszz_dz(gidz,gidx) + d_a_z[gidz]*dszz_dz;
@@ -54,11 +54,11 @@ __global__ void el_velocity(float *d_vz, float *d_vx, float *d_szz, \
 				dsxz_dx = dsxz_dx / d_K_x[gidx] + d_mem_dsxz_dx(gidz,gidx);
 			}
 
-			d_vz(gidz,gidx) += (dszz_dz/dz + dsxz_dx/dx) * d_ave_Byc_a(gidz, gidx) * dt;
+			d_vz(gidz,gidx) += (dszz_dz + dsxz_dx) * d_ave_Byc_a(gidz, gidx) * dt;
 
 			// update vx
-			dsxz_dz = c1*(d_sxz(gidz+1,gidx)-d_sxz(gidz,gidx)) - c2*(d_sxz(gidz+2,gidx)-d_sxz(gidz-1,gidx));
-			dsxx_dx = c1*(d_sxx(gidz,gidx+1)-d_sxx(gidz,gidx)) - c2*(d_sxx(gidz,gidx+2)-d_sxx(gidz,gidx-1));
+			dsxz_dz = (c1*(d_sxz(gidz+1,gidx)-d_sxz(gidz,gidx)) - c2*(d_sxz(gidz+2,gidx)-d_sxz(gidz-1,gidx)))/dz;
+			dsxx_dx = (c1*(d_sxx(gidz,gidx+1)-d_sxx(gidz,gidx)) - c2*(d_sxx(gidz,gidx+2)-d_sxx(gidz,gidx-1)))/dx;
 
 			if(gidz<nPml || (gidz>nz-nPml-nPad-1)){
 				d_mem_dsxz_dz(gidz,gidx) = d_b_z_half[gidz]*d_mem_dsxz_dz(gidz,gidx) + d_a_z_half[gidz]*dsxz_dz;
@@ -69,7 +69,7 @@ __global__ void el_velocity(float *d_vz, float *d_vx, float *d_szz, \
 				dsxx_dx = dsxx_dx / d_K_x_half[gidx] + d_mem_dsxx_dx(gidz,gidx);
 			}
 
-			d_vx(gidz,gidx) += (dsxz_dz/dz + dsxx_dx/dx) * d_ave_Byc_b(gidz, gidx) * dt;
+			d_vx(gidz,gidx) += (dsxz_dz + dsxx_dx) * d_ave_Byc_b(gidz, gidx) * dt;
 
 		}
 		else{
@@ -82,16 +82,16 @@ __global__ void el_velocity(float *d_vz, float *d_vx, float *d_szz, \
 	// ========================================BACKWARD PROPAGATION====================================
 	  if(gidz>=2+nPml && gidz<=nz-nPad-3-nPml && gidx>=2+nPml && gidx<=nx-3-nPml) {
 		  // update vz
-			dszz_dz = c1*(d_szz(gidz,gidx)-d_szz(gidz-1,gidx)) - c2*(d_szz(gidz+1,gidx)-d_szz(gidz-2,gidx));
-			dsxz_dx = c1*(d_sxz(gidz,gidx)-d_sxz(gidz,gidx-1)) - c2*(d_sxz(gidz,gidx+1)-d_sxz(gidz,gidx-2));
+			dszz_dz = (c1*(d_szz(gidz,gidx)-d_szz(gidz-1,gidx)) - c2*(d_szz(gidz+1,gidx)-d_szz(gidz-2,gidx)))/dz;
+			dsxz_dx = (c1*(d_sxz(gidz,gidx)-d_sxz(gidz,gidx-1)) - c2*(d_sxz(gidz,gidx+1)-d_sxz(gidz,gidx-2)))/dx;
 
-			d_vz(gidz,gidx) -= (dszz_dz/dz + dsxz_dx/dx) * d_ave_Byc_a(gidz, gidx) * dt;
+			d_vz(gidz,gidx) -= (dszz_dz + dsxz_dx) * d_ave_Byc_a(gidz, gidx) * dt;
 
 			// update vx
-			dsxz_dz = c1*(d_sxz(gidz+1,gidx)-d_sxz(gidz,gidx)) - c2*(d_sxz(gidz+2,gidx)-d_sxz(gidz-1,gidx));
-			dsxx_dx = c1*(d_sxx(gidz,gidx+1)-d_sxx(gidz,gidx)) - c2*(d_sxx(gidz,gidx+2)-d_sxx(gidz,gidx-1));
+			dsxz_dz = (c1*(d_sxz(gidz+1,gidx)-d_sxz(gidz,gidx)) - c2*(d_sxz(gidz+2,gidx)-d_sxz(gidz-1,gidx)))/dz;
+			dsxx_dx = (c1*(d_sxx(gidz,gidx+1)-d_sxx(gidz,gidx)) - c2*(d_sxx(gidz,gidx+2)-d_sxx(gidz,gidx-1)))/dx;
 
-			d_vx(gidz,gidx) -= (dsxz_dz/dz + dsxx_dx/dx) * d_ave_Byc_b(gidz, gidx) * dt;
+			d_vx(gidz,gidx) -= (dsxz_dz + dsxx_dx) * d_ave_Byc_b(gidz, gidx) * dt;
 
 		}
 		else{

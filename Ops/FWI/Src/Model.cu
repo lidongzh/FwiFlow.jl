@@ -19,13 +19,13 @@ Model::Model() {
     h_Mu = (float *)malloc(nz_ * nx_ * sizeof(float));
     h_CpGrad = (float *)malloc(nz_ * nx_ * sizeof(float));
 
-    intialArray(h_Cp, nz_ * nx_, 3300.0);
-    // intialArray(h_Cs, nz*nx, 3300.0/sqrt(3.0));
-    intialArray(h_Cs, nz_ * nx_, 0.0);
-    intialArray(h_Den, nz_ * nx_, 1000.0);
-    intialArray(h_Lambda, nz_ * nx_, 0.0);
-    intialArray(h_Mu, nz_ * nx_, 0.0);
-    intialArray(h_CpGrad, nz_ * nx_, 0.0);
+    initialArray(h_Cp, nz_ * nx_, 3300.0);
+    // initialArray(h_Cs, nz*nx, 3300.0/sqrt(3.0));
+    initialArray(h_Cs, nz_ * nx_, 0.0);
+    initialArray(h_Den, nz_ * nx_, 1000.0);
+    initialArray(h_Lambda, nz_ * nx_, 0.0);
+    initialArray(h_Mu, nz_ * nx_, 0.0);
+    initialArray(h_CpGrad, nz_ * nx_, 0.0);
 
 
     CHECK(cudaMalloc((void **)&d_Cp, nz_ * nx_ * sizeof(float)));
@@ -76,8 +76,8 @@ Model::Model(const Parameter &para, const float *Cp_, const float*Cs_, const flo
     if (para.Cp_fname() == para.Cs_fname()) {
         // only load vp
         fileBinLoad(h_Cp, nz_ * nx_, para.Cp_fname());
-        intialArray(h_Cs, nz_ * nx_, 0.0);
-        intialArray(h_Den, nz_ * nx_, 1000.0);
+        initialArray(h_Cs, nz_ * nx_, 0.0);
+        initialArray(h_Den, nz_ * nx_, 1000.0);
     } else {
         for(int i=0;i< nz_*nx_;i++){
             h_Cp[i] = Cp_[i];
@@ -90,9 +90,9 @@ Model::Model(const Parameter &para, const float *Cp_, const float*Cs_, const flo
         fileBinLoad(h_Den, nz_ * nx_, para.Den_fname());
         #endif
     }
-    intialArray(h_Lambda, nz_ * nx_, 0.0);
-    intialArray(h_Mu, nz_ * nx_, 0.0);
-    intialArray(h_CpGrad, nz_ * nx_, 0.0);
+    initialArray(h_Lambda, nz_ * nx_, 0.0);
+    initialArray(h_Mu, nz_ * nx_, 0.0);
+    initialArray(h_CpGrad, nz_ * nx_, 0.0);
 
 
     CHECK(cudaMalloc((void **)&d_Cp, nz_ * nx_ * sizeof(float)));
@@ -141,16 +141,16 @@ Model::Model(const Parameter &para) {
     if (para.Cp_fname() == para.Cs_fname()) {
         // only load vp
         fileBinLoad(h_Cp, nz_ * nx_, para.Cp_fname());
-        intialArray(h_Cs, nz_ * nx_, 0.0);
-        intialArray(h_Den, nz_ * nx_, 1000.0);
+        initialArray(h_Cs, nz_ * nx_, 0.0);
+        initialArray(h_Den, nz_ * nx_, 1000.0);
     } else {
         fileBinLoad(h_Cp, nz_ * nx_, para.Cp_fname());
         fileBinLoad(h_Cs, nz_ * nx_, para.Cs_fname());
         fileBinLoad(h_Den, nz_ * nx_, para.Den_fname());
     }
-    intialArray(h_Lambda, nz_ * nx_, 0.0);
-    intialArray(h_Mu, nz_ * nx_, 0.0);
-    intialArray(h_CpGrad, nz_ * nx_, 0.0);
+    initialArray(h_Lambda, nz_ * nx_, 0.0);
+    initialArray(h_Mu, nz_ * nx_, 0.0);
+    initialArray(h_CpGrad, nz_ * nx_, 0.0);
 
 
     CHECK(cudaMalloc((void **)&d_Cp, nz_ * nx_ * sizeof(float)));

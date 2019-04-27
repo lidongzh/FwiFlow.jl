@@ -51,21 +51,6 @@ Cpml::Cpml(Parameter &para, Model &model) {
 	a_x_half, b_x_half, nx, nPml, dx, \
 	f0, dt, CpAve);
 
-	// // save damping parameters
-	// fileBinWrite(K_z, nz-nPad, "K_z.bin");
-	// fileBinWrite(a_z, nz-nPad, "a_z.bin");
-	// fileBinWrite(b_z, nz-nPad, "b_z.bin");
-	// fileBinWrite(K_z_half, nz-nPad, "K_z_half.bin");
-	// fileBinWrite(a_z_half, nz-nPad, "a_z_half.bin");
-	// fileBinWrite(b_z_half, nz-nPad, "b_z_half.bin");
-
-	// fileBinWrite(K_x, nx, "K_x.bin");
-	// fileBinWrite(a_x, nx, "a_x.bin");
-	// fileBinWrite(b_x, nx, "b_x.bin");
-	// fileBinWrite(K_x_half, nx, "K_x_half.bin");
-	// fileBinWrite(a_x_half, nx, "a_x_half.bin");
-	// fileBinWrite(b_x_half, nx, "b_x_half.bin");
-
 
 	// allocate cpml parameters on GPU
 	// CHECK(cudaMalloc((void**)&d_K_z, nz *sizeof(float)));
@@ -113,7 +98,7 @@ Cpml::Cpml(Parameter &para, Model &model) {
 	CHECK(cudaMemcpy(d_a_x_half, a_x_half, nx*sizeof(float), cudaMemcpyHostToDevice));
 	CHECK(cudaMemcpy(d_b_x_half, b_x_half, nx*sizeof(float), cudaMemcpyHostToDevice));
 
-		// turn off pml
+	// 	// turn off pml
 	// intialArrayGPU<<<(nz-nPad+31)/32,32>>>(d_K_z, nz-nPad, 1, 1.0);
 	// intialArrayGPU<<<(nz-nPad+31)/32,32>>>(d_a_z, nz-nPad, 1, 0.0);
 	// intialArrayGPU<<<(nz-nPad+31)/32,32>>>(d_b_z, nz-nPad, 1, 0.0);
