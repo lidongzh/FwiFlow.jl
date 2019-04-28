@@ -11,6 +11,7 @@
 void fileBinLoad(float *h_bin, int size, std::string fname) {
     FILE *fp = fopen(fname.c_str(), "rb");
     if (fp == NULL) {
+        std::cout << "Attempted to read " << fname << std::endl;
         printf("File reading error!\n");
         exit(1);
     } else {

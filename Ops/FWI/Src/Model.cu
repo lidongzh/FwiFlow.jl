@@ -73,23 +73,18 @@ Model::Model(const Parameter &para, const float *Cp_, const float*Cs_, const flo
     h_CpGrad = (float *)malloc(nz_ * nx_ * sizeof(float));
 
     // load Vp, Vs, and Den binaries
-    if (para.Cp_fname() == para.Cs_fname()) {
-        // only load vp
-        fileBinLoad(h_Cp, nz_ * nx_, para.Cp_fname());
-        initialArray(h_Cs, nz_ * nx_, 0.0);
-        initialArray(h_Den, nz_ * nx_, 1000.0);
-    } else {
-        for(int i=0;i< nz_*nx_;i++){
-            h_Cp[i] = Cp_[i];
-            h_Cs[i] = Cs_[i];
-            h_Den[i] = Den_[i];
-        }
-        #if 0
-        fileBinLoad(h_Cp, nz_ * nx_, para.Cp_fname());
-        fileBinLoad(h_Cs, nz_ * nx_, para.Cs_fname());
-        fileBinLoad(h_Den, nz_ * nx_, para.Den_fname());
-        #endif
+
+    for(int i=0;i< nz_*nx_;i++){
+        h_Cp[i] = Cp_[i];
+        h_Cs[i] = Cs_[i];
+        h_Den[i] = Den_[i];
     }
+    #if 0
+    fileBinLoad(h_Cp, nz_ * nx_, para.Cp_fname());
+    fileBinLoad(h_Cs, nz_ * nx_, para.Cs_fname());
+    fileBinLoad(h_Den, nz_ * nx_, para.Den_fname());
+    #endif
+    
     initialArray(h_Lambda, nz_ * nx_, 0.0);
     initialArray(h_Mu, nz_ * nx_, 0.0);
     initialArray(h_CpGrad, nz_ * nx_, 0.0);

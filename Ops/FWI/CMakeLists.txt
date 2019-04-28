@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 # C++11 required for tensorflow
-set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++11 -O3 ${CMAKE_CXX_FLAGS}")
 
 # https://github.com/tensorflow/tensorflow/issues/1569
 # if GCC > 5

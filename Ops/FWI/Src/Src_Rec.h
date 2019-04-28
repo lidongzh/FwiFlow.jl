@@ -34,7 +34,7 @@ class Src_Rec {
   Src_Rec();
   Src_Rec(Parameter &para, std::string survey_fname);
   Src_Rec(Parameter &para, std::string survey_fname, const double *stf,
-          int nShots, int *shot_ids);
+          int nShots, const int *shot_ids);
   ~Src_Rec();
 };
 

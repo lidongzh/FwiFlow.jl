@@ -287,7 +287,7 @@ Src_Rec::Src_Rec(Parameter &para, string survey_fname) {
 
 }
 
-Src_Rec::Src_Rec(Parameter &para, string survey_fname, const double *stf, int group_size, int *shot_ids) {
+Src_Rec::Src_Rec(Parameter &para, string survey_fname, const double *stf, int group_size, const int *shot_ids) {
 
 	string line;
 	ifstream src_rec_file;

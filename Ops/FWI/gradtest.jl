@@ -10,10 +10,10 @@ py"""
 import tensorflow as tf
 libFwiOp = tf.load_op_library('build/libFwiOp.so')
 @tf.custom_gradient
-def fwi_op(cp,cs,den,src,prjdir):
-    res = libFwiOp.fwi_op(cp,cs,den,src,prjdir)
+def fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname):
+    res = libFwiOp.fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
     def grad(dy):
-        return libFwiOp.fwi_op_grad(dy, tf.constant(1.0,dtype=tf.float64), cp,cs,den,src,prjdir)
+        return libFwiOp.fwi_op_grad(dy, tf.constant(1.0,dtype=tf.float64),cp,cs,den,stf,gpu_id,shot_ids,para_fname)
     return res, grad
 """
 elseif Sys.isapple()
@@ -22,9 +22,9 @@ import tensorflow as tf
 libFwiOp = tf.load_op_library('build/libFwiOp.dylib')
 @tf.custom_gradient
 def fwi_op(cp,cs,den):
-    res = libFwiOp.fwi_op(cp,cs,den)
+    res = libFwiOp.fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
     def grad(dy):
-        return libFwiOp.fwi_op_grad(dy, res, cp,cs,den)
+        return libFwiOp.fwi_op_grad(dy,tf.constant(1.0,dtype=tf.float64),cp,cs,den,stf,gpu_id,shot_ids,para_fname)
     return res, grad
 """
 elseif Sys.iswindows()
@@ -33,16 +33,16 @@ import tensorflow as tf
 libFwiOp = tf.load_op_library('build/libFwiOp.dll')
 @tf.custom_gradient
 def fwi_op(cp,cs,den):
-    res = libFwiOp.fwi_op(cp,cs,den)
+    res = libFwiOp.fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
     def grad(dy):
-        return libFwiOp.fwi_op_grad(dy, res, cp,cs,den)
+        return libFwiOp.fwi_op_grad(dy,tf.constant(1.0,dtype=tf.float64),cp,cs,den,stf,gpu_id,shot_ids,para_fname)
     return res, grad
 """
 end
 
 fwi_op = py"fwi_op"
 # ENV["CUDA_VISIBLE_DEVICES"] = 1
-ENV["PARAMDIR"] = "Src/params/"
+# ENV["PARAMDIR"] = "Src/params/"
 config = tf.ConfigProto(device_count = Dict("GPU"=>0))
 # TODO: 
 nz = 134
@@ -59,14 +59,37 @@ den = constant(1000ones(nz, nx))
 # TODO: 
 # error("")
 
-src = constant(Float64.(reinterpret(Float32, read("Src/params/ricker_10Hz.bin"))))
-prj_dir = tf.strings.join(["Src/params/"])
+src = Matrix{Float64}(undef, 1, 2001)
+src[1,:] = Float64.(reinterpret(Float32, read("Src/params/ricker_10Hz.bin")))
+tf_stf = constant(repeat(src, outer=30))
+tf_para_fname = tf.strings.join(["./Src/params/Par_file_obs_data.json"])
+tf_gpu_id0 = constant(0, dtype=Int32)
+tf_gpu_id1 = constant(1, dtype=Int32)
+tf_shot_ids0 = constant(collect(Int32, 1:15), dtype=Int32)
+tf_shot_ids1 = constant(collect(Int32, 16:29), dtype=Int32)
+# shot_ids = constant(zeros(1,1), dtype=Int32)
 
-res=fwi_op(cp,cs,den,src,prj_dir)
-gg=gradients(res,cp)
-sess=Session();init(sess);
-grad_cp = run(sess, gg)
-imshow(grad_cp)
+# res = constant(0.0)
+# function obj()
+#     res = 0.0
+#     for i = 1:29
+#         gpu_id = mod(i, 2)
+#         res += fwi_op(cp, cs, den, tf_stf, constant(gpu_id, dtype=Int32), constant([i], dtype=Int32), tf_para_fname)
+#     end
+#     return res
+# end
+# J = obj()
+
+J = fwi_op(cp, cs, den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname) +
+fwi_op(cp, cs, den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
+
+config = tf.ConfigProto()
+config.intra_op_parallelism_threads = 24
+config.inter_op_parallelism_threads = 24
+sess=Session(config=config);init(sess);
+@time run(sess, J)
+# grad_cp = run(sess, gg)
+# imshow(grad_cp)
 
 error("")
 

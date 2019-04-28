@@ -1,9 +1,12 @@
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <string>
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/shape_inference.h"
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/platform/default/logging.h"
-using namespace std;
+// using namespace std;
 using std::string;
 using namespace tensorflow;
 // #include "ADEL.h"
@@ -15,8 +18,8 @@ REGISTER_OP("FwiOp")
     .Input("cs : double")
     .Input("den : double")
     .Input("stf : double")
-    .Input("gpu_id : int")
-    .Input("shot_ids : int")
+    .Input("gpu_id : int32")
+    .Input("shot_ids : int32")
     .Input("para_fname : string")
     .Output("res : double")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
@@ -70,9 +73,9 @@ class FwiOpOp : public OpKernel {
 
     // create output shape
     // int nz = cp_shape.dim_size(0), nx = cp_shape.dim_size(1);
-    int group_size = stf_shape.dim_size(0);
+    int group_size = shot_ids_shape.dim_size(0);
 
-    TensorShape res_shape({});
+    TensorShape res_shape({1});
 
     // create output tensor
 
@@ -85,17 +88,18 @@ class FwiOpOp : public OpKernel {
     auto cs_tensor = cs.flat<double>().data();
     auto den_tensor = den.flat<double>().data();
     auto stf_tensor = stf.flat<double>().data();
-    auto gpu_id_tensor = gpu_id.flat<int>().data();
-    auto shot_ids_tensor = shot_ids.flat<int>().data();
+    auto gpu_id_tensor = gpu_id.flat<int32>().data();
+    auto shot_ids_tensor = shot_ids.flat<int32>().data();
     auto para_fname_tensor = para_fname.flat<string>().data();
     auto res_tensor = res->flat<double>().data();
 
     // implement your forward function here
 
     // TODO:
-    // forward(res_tensor, cp_tensor, cs_tensor, den_tensor, stf_tensor,
-    //         *gpu_id_tensor, group_size, shot_ids_tensor,
-    //         std::string(*para_fname_tensor));
+    std::cout << *para_fname_tensor << " !!!!!!!!" << std::endl;
+    forward(res_tensor, cp_tensor, cs_tensor, den_tensor, stf_tensor,
+            *gpu_id_tensor, group_size, shot_ids_tensor,
+            string(*para_fname_tensor));
   }
 };
 REGISTER_KERNEL_BUILDER(Name("FwiOp").Device(DEVICE_CPU), FwiOpOp);
@@ -108,15 +112,15 @@ REGISTER_OP("FwiOpGrad")
     .Input("cs : double")
     .Input("den : double")
     .Input("stf : double")
-    .Input("gpu_id : int")
-    .Input("shot_ids : int")
+    .Input("gpu_id : int32")
+    .Input("shot_ids : int32")
     .Input("para_fname: string")
     .Output("grad_cp : double")
     .Output("grad_cs : double")
     .Output("grad_den : double")
     .Output("grad_stf : double")
-    .Output("grad_gpu_id : int")
-    .Output("grad_shot_ids : int")
+    .Output("grad_gpu_id : int32")
+    .Output("grad_shot_ids : int32")
     .Output("grad_para_fname:string");
 class FwiOpGradOp : public OpKernel {
  private:
@@ -132,6 +136,7 @@ class FwiOpGradOp : public OpKernel {
     const Tensor& stf = context->input(5);
     const Tensor& gpu_id = context->input(6);
     const Tensor& shot_ids = context->input(7);
+    const Tensor& para_fname = context->input(8);
 
     const TensorShape& grad_res_shape = grad_res.shape();
     const TensorShape& res_shape = res.shape();
@@ -141,6 +146,7 @@ class FwiOpGradOp : public OpKernel {
     const TensorShape& stf_shape = stf.shape();
     const TensorShape& gpu_id_shape = gpu_id.shape();
     const TensorShape& shot_ids_shape = shot_ids.shape();
+    const TensorShape& para_fname_shape = para_fname.shape();
 
     DCHECK_EQ(grad_res_shape.dims(), 0);
     DCHECK_EQ(res_shape.dims(), 0);
@@ -162,6 +168,7 @@ class FwiOpGradOp : public OpKernel {
     TensorShape grad_stf_shape(stf_shape);
     TensorShape grad_gpu_id_shape(gpu_id_shape);
     TensorShape grad_shot_ids_shape(shot_ids_shape);
+    TensorShape grad_para_fname_shape(para_fname_shape);
 
     // create output tensor
 
@@ -183,6 +190,9 @@ class FwiOpGradOp : public OpKernel {
     Tensor* grad_shot_ids = NULL;
     OP_REQUIRES_OK(context, context->allocate_output(5, grad_shot_ids_shape,
                                                      &grad_shot_ids));
+    Tensor* grad_para_fname = NULL;
+    OP_REQUIRES_OK(context, context->allocate_output(6, grad_para_fname_shape,
+                                                     &grad_para_fname));
 
     // get the corresponding Eigen tensors for data access
 
@@ -190,18 +200,21 @@ class FwiOpGradOp : public OpKernel {
     auto cs_tensor = cs.flat<double>().data();
     auto den_tensor = den.flat<double>().data();
     auto stf_tensor = stf.flat<double>().data();
-    auto gpu_id_tensor = gpu_id.flat<int>().data();
-    auto shot_ids_tensor = shot_ids.flat<int>().data();
+    auto gpu_id_tensor = gpu_id.flat<int32>().data();
+    auto shot_ids_tensor = shot_ids.flat<int32>().data();
+    auto para_fname_tensor = para_fname.flat<string>().data();
     auto grad_res_tensor = grad_res.flat<double>().data();
     auto res_tensor = res.flat<double>().data();
     auto grad_cp_tensor = grad_cp->flat<double>().data();
     auto grad_cs_tensor = grad_cs->flat<double>().data();
     auto grad_den_tensor = grad_den->flat<double>().data();
     auto grad_stf_tensor = grad_stf->flat<double>().data();
-    auto grad_gpu_id_tensor = grad_gpu_id->flat<int>().data();
-    auto grad_shot_ids_tensor = grad_shot_ids->flat<int>().data();
+    auto grad_gpu_id_tensor = grad_gpu_id->flat<int32>().data();
+    auto grad_shot_ids_tensor = grad_shot_ids->flat<int32>().data();
+    auto grad_para_fname_tensor = grad_para_fname->flat<string>().data();
 
     // implement your backward function here
+    std::cout << *grad_para_fname_tensor << " !!!!!" << std::endl;
 
     // TODO:
   }

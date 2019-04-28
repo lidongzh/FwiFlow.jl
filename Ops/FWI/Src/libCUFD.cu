@@ -35,8 +35,8 @@ using std::string;
 */
 void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
           double *grad_stf, const double *Cp, const double *Cs,
-          const double *Den, const double *stf, int calc_id, int gpu_id,
-          int group_size, int *shot_ids, string para_fname) {
+          const double *Den, const double *stf, int calc_id, const int gpu_id,
+          int group_size, const int *shot_ids, const string para_fname) {
   // int deviceCount = 0;
   // CHECK(cudaGetDeviceCount (&deviceCount));
   // printf("number of devices = %d\n", deviceCount);
@@ -157,7 +157,7 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
   // NOTE Processing Shot
   for (int iShot = 0; iShot < group_size; iShot++) {
 #ifdef VERBOSE
-    printf("	Processing shot %d\n", iShot);
+    printf("	Processing shot %d\n", shot_ids[iShot]);
 #endif
     CHECK(cudaStreamCreate(&streams[iShot]));
 
@@ -189,9 +189,9 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
 
     nrec = src_rec.vec_nrec.at(iShot);
     if (para.if_res()) {
-      fileBinLoad(
-          src_rec.vec_data_obs.at(iShot), nSteps * nrec,
-          para.data_dir_name() + "/Shot" + std::to_string(iShot) + ".bin");
+      fileBinLoad(src_rec.vec_data_obs.at(iShot), nSteps * nrec,
+                  para.data_dir_name() + "/Shot" +
+                      std::to_string(shot_ids[iShot]) + ".bin");
       CHECK(cudaMemcpyAsync(src_rec.d_vec_data_obs.at(iShot),
                             src_rec.vec_data_obs.at(iShot),
                             nrec * nSteps * sizeof(float),
@@ -509,31 +509,32 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
             << std::endl;
 #endif
 
+  if (!para.if_res()) {
+    for (int iShot = 0; iShot < group_size; iShot++) {
+      fileBinWrite(src_rec.vec_data.at(iShot),
+                   nSteps * src_rec.vec_nrec.at(iShot),
+                   para.data_dir_name() + "Shot" +
+                       std::to_string(shot_ids[iShot]) + ".bin");
+    }
+  }
+
   if (para.if_save_scratch()) {
-    if (!para.if_res()) {
-      for (int iShot = 0; iShot < group_size; iShot++) {
-        fileBinWrite(
-            src_rec.vec_data.at(iShot), nSteps * src_rec.vec_nrec.at(iShot),
-            para.data_dir_name() + "Shot" + std::to_string(iShot) + ".bin");
-      }
-    } else {
-      for (int iShot = 0; iShot < group_size; iShot++) {
-        fileBinWrite(src_rec.vec_res.at(iShot),
-                     nSteps * src_rec.vec_nrec.at(iShot),
-                     para.scratch_dir_name() + "Residual_Shot" +
-                         std::to_string(iShot) + ".bin");
-        fileBinWrite(src_rec.vec_data.at(iShot),
-                     nSteps * src_rec.vec_nrec.at(iShot),
-                     para.scratch_dir_name() + "Syn_Shot" +
-                         std::to_string(iShot) + ".bin");
-        fileBinWrite(src_rec.vec_data_obs.at(iShot),
-                     nSteps * src_rec.vec_nrec.at(iShot),
-                     para.scratch_dir_name() + "CondObs_Shot" +
-                         std::to_string(iShot) + ".bin");
-        // fileBinWrite(src_rec.vec_source.at(iShot), nSteps,
-        //              para.scratch_dir_name() + "src_updated" +
-        //                  std::to_string(iShot) + ".bin");
-      }
+    for (int iShot = 0; iShot < group_size; iShot++) {
+      fileBinWrite(src_rec.vec_res.at(iShot),
+                   nSteps * src_rec.vec_nrec.at(iShot),
+                   para.scratch_dir_name() + "Residual_Shot" +
+                       std::to_string(shot_ids[iShot]) + ".bin");
+      fileBinWrite(src_rec.vec_data.at(iShot),
+                   nSteps * src_rec.vec_nrec.at(iShot),
+                   para.scratch_dir_name() + "Syn_Shot" +
+                       std::to_string(shot_ids[iShot]) + ".bin");
+      fileBinWrite(src_rec.vec_data_obs.at(iShot),
+                   nSteps * src_rec.vec_nrec.at(iShot),
+                   para.scratch_dir_name() + "CondObs_Shot" +
+                       std::to_string(shot_ids[iShot]) + ".bin");
+      // fileBinWrite(src_rec.vec_source.at(iShot), nSteps,
+      //              para.scratch_dir_name() + "src_updated" +
+      //                  std::to_string(iShot) + ".bin");
     }
   }
 
