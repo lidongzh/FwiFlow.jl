@@ -47,7 +47,7 @@ config = tf.ConfigProto(device_count = Dict("GPU"=>0))
 # TODO: 
 nz = 134
 nx = 384
-cp = constant(3000ones(nz, nx))
+cp = constant(2500ones(nz, nx))
 cs = constant(zeros(nz, nx))
 den = constant(1000ones(nz, nx))
 
@@ -58,6 +58,7 @@ den = constant(1000ones(nz, nx))
 
 # TODO: 
 # error("")
+# argsparse.jl
 
 src = Matrix{Float64}(undef, 1, 2001)
 src[1,:] = Float64.(reinterpret(Float32, read("Src/params/ricker_10Hz.bin")))
@@ -69,7 +70,6 @@ tf_shot_ids0 = constant(collect(Int32, 1:15), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 16:29), dtype=Int32)
 # shot_ids = constant(zeros(1,1), dtype=Int32)
 
-# res = constant(0.0)
 # function obj()
 #     res = 0.0
 #     for i = 1:29
@@ -80,16 +80,18 @@ tf_shot_ids1 = constant(collect(Int32, 16:29), dtype=Int32)
 # end
 # J = obj()
 
-J = fwi_op(cp, cs, den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname) +
-fwi_op(cp, cs, den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
-
-config = tf.ConfigProto()
-config.intra_op_parallelism_threads = 24
-config.inter_op_parallelism_threads = 24
+J1 = fwi_op(cp, cs, den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
+J2 = fwi_op(cp, cs, den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
+J = J1 + J2
+# config = tf.ConfigProto()
+# config.allow_growth
+# config.intra_op_parallelism_threads = 2
+# config.inter_op_parallelism_threads = 2
 sess=Session(config=config);init(sess);
-@time run(sess, J)
-# grad_cp = run(sess, gg)
-# imshow(grad_cp)
+# @time run(sess, J)
+gg = gradients(J, cp)
+grad_cp = run(sess, gg)
+imshow(grad_cp);colorbar();
 
 error("")
 

@@ -1,0 +1,1 @@
+{"nz": 134, "nx": 384, "dz": 10, "dx": 10, "nSteps": 2001, "dt": 0.001, "f0": 10, "nPoints_pml": 32, "nPad": 0, "isAc": true, "if_win": false, "filter": [0, 0.1, 100.0, 200.0], "if_src_update": false}

@@ -256,7 +256,7 @@ Parameter::Parameter(const std::string &para_fname, int calc_id) {
     if_res_ = true;
     withAdj_ = false;
   } else if (calc_id == 1) {
-    if_res_ = true;
+    if_res_ = false;
     withAdj_ = true;
   } else if (calc_id == 2) {
     if_res_ = false;

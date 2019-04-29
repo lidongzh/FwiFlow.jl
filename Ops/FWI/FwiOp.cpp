@@ -161,6 +161,7 @@ class FwiOpGradOp : public OpKernel {
     // int m = Example.dim_size(0);
 
     // create output shape
+    int group_size = shot_ids_shape.dim_size(0);
 
     TensorShape grad_cp_shape(cp_shape);
     TensorShape grad_cs_shape(cs_shape);
@@ -217,6 +218,9 @@ class FwiOpGradOp : public OpKernel {
     std::cout << *grad_para_fname_tensor << " !!!!!" << std::endl;
 
     // TODO:
+    backward(grad_cp_tensor, grad_cs_tensor, grad_den_tensor, grad_stf_tensor,
+             cp_tensor, cs_tensor, den_tensor, stf_tensor, *gpu_id_tensor,
+             group_size, shot_ids_tensor, string(*para_fname_tensor));
   }
 };
 REGISTER_KERNEL_BUILDER(Name("FwiOpGrad").Device(DEVICE_CPU), FwiOpGradOp);

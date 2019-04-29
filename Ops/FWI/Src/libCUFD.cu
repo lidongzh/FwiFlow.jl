@@ -10,6 +10,13 @@
 using std::string;
 
 #define VERBOSE
+#define DEBUG
+
+// extern "C" void cufd(double *res, double *grad_Cp, double *grad_Cs,
+//                      double *grad_Den, double *grad_stf, const double *Cp,
+//                      const double *Cs, const double *Den, const double *stf,
+//                      int calc_id, const int gpu_id, int group_size,
+//                      const int *shot_ids, const string para_fname);
 
 /*
         double res : residual
@@ -491,6 +498,7 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
       CHECK(cudaMemcpy(model.h_CpGrad, model.d_CpGrad, nz * nx * sizeof(float),
                        cudaMemcpyDeviceToHost));
       // fileBinWrite(model.h_CpGrad, nz*nx, "CpGradient.bin");
+
       for (int i = 0; i < nz; i++) {
         for (int j = 0; j < nx; j++) {
           grad_Cp[i * nx + j] = model.h_CpGrad[j * nz + i];
@@ -537,28 +545,57 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
       //                  std::to_string(iShot) + ".bin");
     }
   }
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
 
   // output residual
-  if (para.if_res()) {
+  if (para.if_res() && !para.withAdj()) {
     h_l2Obj = 0.5 * h_l2Obj;  // DL 02/21/2019 (need to make misfit accurate
                               // here rather than in the script)
     // fileBinWrite(&h_l2Obj, 1, "l2Obj.bin");
     std::cout << "Total l2 residual = " << std::to_string(h_l2Obj) << std::endl;
+    std::cout << "calc_id = " << calc_id << std::endl;
     *res = h_l2Obj;
   }
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   free(h_l2Obj_temp);
-
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   free(h_snap);
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   free(h_snap_back);
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   free(h_snap_adj);
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   free(fCp);
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   free(fCs);
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   free(fDen);
 
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   // destroy the streams
   for (int iShot = 0; iShot < group_size; iShot++)
     CHECK(cudaStreamDestroy(streams[iShot]));
-
+#ifdef DEBUG
+  std::cout << "cufd--" << __LINE__ << std::endl;
+#endif
   cudaFree(d_vz);
   cudaFree(d_vx);
   cudaFree(d_szz);
