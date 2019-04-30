@@ -4,103 +4,100 @@ using LinearAlgebra
 using PyPlot
 using Random
 Random.seed!(233)
+include("fwi_util.jl")
+np = pyimport("numpy")
 
-if Sys.islinux()
-py"""
-import tensorflow as tf
-libFwiOp = tf.load_op_library('build/libFwiOp.so')
-@tf.custom_gradient
-def fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname):
-    res = libFwiOp.fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
-    def grad(dy):
-        return libFwiOp.fwi_op_grad(dy, tf.constant(1.0,dtype=tf.float64),cp,cs,den,stf,gpu_id,shot_ids,para_fname)
-    return res, grad
-"""
-elseif Sys.isapple()
-py"""
-import tensorflow as tf
-libFwiOp = tf.load_op_library('build/libFwiOp.dylib')
-@tf.custom_gradient
-def fwi_op(cp,cs,den):
-    res = libFwiOp.fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
-    def grad(dy):
-        return libFwiOp.fwi_op_grad(dy,tf.constant(1.0,dtype=tf.float64),cp,cs,den,stf,gpu_id,shot_ids,para_fname)
-    return res, grad
-"""
-elseif Sys.iswindows()
-py"""
-import tensorflow as tf
-libFwiOp = tf.load_op_library('build/libFwiOp.dll')
-@tf.custom_gradient
-def fwi_op(cp,cs,den):
-    res = libFwiOp.fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
-    def grad(dy):
-        return libFwiOp.fwi_op_grad(dy,tf.constant(1.0,dtype=tf.float64),cp,cs,den,stf,gpu_id,shot_ids,para_fname)
-    return res, grad
-"""
-end
-
-fwi_op = py"fwi_op"
+# argsparse.jl
 # ENV["CUDA_VISIBLE_DEVICES"] = 1
 # ENV["PARAMDIR"] = "Src/params/"
-config = tf.ConfigProto(device_count = Dict("GPU"=>0))
-# TODO: 
-nz = 134
-nx = 384
-cp = constant(2500ones(nz, nx))
-cs = constant(zeros(nz, nx))
-den = constant(1000ones(nz, nx))
+# config = tf.ConfigProto(device_count = Dict("GPU"=>0))
 
-# u = fwi_op(cp,cs,den)
-# sess = Session()
-# init(sess)
-# run(sess, u)
+nz = 100
+nx = 100
+dz = 20
+dx = 20
+nSteps = 2001
+dt = 0.0025
+f0 = 4.5
+filter_para = [0, 0.1, 100.0, 200.0]
+nPml = 32
+isAc = true
+nPad = 0
+x_src = collect(5:10:100-nPml)
+z_src = 2ones(Int64, size(x_src))
+# x_rec = collect(5:250-nPml)
+# z_rec = 2ones(Int64, size(x_rec))
 
-# TODO: 
-# error("")
-# argsparse.jl
+z = (1:nz-33)|>collect
+x = (1:nx-33)|>collect
+x_rec, z_rec = np.meshgrid(x, z)
+x_rec = x_rec[:]
+z_rec = z_rec[:]
+
+para_fname = "./para_file.json"
+survey_fname = "./survey_file.json"
+data_dir_name = "./Data"
+paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, data_dir_name)
+surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
+
+# cp = constant(3000ones(nz, nx))
+cp = (1. .+ 0.1*rand(nz, nx)) .* 3000
+cs = zeros(nz, nx)
+den = 1000.0 .* ones(nz, nx)
+
+tf_cp = constant(cp)
+tf_cs = constant(cs)
+tf_den = constant(den)
 
 src = Matrix{Float64}(undef, 1, 2001)
-src[1,:] = Float64.(reinterpret(Float32, read("Src/params/ricker_10Hz.bin")))
+src[1,:] = Float64.(reinterpret(Float32, read("./Src/params/ricker_10Hz.bin")))
 tf_stf = constant(repeat(src, outer=30))
-tf_para_fname = tf.strings.join(["./Src/params/Par_file_obs_data.json"])
+tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
-tf_shot_ids0 = constant(collect(Int32, 1:15), dtype=Int32)
-tf_shot_ids1 = constant(collect(Int32, 16:29), dtype=Int32)
+tf_shot_ids0 = constant(collect(Int32, 1:length(x_src)), dtype=Int32)
+# tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 # shot_ids = constant(zeros(1,1), dtype=Int32)
+
+res1 = fwi_obs_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
+# res2 = fwi_obs_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
+
+sess=Session();init(sess);
+@time run(sess, res1)
+# error("")
 
 # function obj()
 #     res = 0.0
 #     for i = 1:29
 #         gpu_id = mod(i, 2)
-#         res += fwi_op(cp, cs, den, tf_stf, constant(gpu_id, dtype=Int32), constant([i], dtype=Int32), tf_para_fname)
+#         res += fwi_op(tf_cp, tf_cs, tf_den, tf_stf, constant(gpu_id, dtype=Int32), constant([i], dtype=Int32), tf_para_fname)
 #     end
 #     return res
 # end
 # J = obj()
 
-J1 = fwi_op(cp, cs, den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
-J2 = fwi_op(cp, cs, den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
-J = J1 + J2
-# config = tf.ConfigProto()
-# config.allow_growth
-# config.intra_op_parallelism_threads = 2
-# config.inter_op_parallelism_threads = 2
-sess=Session(config=config);init(sess);
-# @time run(sess, J)
-gg = gradients(J, cp)
-grad_cp = run(sess, gg)
-imshow(grad_cp);colorbar();
+# J1 = fwi_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
+# J2 = fwi_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
+# J = J1 + J2
+# # config = tf.ConfigProto()
+# # config.allow_growth
+# # config.intra_op_parallelism_threads = 2
+# # config.inter_op_parallelism_threads = 2
+# sess=Session();init(sess);
+# # @time run(sess, J)
+# gg = gradients(J, cp)
+# grad_cp = run(sess, gg)
+# imshow(grad_cp);colorbar();
 
-error("")
+# error("")
 
 # gradient check -- v
 function scalar_function(m)
-    return fwi_op(m,cs,den,src,prj_dir)
+    return fwi_op(m, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
 end
 
-m_ = constant(3300ones(nz, nx))
+# m_ = constant(3000ones(nz, nx))
+m_ = constant(cp)
 # v_ = 100. .* (1. .+ rand(Float32, 384, 134))
 
 v0 = zeros(nz, nx)
@@ -127,6 +124,8 @@ sess = Session()
 init(sess)
 sval_ = run(sess, s_)
 wval_ = run(sess, w_)
+sval_ = [x[1] for x in sval_]
+wval_ = [x[1] for x in wval_]
 close("all")
 loglog(gs_, abs.(sval_), "*-", label="finite difference")
 loglog(gs_, abs.(wval_), "+-", label="automatic differentiation")

@@ -521,7 +521,7 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
     for (int iShot = 0; iShot < group_size; iShot++) {
       fileBinWrite(src_rec.vec_data.at(iShot),
                    nSteps * src_rec.vec_nrec.at(iShot),
-                   para.data_dir_name() + "Shot" +
+                   para.data_dir_name() + "/Shot" +
                        std::to_string(shot_ids[iShot]) + ".bin");
     }
   }
@@ -530,24 +530,24 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
     for (int iShot = 0; iShot < group_size; iShot++) {
       fileBinWrite(src_rec.vec_res.at(iShot),
                    nSteps * src_rec.vec_nrec.at(iShot),
-                   para.scratch_dir_name() + "Residual_Shot" +
+                   para.scratch_dir_name() + "/Residual_Shot" +
                        std::to_string(shot_ids[iShot]) + ".bin");
       fileBinWrite(src_rec.vec_data.at(iShot),
                    nSteps * src_rec.vec_nrec.at(iShot),
-                   para.scratch_dir_name() + "Syn_Shot" +
+                   para.scratch_dir_name() + "/Syn_Shot" +
                        std::to_string(shot_ids[iShot]) + ".bin");
       fileBinWrite(src_rec.vec_data_obs.at(iShot),
                    nSteps * src_rec.vec_nrec.at(iShot),
-                   para.scratch_dir_name() + "CondObs_Shot" +
+                   para.scratch_dir_name() + "/CondObs_Shot" +
                        std::to_string(shot_ids[iShot]) + ".bin");
       // fileBinWrite(src_rec.vec_source.at(iShot), nSteps,
       //              para.scratch_dir_name() + "src_updated" +
       //                  std::to_string(iShot) + ".bin");
     }
   }
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+  // #ifdef DEBUG
+  //   std::cout << "cufd--" << __LINE__ << std::endl;
+  // #endif
 
   // output residual
   if (para.if_res() && !para.withAdj()) {
@@ -558,44 +558,25 @@ void cufd(double *res, double *grad_Cp, double *grad_Cs, double *grad_Den,
     std::cout << "calc_id = " << calc_id << std::endl;
     *res = h_l2Obj;
   }
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   free(h_l2Obj_temp);
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   free(h_snap);
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   free(h_snap_back);
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   free(h_snap_adj);
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   free(fCp);
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   free(fCs);
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   free(fDen);
 
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
   // destroy the streams
   for (int iShot = 0; iShot < group_size; iShot++)
     CHECK(cudaStreamDestroy(streams[iShot]));
-#ifdef DEBUG
-  std::cout << "cufd--" << __LINE__ << std::endl;
-#endif
+
   cudaFree(d_vz);
   cudaFree(d_vx);
   cudaFree(d_szz);
