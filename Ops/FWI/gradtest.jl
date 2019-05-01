@@ -12,8 +12,8 @@ np = pyimport("numpy")
 # ENV["PARAMDIR"] = "Src/params/"
 # config = tf.ConfigProto(device_count = Dict("GPU"=>0))
 
-nz = 100
-nx = 100
+nz = 200
+nx = 200
 dz = 20
 dx = 20
 nSteps = 2001
@@ -23,16 +23,22 @@ filter_para = [0, 0.1, 100.0, 200.0]
 nPml = 32
 isAc = true
 nPad = 0
-x_src = collect(5:10:100-nPml)
-z_src = 2ones(Int64, size(x_src))
-# x_rec = collect(5:250-nPml)
+# x_src = collect(5:10:nx-2nPml-5)
+# z_src = 2ones(Int64, size(x_src))
+# x_rec = collect(5:100-nPml)
 # z_rec = 2ones(Int64, size(x_rec))
 
-z = (1:nz-33)|>collect
-x = (1:nx-33)|>collect
+x_src = [100-nPml]
+z_src = [100-nPml]
+
+z = (5:10:nz-2nPml-5)|>collect
+x = (5:10:nx-2nPml-5)|>collect
 x_rec, z_rec = np.meshgrid(x, z)
 x_rec = x_rec[:]
 z_rec = z_rec[:]
+
+# x_rec = collect(5:1:nx-2nPml-5)
+# z_rec = 60ones(Int64, size(x_rec))
 
 para_fname = "./para_file.json"
 survey_fname = "./survey_file.json"
@@ -40,8 +46,8 @@ data_dir_name = "./Data"
 paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, data_dir_name)
 surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
 
-# cp = constant(3000ones(nz, nx))
-cp = (1. .+ 0.1*rand(nz, nx)) .* 3000
+cp = 3000ones(nz, nx)
+# cp = (1. .+ 0.1*rand(nz, nx)) .* 3000.
 cs = zeros(nz, nx)
 den = 1000.0 .* ones(nz, nx)
 
@@ -51,16 +57,15 @@ tf_den = constant(den)
 
 src = Matrix{Float64}(undef, 1, 2001)
 src[1,:] = Float64.(reinterpret(Float32, read("./Src/params/ricker_10Hz.bin")))
-tf_stf = constant(repeat(src, outer=30))
+tf_stf = constant(repeat(src, outer=length(z_src)))
 tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
-tf_shot_ids0 = constant(collect(Int32, 1:length(x_src)), dtype=Int32)
-# tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
-# shot_ids = constant(zeros(1,1), dtype=Int32)
+tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
+tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 
 res1 = fwi_obs_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
-# res2 = fwi_obs_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
+# res2 = fwi_obs_op(tf_cp2, tf_cs2, tf_den2, tf_stf, tf_gpu_id1, tf_shot_ids0, tf_para_fname)
 
 sess=Session();init(sess);
 @time run(sess, res1)
@@ -77,7 +82,7 @@ sess=Session();init(sess);
 # J = obj()
 
 # J1 = fwi_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
-# J2 = fwi_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id1, tf_shot_ids1, tf_para_fname)
+# J2 = fwi_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id1, tf_shot_ids0, tf_para_fname)
 # J = J1 + J2
 # # config = tf.ConfigProto()
 # # config.allow_growth
@@ -85,7 +90,7 @@ sess=Session();init(sess);
 # # config.inter_op_parallelism_threads = 2
 # sess=Session();init(sess);
 # # @time run(sess, J)
-# gg = gradients(J, cp)
+# gg = gradients(J1, tf_cp)
 # grad_cp = run(sess, gg)
 # imshow(grad_cp);colorbar();
 
@@ -96,14 +101,18 @@ function scalar_function(m)
     return fwi_op(m, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_para_fname)
 end
 
-# m_ = constant(3000ones(nz, nx))
-m_ = constant(cp)
+# open("./Data/Shot1.bin","w") do f
+#     write(f, zeros(nz*nx,1))
+# end
+
+m_ = constant(3100ones(nz, nx))
+# m_ = constant(cp)
 # v_ = 100. .* (1. .+ rand(Float32, 384, 134))
 
 v0 = zeros(nz, nx)
 # PLEASE!!!!!!!!!!!!!! Don't perturb in the CPML region!!!!!!!!!!!!!!!!!!!!!!!
-v0[33:nz-33-1, 33:nx-33-1] .= 1.0
-v_ = Float64.((1. .+ 0.1*rand(nz, nx)) .* 300 .* v0)
+v0[nPml+5:nz-nPml-5, nPml+5:nx-nPml-5] .= 1.0
+v_ = constant(Float64.((1. .+ 0.1*rand(nz, nx)) .* 500 .* v0))
 y_ = scalar_function(m_)
 dy_ = gradients(y_, m_)
 ms_ = Array{Any}(undef, 5)
@@ -124,6 +133,7 @@ sess = Session()
 init(sess)
 sval_ = run(sess, s_)
 wval_ = run(sess, w_)
+# error("")
 sval_ = [x[1] for x in sval_]
 wval_ = [x[1] for x in wval_]
 close("all")

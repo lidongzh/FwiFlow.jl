@@ -400,6 +400,7 @@ Src_Rec::Src_Rec(Parameter &para, string survey_fname, const double *stf, int gr
 		// get the source time function for each shot
 		h_source = new float[nSteps];
 		for (int it = 0; it < nSteps; it++){
+			// the stf shot index starts from 0!!!
 			h_source[it] = stf(shot_ids[i], it);
 		}
 

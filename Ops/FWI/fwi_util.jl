@@ -93,7 +93,7 @@ function surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
     shot["nrec"] = nrec
     shot["z_rec"] = z_rec
     shot["x_rec"] = x_rec
-    survey["shot$i"] = shot
+    survey["shot$(i-1)"] = shot
   end
   
   survey_string = JSON.json(survey)
