@@ -39,13 +39,13 @@ const SRC_CONST = 5.6146
 const GRAV_CONST = 1.0/144.0
 nPml = 32
 
-m = 30
+m = 15
 n = 30
 scaling = (200-2nPml)/30
 h = 100.0 # ft
 # NT = 500
 NT  = 50
-dt_survey = 10
+dt_survey = 5
 Δt = 20.0 # day
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
@@ -54,8 +54,8 @@ X, Z = np.meshgrid(x, z)
 ρo = 40.0 # lbm/scf (pound/ft^3)
 μw = 1.0 # centi poise
 μo = 3.0
-K = 20.0 .* ones(m,n) # millidarcy
-K[8:10,:] .= 100.0
+# K = 20.0 .* ones(m,n) # millidarcy
+# K[8:10,:] .= 100.0
 K_init = 20.0 .* ones(m,n)
 
 # K[10:18, 14:18] .= 100.0
@@ -79,7 +79,7 @@ n_survey = length(survey_indices)
 # ENV["PARAMDIR"] = "Src/params/"
 # config = tf.ConfigProto(device_count = Dict("GPU"=>0))
 
-nz = 200
+nz = 100
 nx = 200
 dz = 20
 dx = 20
@@ -89,22 +89,22 @@ f0 = 4.5
 filter_para = [0, 0.1, 100.0, 200.0]
 isAc = true
 nPad = 0
-x_src = collect(5:10:nx-2nPml-5)
-z_src = 2ones(Int64, size(x_src))
+z_src = collect(5:10:nx-2nPml-5)
+x_src = 5ones(Int64, size(z_src))
 # x_rec = collect(5:100-nPml)
 # z_rec = 2ones(Int64, size(x_rec))
 
 # x_src = [100-nPml]
 # z_src = [100-nPml]
 
-z = (5:10:nz-2nPml-5)|>collect
-x = (5:10:nx-2nPml-5)|>collect
-x_rec, z_rec = np.meshgrid(x, z)
-x_rec = x_rec[:]
-z_rec = z_rec[:]
+# z = (5:10:nz-2nPml-5)|>collect
+# x = (5:10:nx-2nPml-5)|>collect
+# x_rec, z_rec = np.meshgrid(x, z)
+# x_rec = x_rec[:]
+# z_rec = z_rec[:]
 
-# x_rec = collect(5:1:nx-2nPml-5)
-# z_rec = 60ones(Int64, size(x_rec))
+z_rec = collect(5:1:nx-2nPml-5)
+x_rec = (nx-2nPml-5) .* ones(Int64, size(z_rec))
 
 para_fname = "./$(args["version"])/para_file.json"
 survey_fname = "./$(args["version"])/survey_file.json"
@@ -126,5 +126,7 @@ tf_stf = constant(repeat(src, outer=length(z_src)))
 tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
+nGpus = 2
+tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
 tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)

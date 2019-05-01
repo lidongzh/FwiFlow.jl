@@ -8,8 +8,8 @@ include("args.jl")
 function sw_p_to_cp(sw, p)
     sw = tf.reshape(sw, (1, m, n, 1))
     p = tf.reshape(p, (1, m, n, 1))
-    sw = tf.image.resize_bilinear(sw, (200,200))
-    p = tf.image.resize_bilinear(p, (200,200))
+    sw = tf.image.resize_bilinear(sw, (100,200))
+    p = tf.image.resize_bilinear(p, (100,200))
     sw = cast(sw, Float64)
     p = cast(p, Float64)
     sw = squeeze(sw)
@@ -44,6 +44,10 @@ if args["generate_data"]
         surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
         res[i] = fwi_obs_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, para_fname)
     end
+    # config = tf.ConfigProto()
+    # config.intra_op_parallelism_threads = 1
+    # config.inter_op_parallelism_threads = 4
+    sess = Session(); init(sess);
     sess = Session(); init(sess)
     run(sess, res)
     error("Generate Data: Stop")
@@ -63,7 +67,7 @@ loss = constant(0.0)
 for i = 1:n_survey
     global loss
     para_fname = "./$(args["version"])/para_file$i.json"
-    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, para_fname)
+    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id_array[mod(i,nGpus)], tf_shot_ids0, para_fname)
 end
 
 sess = Session(); init(sess)
@@ -103,6 +107,9 @@ function print_iter(rk)
     end
 end
 
+# config = tf.ConfigProto()
+# config.intra_op_parallelism_threads = 2
+# config.inter_op_parallelism_threads = 2
 sess = Session(); init(sess);
 opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 150.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
