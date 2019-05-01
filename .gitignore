@@ -23,3 +23,4 @@ log
 amgcl/
 .vscode/
 *.DS_Store*
+*0000*

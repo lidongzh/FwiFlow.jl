@@ -5,6 +5,7 @@ using PyPlot
 using Random
 Random.seed!(233)
 include("fwi_util.jl")
+include("fwi_util_op.jl")
 np = pyimport("numpy")
 
 # argsparse.jl
@@ -69,6 +70,7 @@ res1 = fwi_obs_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf_par
 
 sess=Session();init(sess);
 @time run(sess, res1)
+error("")
 # error("")
 
 # function obj()
