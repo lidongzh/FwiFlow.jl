@@ -19,6 +19,9 @@ function parse_commandline()
 end
 
 args = parse_commandline()
+if !isdir("./$(args["version"])")
+    mkdir("./$(args["version"])")
+end
 
 using PyTensorFlow
 using PyCall

@@ -1,4 +1,8 @@
-# Main program for two phase flow inversion
+#=
+Main program for two phase flow inversion
+=# 
+
+
 include("args.jl")
 
 function sw_p_to_cp(sw, p)
@@ -100,7 +104,7 @@ function print_iter(rk)
 end
 
 sess = Session(); init(sess);
-opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (20.0, 100.0)), method="L-BFGS-B", 
+opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 150.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
 @info "Optimization Starts..."
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K])
