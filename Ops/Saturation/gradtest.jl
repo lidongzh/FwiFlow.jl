@@ -42,6 +42,7 @@ end
 
 sat_op = py"sat_op"
 
+if Sys.islinux()
 py"""
 import tensorflow as tf
 libUpwpsOp = tf.load_op_library('../Upwps/build/libUpwpsOp.so')
@@ -52,8 +53,21 @@ def upwps_op(permi,mobi,src,funcref,h,rhograv,index):
         return libUpwpsOp.upwps_op_grad(dy, pres, permi,mobi,src,funcref,h,rhograv,index)
     return pres, grad
 """
+elseif Sys.isapple()
+    py"""
+    import tensorflow as tf
+    libUpwpsOp = tf.load_op_library('../Upwps/build/libUpwpsOp.dylib')
+    @tf.custom_gradient
+    def upwps_op(permi,mobi,src,funcref,h,rhograv,index):
+        pres = libUpwpsOp.upwps_op(permi,mobi,src,funcref,h,rhograv,index)
+        def grad(dy):
+            return libUpwpsOp.upwps_op_grad(dy, pres, permi,mobi,src,funcref,h,rhograv,index)
+        return pres, grad
+    """
+end
 upwps_op = py"upwps_op"
 
+if Sys.islinux()
 py"""
 import tensorflow as tf
 libUpwlapOp = tf.load_op_library('../Upwlap/build/libUpwlapOp.so')
@@ -64,8 +78,21 @@ def upwlap_op(perm,mobi,func,h,rhograv):
         return libUpwlapOp.upwlap_op_grad(dy, out, perm,mobi,func,h,rhograv)
     return out, grad
 """
+elseif Sys.isapple()
+py"""
+import tensorflow as tf
+libUpwlapOp = tf.load_op_library('../Upwlap/build/libUpwlapOp.dylib')
+@tf.custom_gradient
+def upwlap_op(perm,mobi,func,h,rhograv):
+    out = libUpwlapOp.upwlap_op(perm,mobi,func,h,rhograv)
+    def grad(dy):
+        return libUpwlapOp.upwlap_op_grad(dy, out, perm,mobi,func,h,rhograv)
+    return out, grad
+"""
+end    
 upwlap_op = py"upwlap_op"
 
+if Sys.islinux()
 py"""
 import tensorflow as tf
 libPoissonOp = tf.load_op_library('../Poisson/build/libPoissonOp.so')
@@ -76,6 +103,18 @@ def poisson_op(coef,g,h,rhograv,index):
         return libPoissonOp.poisson_op_grad(dy, p, coef, g, h, rhograv, index)
     return p, grad
 """
+elseif Sys.isapple()
+py"""
+import tensorflow as tf
+libPoissonOp = tf.load_op_library('../Poisson/build/libPoissonOp.so')
+@tf.custom_gradient
+def poisson_op(coef,g,h,rhograv,index):
+    p = libPoissonOp.poisson_op(coef,g,h,rhograv,index)
+    def grad(dy):
+        return libPoissonOp.poisson_op_grad(dy, p, coef, g, h, rhograv, index)
+    return p, grad
+"""
+end    
 poisson_op = py"poisson_op"
 
 

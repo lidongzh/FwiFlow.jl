@@ -44,11 +44,10 @@ if args["generate_data"]
         surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
         res[i] = fwi_obs_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, para_fname)
     end
-    # config = tf.ConfigProto()
-    # config.intra_op_parallelism_threads = 1
-    # config.inter_op_parallelism_threads = 4
-    sess = Session(); init(sess);
-    sess = Session(); init(sess)
+    config = tf.ConfigProto()
+    config.intra_op_parallelism_threads = 24
+    config.inter_op_parallelism_threads = 24
+    sess = Session(config=config); init(sess);
     run(sess, res)
     error("Generate Data: Stop")
 end
@@ -107,10 +106,10 @@ function print_iter(rk)
     end
 end
 
-# config = tf.ConfigProto()
-# config.intra_op_parallelism_threads = 2
-# config.inter_op_parallelism_threads = 2
-sess = Session(); init(sess);
+config = tf.ConfigProto()
+config.intra_op_parallelism_threads = 24
+config.inter_op_parallelism_threads = 24
+sess = Session(config=config); init(sess);
 opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 150.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
 @info "Optimization Starts..."

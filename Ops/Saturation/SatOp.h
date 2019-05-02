@@ -353,6 +353,9 @@ void forward(double *sat, const double *s0, const double *pt,
     double error;
     resEg = -resEg;
     std::tie(iters, error) = solve(resEg, delta_sEg);
+    // std::cout << "error"
+    //           << " " << (Jac * delta_sEg - resEg).norm() / resEg.norm()
+    //           << std::endl;
 #ifdef OUTPUT_AMG
     std::cout << iters << " " << error << std::endl;
 #endif
@@ -417,6 +420,9 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
   double error;
   rhs = -rhs;
   std::tie(iters, error) = solve(rhs, adjoint);
+  // std::cout << "error"
+  //           << " " << (Trans_Jac * adjoint - rhs).norm() / rhs.norm()
+  //           << std::endl;
 #ifdef OUTPUT_AMG
   std::cout << iters << " " << error << std::endl;
 #endif
