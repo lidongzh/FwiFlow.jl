@@ -8,16 +8,17 @@ include("args.jl")
 function sw_p_to_cp(sw, p)
     sw = tf.reshape(sw, (1, m, n, 1))
     p = tf.reshape(p, (1, m, n, 1))
-    sw = tf.image.resize_bilinear(sw, (100,200))
-    p = tf.image.resize_bilinear(p, (100,200))
+    sw = tf.image.resize_bilinear(sw, (nz, nx))
+    p = tf.image.resize_bilinear(p, (nz, nx))
     sw = cast(sw, Float64)
     p = cast(p, Float64)
     sw = squeeze(sw)
     p = squeeze(p)
-    # sw = tf.pad(sw, [nPml nPml;nPml nPml] )
+    # sw = tf.pad(sw, [nPml nPml;nPml nPml])
     # p = tf.pad(p, [nPml nPml;nPml nPml])
     # println(p, sw)
-    return (1.0 +0.2*sw)*3000
+    tran_cp = (1.0 +0.2*sw)*3000.0
+    return tf.pad(tran_cp, [nPml (nPml+nPad); nPml nPml], constant_values=3000.0)
 end
 
 # NOTE Generate Data
@@ -29,8 +30,8 @@ if args["generate_data"]
     out_sw_true, out_p_true = imseq(tfCtxTrue)
     cps = Array{PyObject}(undef, n_survey)
     for i = 1:n_survey
-        sw = out_sw_true[survey_indices[i]-1]
-        p = out_p_true[survey_indices[i]-1]
+        sw = out_sw_true[survey_indices[i]]
+        p = out_p_true[survey_indices[i]]
         cps[i] = sw_p_to_cp(sw, p)
     end
 
@@ -40,7 +41,7 @@ if args["generate_data"]
             mkdir("./$(args["version"])/Data$i")
         end
         para_fname = "./$(args["version"])/para_file$i.json"
-        paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, "./$(args["version"])/Data$i/")
+        paraGen(nz_pad, nx_pad, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, "./$(args["version"])/Data$i/")
         surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
         res[i] = fwi_obs_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, para_fname)
     end

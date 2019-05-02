@@ -79,51 +79,53 @@ n_survey = length(survey_indices)
 # ENV["PARAMDIR"] = "Src/params/"
 # config = tf.ConfigProto(device_count = Dict("GPU"=>0))
 
-nz = 100
-nx = 200
-dz = 20
-dx = 20
+# nz = 100
+# nx = 200
+dz = 3 # meters
+dx = 3
+nz = Int64(round(0.3048 * (m * h) / dz)) + 1
+nx = Int64(round(0.3048 * (n * h) / dx)) + 1
 nSteps = 2001
-dt = 0.0025
-f0 = 4.5
-filter_para = [0, 0.1, 100.0, 200.0]
+dt = 0.00025
+f0 = 50.0
+filter_para = [0, 0.1, 1000.0, 2000.0]
 isAc = true
-nPad = 0
-z_src = collect(5:10:nx-2nPml-5)
+nPad = 32 - mod((nz+2*nPml), 32)
+nz_pad = nz + 2*nPml + nPad
+nx_pad = nx + 2*nPml
+
+# reflection
+# x_src = collect(5:20:nx-5)
+# z_src = 5ones(Int64, size(x_src))
+# x_rec = collect(5:1:nx-5)
+# z_rec = 5 .* ones(Int64, size(x_rec))
+
+# xwell
+z_src = collect(5:20:nz-5)
 x_src = 5ones(Int64, size(z_src))
-# x_rec = collect(5:100-nPml)
-# z_rec = 2ones(Int64, size(x_rec))
+z_rec = collect(5:1:nz-5)
+x_rec = 5 .* ones(Int64, size(z_rec))
 
-# x_src = [100-nPml]
-# z_src = [100-nPml]
-
-# z = (5:10:nz-2nPml-5)|>collect
-# x = (5:10:nx-2nPml-5)|>collect
-# x_rec, z_rec = np.meshgrid(x, z)
-# x_rec = x_rec[:]
-# z_rec = z_rec[:]
-
-z_rec = collect(5:1:nx-2nPml-5)
-x_rec = (nx-2nPml-5) .* ones(Int64, size(z_rec))
-
-para_fname = "./$(args["version"])/para_file.json"
+# para_fname = "./$(args["version"])/para_file.json"
 survey_fname = "./$(args["version"])/survey_file.json"
 # data_dir_name = "./$(args["version"])/Data"
 # paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, data_dir_name)
 surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
-cp = 3000ones(nz, nx)
-# cp = (1. .+ 0.1*rand(nz, nx)) .* 3000.
-cs = zeros(nz, nx)
-den = 1000.0 .* ones(nz, nx)
 
-tf_cp = constant(cp)
+cs = zeros(nz_pad, nx_pad)
+den = 1000.0 .* ones(nz_pad, nx_pad)
+cp_pad_value = 3000.0
+
+# tf_cp = constant(cp)
 tf_cs = constant(cs)
 tf_den = constant(den)
 
-src = Matrix{Float64}(undef, 1, 2001)
-src[1,:] = Float64.(reinterpret(Float32, read("../Ops/FWI/Src/params/ricker_10Hz.bin")))
+# src = Matrix{Float64}(undef, 1, 2001)
+# # src[1,:] = Float64.(reinterpret(Float32, read("../Ops/FWI/Src/params/ricker_10Hz.bin")))
+# src[1,:] = Float64.(reinterpret(Float32, read("../Ops/FWI/Src/params/Mar_source_2001.bin")))
+src = sourceGene(f0, nSteps, dt)
 tf_stf = constant(repeat(src, outer=length(z_src)))
-tf_para_fname = tf.strings.join([para_fname])
+# tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
 nGpus = 2

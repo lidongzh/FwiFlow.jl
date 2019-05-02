@@ -303,6 +303,7 @@ void forward(double *sat, const double *s0, const double *pt,
              const double *qo, const double *sref, double dt, double h, int nz,
              int nx) {
   Eigen::VectorXd resEg(nz * nx);
+  Eigen::VectorXd negResEg(nz * nx);
   Eigen::MatrixXd sEg(nz, nx);
   Eigen::MatrixXd delta_sEg_mat_tran(nx, nz);
   Eigen::MatrixXd delta_sEg_mat(nz, nx);
@@ -351,8 +352,8 @@ void forward(double *sat, const double *s0, const double *pt,
     // Solve the system for the given RHS:
     int iters;
     double error;
-    resEg = -resEg;
-    std::tie(iters, error) = solve(resEg, delta_sEg);
+    negResEg = -1.0 * resEg;
+    std::tie(iters, error) = solve(negResEg, delta_sEg);
     // std::cout << "error"
     //           << " " << (Jac * delta_sEg - resEg).norm() / resEg.norm()
     //           << std::endl;
@@ -389,6 +390,7 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
   Eigen::SparseMatrix<double, Eigen::RowMajor> Jac(nz * nx, nz * nx);
   Eigen::SparseMatrix<double, Eigen::RowMajor> Trans_Jac(nz * nx, nz * nx);
   Eigen::VectorXd rhs(nz * nx);
+  Eigen::VectorXd negRhs(nz * nx);
   Eigen::VectorXd adjoint = Eigen::VectorXd::Zero(nz * nx);
   for (int i = 0; i < nz; i++) {
     for (int j = 0; j < nx; j++) {
@@ -418,8 +420,8 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
 #endif
   int iters;
   double error;
-  rhs = -rhs;
-  std::tie(iters, error) = solve(rhs, adjoint);
+  negRhs = -1.0 * rhs;
+  std::tie(iters, error) = solve(negRhs, adjoint);
   // std::cout << "error"
   //           << " " << (Trans_Jac * adjoint - rhs).norm() / rhs.norm()
   //           << std::endl;

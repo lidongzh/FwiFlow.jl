@@ -55,3 +55,21 @@ function surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
 
 end
 
+function sourceGene(f, nStep, delta_t)
+#  Ricker wavelet generation and integration for source
+#  Dongzhuo Li @ Stanford
+#  May, 2015
+
+  e = pi*pi*f*f;
+  t_delay = 1.2/f;
+  source = Matrix{Float64}(undef, 1, nStep)
+  for it = 1:nStep
+      source[it] = (1-2*e*(delta_t*(it-1)-t_delay)^2)*exp(-e*(delta_t*(it-1)-t_delay)^2);
+  end
+
+  for it = 2:nStep
+      source[it] = source[it] + source[it-1];
+  end
+  source = source * delta_t;
+end
+
