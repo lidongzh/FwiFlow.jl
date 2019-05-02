@@ -106,7 +106,7 @@ def poisson_op(coef,g,h,rhograv,index):
 elseif Sys.isapple()
 py"""
 import tensorflow as tf
-libPoissonOp = tf.load_op_library('../Poisson/build/libPoissonOp.so')
+libPoissonOp = tf.load_op_library('../Poisson/build/libPoissonOp.dylib')
 @tf.custom_gradient
 def poisson_op(coef,g,h,rhograv,index):
     p = libPoissonOp.poisson_op(coef,g,h,rhograv,index)
