@@ -361,6 +361,26 @@ void forward(double *sat, const double *s0, const double *pt,
     std::cout << iters << " " << error << std::endl;
 #endif
     // =============================================
+
+    // ============ Eigen SparseLU =============
+    // Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+    // // Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>  solver;
+    // solver.analyzePattern(Jac);
+    // solver.compute(Jac);
+    // if (solver.info() != Eigen::Success) {
+    //   // decomposition failed
+    //   std::cout << "!!!decomposition failed" << std::endl;
+    //   exit(1);
+    // }
+    // negResEg = -1.0 * resEg;
+    // delta_sEg = solver.solve(negResEg);
+    // if (solver.info() != Eigen::Success) {
+    //   // solving failed
+    //   std::cout << "!!!solving failed" << std::endl;
+    //   exit(1);
+    // }
+    // ================= END =====================
+
     // sEg += delta_sEg;
     Eigen::Map<Eigen::MatrixXd> delta_sEg_mat_tran(delta_sEg.data(), nx, nz);
     delta_sEg_mat = delta_sEg_mat_tran.transpose();
@@ -401,6 +421,7 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
     rhs(i) = grad_sat[i];
   }
   assembleJ(Jac, sEg, pt, permi, poro, qo, dt, h, nz, nx);
+  // ================ AMG ====================
   // Setup the solver:
   typedef amgcl::make_solver<
       amgcl::amg<amgcl::backend::eigen<double>, amgcl::coarsening::ruge_stuben,
@@ -428,6 +449,27 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
 #ifdef OUTPUT_AMG
   std::cout << iters << " " << error << std::endl;
 #endif
+  // ================= END =====================
+
+  // ============ Eigen SparseLU =============
+  // Trans_Jac = Jac.transpose();
+  // Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+  // // Eigen::BiCGSTAB<Eigen::SparseMatrix<double>>  solver;
+  // solver.analyzePattern(Trans_Jac);
+  // solver.compute(Trans_Jac);
+  // if (solver.info() != Eigen::Success) {
+  //   // decomposition failed
+  //   std::cout << "!!!decomposition failed" << std::endl;
+  //   exit(1);
+  // }
+  // negRhs = -1.0 * rhs;
+  // adjoint = solver.solve(negRhs);
+  // if (solver.info() != Eigen::Success) {
+  //   // solving failed
+  //   std::cout << "!!!solving failed" << std::endl;
+  //   exit(1);
+  // }
+  // ================= END =====================
 
   // compute gradient with respect to s0
   for (int i = 0; i < nz; i++) {
