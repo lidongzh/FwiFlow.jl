@@ -101,10 +101,10 @@ nx_pad = nx + 2*nPml
 # z_rec = 5 .* ones(Int64, size(x_rec))
 
 # xwell
-z_src = collect(5:20:nz-5)
+z_src = collect(5:10:nz-5) #14->11srcs 10->15srcs
 x_src = 5ones(Int64, size(z_src))
 z_rec = collect(5:1:nz-5)
-x_rec = 5 .* ones(Int64, size(z_rec))
+x_rec = (nx-5) .* ones(Int64, size(z_rec))
 
 # para_fname = "./$(args["version"])/para_file.json"
 survey_fname = "./$(args["version"])/survey_file.json"

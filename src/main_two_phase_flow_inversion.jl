@@ -41,8 +41,11 @@ if args["generate_data"]
             mkdir("./$(args["version"])/Data$i")
         end
         para_fname = "./$(args["version"])/para_file$i.json"
+        survey_fname = "./$(args["version"])/survey_file$i.json"
         paraGen(nz_pad, nx_pad, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, "./$(args["version"])/Data$i/")
-        surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
+        shot_inds = collect(1:3:length(z_src)) .+ mod(i-1,3)
+        surveyGen(z_src[shot_inds], x_src[shot_inds], z_rec, x_rec, survey_fname)
+        tf_shot_ids0 = constant(collect(0:length(shot_inds)-1), dtype=Int32)
         res[i] = fwi_obs_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, para_fname)
     end
     config = tf.ConfigProto()
@@ -57,8 +60,8 @@ tfCtxInit = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K_init,g,ϕ,qw,qo, sw0, fa
 out_sw_init, out_p_init = imseq(tfCtxInit)
 cps = Array{PyObject}(undef, n_survey)
 for i = 1:n_survey
-    sw = out_sw_init[survey_indices[i]-1]
-    p = out_p_init[survey_indices[i]-1]
+    sw = out_sw_init[survey_indices[i]]
+    p = out_p_init[survey_indices[i]]
     cps[i] = sw_p_to_cp(sw, p)
 end
 
@@ -67,11 +70,15 @@ loss = constant(0.0)
 for i = 1:n_survey
     global loss
     para_fname = "./$(args["version"])/para_file$i.json"
-    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id_array[mod(i,nGpus)], tf_shot_ids0, para_fname)
+    survey_fname = "./$(args["version"])/survey_file$i.json"
+    shot_inds = collect(1:3:length(z_src)) .+ mod(i-1,3)
+    tf_shot_ids0 = constant(collect(0:length(shot_inds)-1), dtype=Int32)
+    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id_array[1], tf_shot_ids0, para_fname)
 end
 
-sess = Session(); init(sess)
+
 if args["verbose"]
+    sess = Session(); init(sess)
     println("Initial loss = ", run(sess, loss))
     g = gradients(loss, tfCtxInit.K)
     G = run(sess, g)
@@ -112,7 +119,7 @@ config.intra_op_parallelism_threads = 24
 config.inter_op_parallelism_threads = 24
 sess = Session(config=config); init(sess);
 opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 150.0)), method="L-BFGS-B", 
-    options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
+    options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
 @info "Optimization Starts..."
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K])
 
