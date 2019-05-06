@@ -123,12 +123,13 @@ Mask[nPml+1:nPml+10,:] .= 0.0
 tf_cp_inv_msk = tf_cp_inv .* constant(Mask) + constant(cp_init[1,1] .* (1. .- Mask))
 
 # NOTE Compute FWI loss
-loss = constant(0.0)
-for i = 1:nGpus
-    global loss
-    tf_shot_ids = constant(collect(shot_id_points[i] : shot_id_points[i+1]), dtype=Int32)
-    loss += fwi_op(tf_cp_inv_msk, tf_cs, tf_den, tf_stf, tf_gpu_id_array[i], tf_shot_ids, para_fname)
-end
+# loss = constant(0.0)
+# for i = 1:nGpus
+#     global loss
+#     tf_shot_ids = constant(collect(shot_id_points[i] : shot_id_points[i+1]), dtype=Int32)
+#     loss += fwi_op(tf_cp_inv_msk, tf_cs, tf_den, tf_stf, tf_gpu_id_array[i], tf_shot_ids, para_fname)
+# end
+loss = fwi_op(tf_cp_inv_msk, tf_cs, tf_den, tf_stf, tf_gpu_id_array[1], tf_shot_ids0, para_fname)
 gradCp = gradients(loss, tf_cp_inv)
 
 
@@ -185,3 +186,21 @@ opt = ScipyOptimizerInterface(loss, var_list=[tf_cp_inv], var_to_bounds=Dict(tf_
 @info "Optimization Starts..."
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tf_cp_inv,gradCp])
 
+# adam = AdamOptimizer(learning_rate=50.0)
+# op = minimize(adam, loss)
+# sess = Session(); init(sess);
+# for iter = 1:1000
+#     _, misfit, cp, cpgrad = run(sess, [op, loss, tf_cp_inv, gradCp])
+
+#     open("./$(args["version"])/Cp$iter.txt", "w") do io 
+#         writedlm(io, cp)
+#     end
+
+#     open("./$(args["version"])/loss.txt", "a") do io 
+#         writedlm(io, Any[iter misfit])
+#     end
+
+#     open("./$(args["version"])/gradCp$iter.txt", "w") do io 
+#         writedlm(io, cpgrad)
+#     end
+# end

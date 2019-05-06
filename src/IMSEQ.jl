@@ -10,13 +10,13 @@ include("sat_op.jl")
 
 
 # Solver parameters
-m = 15
+m = 30
 n = 30
-h = 110.0
+h = 100.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
-NT = 92
+NT = 50
 Δt = 20.
 # T = NT() # 100 days
 z = (1:m)*h|>collect
@@ -36,9 +36,15 @@ const GRAV_CONST = 1.0/144.0 # conversion to psi
 ρo = constant(40.0)
 μw = constant(1.0)
 μo = constant(3.0)
-K_np = 80.0 .* ones(m,n)
-# K_np[16,:] .= 5e-14
-# K_np[12:14,:] .= 100.0
+K_np = 20.0 .* ones(m,n)
+# K_np[16:20,:] .= 100.0
+for i = 1:m
+    for j = 1:n
+        if i <= (14 - 24)/(30 - 1)*(j-1) + 24 && i >= (12 - 18)/(30 - 1)*(j-1) + 18
+            K_np[i,j] = 100.0
+        end
+    end
+end
 K = constant(K_np)
 g = constant(9.8*GRAV_CONST)
 ϕ = constant(0.25 .* ones(m,n))
@@ -130,10 +136,14 @@ end
 function vis(val, args...;kwargs...)
     close("all")
     ns = Int64.(round.(LinRange(1,size(val,1),9)))
+    figure(figsize=(80,40))
     for i = 1:9
         subplot(330+i)
         imshow(val[ns[i],:,:], args...;kwargs...)
-        colorbar()
+        xlabel("Distance (ft)")
+        ylabel("Depth (ft)")
+        cb = colorbar()
+        cb.set_label("Sw")
     end
 end
 
@@ -143,11 +153,11 @@ Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 
 # qw[:,12,5] .= (0.0026/h^3)
-qw[:,7,5] .= 1400 * (1/h^2)/10 * SRC_CONST
+qw[:,15,5] .= 3000 * (1/h^2)/20 * SRC_CONST
 qo = zeros(NT, m, n)
 
 # qo[:,12,25] .= -(0.004/h^3)
-qo[:,7,25] .= -2200 * (1/h^2)/10 * SRC_CONST
+qo[:,15,25] .= -3000 * (1/h^2)/20 * SRC_CONST
 sw0 = zeros(m,n)
 # sw0[10:12,16:18] .= 0.3
 
@@ -159,8 +169,7 @@ out_sw, out_p, out_u, out_v, out_f, out_Δt = solve(qw, qo, sw0, sw1)
 sess = Session(); init(sess)
 S, P, U, V, F, T = run(sess, [out_sw, out_p, out_u, out_v, out_f, out_Δt])
 
-
-vis(S)
+vis(S, extent=[0,n*h,m*h,0])
 
 # quiver(x, z, V[80,:,:],U[80,:,:])
 # title("velocity field")
