@@ -26,14 +26,15 @@ end
 if args["generate_data"]
     println("Generate Test Data...")
     K = 20.0 .* ones(m,n) # millidarcy
-    # K[8:10,:] .= 100.0
-    for i = 1:m
-        for j = 1:n
-            if i <= (14 - 24)/(30 - 1)*(j-1) + 24 && i >= (12 - 18)/(30 - 1)*(j-1) + 18
-                K[i,j] = 100.0
-            end
-        end
-    end
+    K[8:10,:] .= 100.0
+    # K[17:21,:] .= 100.0
+    # for i = 1:m
+    #     for j = 1:n
+    #         if i <= (14 - 24)/(30 - 1)*(j-1) + 24 && i >= (12 - 18)/(30 - 1)*(j-1) + 18
+    #             K[i,j] = 100.0
+    #         end
+    #     end
+    # end
     tfCtxTrue = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K,g,ϕ,qw,qo, sw0, true)
     out_sw_true, out_p_true = imseq(tfCtxTrue)
     cps = Array{PyObject}(undef, n_survey)
@@ -51,9 +52,9 @@ if args["generate_data"]
         para_fname = "./$(args["version"])/para_file$i.json"
         survey_fname = "./$(args["version"])/survey_file$i.json"
         paraGen(nz_pad, nx_pad, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, "./$(args["version"])/Data$i/")
-        shot_inds = collect(1:3:length(z_src)) .+ mod(i-1,3) # 5src rotation
+        # shot_inds = collect(1:3:length(z_src)) .+ mod(i-1,3) # 5src rotation
         # shot_inds = i # 1src rotation
-        # shot_inds = collect(1:length(z_src)) # all sources
+        shot_inds = collect(1:length(z_src)) # all sources
         surveyGen(z_src[shot_inds], x_src[shot_inds], z_rec, x_rec, survey_fname)
         tf_shot_ids0 = constant(collect(0:length(shot_inds)-1), dtype=Int32)
         res[i] = fwi_obs_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, para_fname)
@@ -81,12 +82,13 @@ for i = 1:n_survey
     global loss
     para_fname = "./$(args["version"])/para_file$i.json"
     survey_fname = "./$(args["version"])/survey_file$i.json"
-    shot_inds = collect(1:3:length(z_src)) .+ mod(i-1,3)
+    # shot_inds = collect(1:3:length(z_src)) .+ mod(i-1,3)
     # shot_inds = i
-    # shot_inds = collect(1:length(z_src)) # all sources
+    shot_inds = collect(1:length(z_src)) # all sources
     tf_shot_ids0 = constant(collect(0:length(shot_inds)-1), dtype=Int32)
-    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id_array[1], tf_shot_ids0, para_fname)
+    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id_array[mod(i,2)], tf_shot_ids0, para_fname)
 end
+gradK = gradients(loss, tfCtxInit.K)
 
 
 if args["verbose"]
@@ -100,8 +102,8 @@ end
 # Optimization
 __cnt = 0
 # invK = zeros(m,n)
-function print_loss(l, K)
-    global __cnt, __l, __K
+function print_loss(l, K, gradK)
+    global __cnt, __l, __K, __gradK
     if mod(__cnt,1)==0
         println("\niter=$__iter, eval=$__cnt, current loss=",l)
         # println("a=$a, b1=$b1, b2=$b2")
@@ -109,6 +111,7 @@ function print_loss(l, K)
     __cnt += 1
     __l = l
     __K = K
+    __gradK = gradK
 end
 
 __iter = 0
@@ -124,14 +127,17 @@ function print_iter(rk)
     open("./$(args["version"])/K$__iter.txt", "w") do io 
         writedlm(io, __K)
     end
+    open("./$(args["version"])/gradK$__iter.txt", "w") do io 
+        writedlm(io, __gradK)
+    end
 end
 
 config = tf.ConfigProto()
 config.intra_op_parallelism_threads = 24
 config.inter_op_parallelism_threads = 24
 sess = Session(config=config); init(sess);
-opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 150.0)), method="L-BFGS-B", 
+opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 110.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
 @info "Optimization Starts..."
-ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K])
+ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K,gradK])
 

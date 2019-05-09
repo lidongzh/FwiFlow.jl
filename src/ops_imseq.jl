@@ -6,6 +6,8 @@ using DelimitedFiles
 using Random
 Random.seed!(233)
 
+const K_CONST =  constant(9.869232667160130e-16)
+
 np = pyimport("numpy")
 include("poisson_op.jl")
 include("laplacian_op.jl")
@@ -68,14 +70,14 @@ function onestep(sw, p, m, n, h, Δt, Z, ρw, ρo, μw, μo, K, g, ϕ, qw, qo)
     potential_c = (ρw - ρo)*g .* Z
 
     # Step 1: implicit potential
-    Θ = upwlap_op(K, λo, potential_c, h, constant(0.0))
+    Θ = upwlap_op(K * K_CONST, λo, potential_c, h, constant(0.0))
 
     load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, m, n)
 
-    p = upwps_op(K, λ, load_normal, p, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+    p = upwps_op(K * K_CONST, λ, load_normal, p, h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
 
     # step 2: implicit transport
-    sw = sat_op(sw, p, K, ϕ, qw, qo, μw, μo, sw, Δt, h)
+    sw = sat_op(sw, p, K * K_CONST, ϕ, qw, qo, μw, μo, sw, Δt, h)
     return sw, p
 end
 
