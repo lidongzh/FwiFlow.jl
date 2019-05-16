@@ -6,12 +6,12 @@ using DelimitedFiles
 using Random
 Random.seed!(233)
 
-const K_CONST =  constant(9.869232667160130e-16)
-
 np = pyimport("numpy")
 include("poisson_op.jl")
 include("laplacian_op.jl")
 include("sat_op.jl")
+
+const K_CONST =  9.869232667160130e-16 * 86400
 
 mutable struct Ctx
   m; n; h; NT; Δt; Z; X; ρw; ρo;

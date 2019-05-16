@@ -8,17 +8,17 @@ include("poisson_op.jl")
 include("laplacian_op.jl")
 include("sat_op.jl")
 
-const K_CONST =  9.869232667160130e-16
+const K_CONST =  9.869232667160130e-16 * 86400.0
 
 # Solver parameters
 m = 15
 n = 30
-h = 110.0 * 0.3048
+h = 100.0 * 0.3048
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
 NT = 50
-Δt = 86400.0 * 20.
+Δt = 20.
 # T = NT() # 100 days
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
@@ -30,7 +30,7 @@ tf_t = constant(Δt)
 
 const ALPHA = 1.0  # conversion coefficient for field unit
 # const ALPHA = 0.001127
-const SRC_CONST = 1.0  # conversion from stb to standard cubic feet
+const SRC_CONST = 86400.0  # conversion from stb to standard cubic feet
 # const SRC_CONST = 1.0
 const GRAV_CONST = 1.0 # conversion to psi
 ρw = constant(996.9571)
@@ -38,7 +38,7 @@ const GRAV_CONST = 1.0 # conversion to psi
 μw = constant(1e-3)
 μo = constant(3e-3)
 K_np = 20. .* ones(m,n)
-K_np[8:10, :] .= 100.0
+K_np[8:10, :] .= 80.0
 # K_np[16:20,:] .= 100.0
 # for i = 1:m
 #     for j = 1:n
@@ -160,11 +160,11 @@ Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 
 # qw[:,12,5] .= (0.0026/h^3)
-qw[:,7,5] .= 0.0026 * (1/h^2)/20/0.3048 * SRC_CONST
+qw[:,7,5] .= 0.0015 * (1/h^2)/20.0/0.3048 * SRC_CONST
 qo = zeros(NT, m, n)
 
 # qo[:,12,25] .= -(0.004/h^3)
-qo[:,7,25] .= -0.004 * (1/h^2)/20/0.3048 * SRC_CONST
+qo[:,7,25] .= -0.0015 * (1/h^2)/20.0/0.3048 * SRC_CONST
 sw0 = zeros(m,n)
 # sw0[10:12,16:18] .= 0.3
 

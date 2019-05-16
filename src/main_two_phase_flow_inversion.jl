@@ -86,7 +86,7 @@ for i = 1:n_survey
     # shot_inds = i
     shot_inds = collect(1:length(z_src)) # all sources
     tf_shot_ids0 = constant(collect(0:length(shot_inds)-1), dtype=Int32)
-    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id_array[mod(i,2)], tf_shot_ids0, para_fname)
+    loss += fwi_op(cps[i], tf_cs, tf_den, tf_stf, tf_gpu_id_array[mod(i,2)], tf_shot_ids0, para_fname) # mod(i,2)
 end
 gradK = gradients(loss, tfCtxInit.K)
 
