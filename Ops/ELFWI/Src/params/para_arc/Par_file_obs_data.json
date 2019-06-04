@@ -1,0 +1,1 @@
+{"nz":134,"nx":384,"dz":24,"dx":24,"nSteps":2001,"dt":0.0025,"f0":4.5,"nPoints_pml":32,"nPad":0,"Cp_fname":"../params/Models/Model_Cp.bin","Cs_fname":"../params/Models/Model_Cs.bin","Den_fname":"../params/Models/Model_Den.bin","data_dir_name":"../Data/","isAc":true,"withAdj":false,"if_res":false,"if_win":false,"filter":[0,0.1,100,200],"if_src_update":false}
