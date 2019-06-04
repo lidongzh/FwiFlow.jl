@@ -13,7 +13,6 @@
 #include "rapidjson/rapidjson.h"
 
 #define PI (3.141592653589793238462643383279502884197169)
-#define MEGA 1e6
 
 #define TX 32
 #define TY 16
@@ -49,9 +48,6 @@ void displayArray(std::string s, float *ip, int nx, int ny);
 __global__ void moduliInit(float *d_Cp, float *d_Cs, float *d_Den,
                            float *d_Lambda, float *d_Mu, int nx, int ny);
 
-__global__ void velInit(float *d_Lambda, float *d_Mu, float *d_Den, float *d_Cp,
-                        float *d_Cs, int nx, int ny);
-
 __global__ void aveMuInit(float *d_Mu, float *d_ave_Mu, int nx, int ny);
 
 __global__ void aveBycInit(float *d_Den, float *d_ave_Byc_a, float *d_ave_Byc_b,
@@ -72,26 +68,29 @@ void cpmlInit(float *K, float *a, float *b, float *K_half, float *a_half,
               float *b_half, int N, int nPml, float dh, float f0, float dt,
               float CpAve);
 
-__global__ void el_stress(
-    float *d_vz, float *d_vx, float *d_szz, float *d_sxx, float *d_sxz,
-    float *d_mem_dvz_dz, float *d_mem_dvz_dx, float *d_mem_dvx_dz,
-    float *d_mem_dvx_dx, float *d_Lambda, float *d_Mu, float *d_ave_Mu,
-    float *d_Den, float *d_K_z, float *d_a_z, float *d_b_z, float *d_K_z_half,
-    float *d_a_z_half, float *d_b_z_half, float *d_K_x, float *d_a_x,
-    float *d_b_x, float *d_K_x_half, float *d_a_x_half, float *d_b_x_half,
-    int nz, int nx, float dt, float dz, float dx, int nPml, int nPad,
-    bool isFor, float *d_szz_adj, float *d_sxx_adj, float *d_sxz_adj,
-    float *d_LambdaGrad, float *d_MuGrad);
+__global__ void el_stress(float *d_vz, float *d_vx, float *d_szz, float *d_sxx,
+                          float *d_sxz, float *d_mem_dvz_dz,
+                          float *d_mem_dvz_dx, float *d_mem_dvx_dz,
+                          float *d_mem_dvx_dx, float *d_Lambda, float *d_Mu,
+                          float *d_ave_Mu, float *d_Den, float *d_K_z,
+                          float *d_a_z, float *d_b_z, float *d_K_z_half,
+                          float *d_a_z_half, float *d_b_z_half, float *d_K_x,
+                          float *d_a_x, float *d_b_x, float *d_K_x_half,
+                          float *d_a_x_half, float *d_b_x_half, int nz, int nx,
+                          float dt, float dz, float dx, int nPml, int nPad,
+                          bool isFor);
 
-__global__ void el_velocity(
-    float *d_vz, float *d_vx, float *d_szz, float *d_sxx, float *d_sxz,
-    float *d_mem_dszz_dz, float *d_mem_dsxz_dx, float *d_mem_dsxz_dz,
-    float *d_mem_dsxx_dx, float *d_Lambda, float *d_Mu, float *d_ave_Byc_a,
-    float *d_ave_Byc_b, float *d_K_z, float *d_a_z, float *d_b_z,
-    float *d_K_z_half, float *d_a_z_half, float *d_b_z_half, float *d_K_x,
-    float *d_a_x, float *d_b_x, float *d_K_x_half, float *d_a_x_half,
-    float *d_b_x_half, int nz, int nx, float dt, float dz, float dx, int nPml,
-    int nPad, bool isFor, float *d_vz_adj, float *d_vx_adj, float *d_DenGrad);
+__global__ void el_velocity(float *d_vz, float *d_vx, float *d_szz,
+                            float *d_sxx, float *d_sxz, float *d_mem_dszz_dz,
+                            float *d_mem_dsxz_dx, float *d_mem_dsxz_dz,
+                            float *d_mem_dsxx_dx, float *d_Lambda, float *d_Mu,
+                            float *d_ave_Byc_a, float *d_ave_Byc_b,
+                            float *d_K_z, float *d_a_z, float *d_b_z,
+                            float *d_K_z_half, float *d_a_z_half,
+                            float *d_b_z_half, float *d_K_x, float *d_a_x,
+                            float *d_b_x, float *d_K_x_half, float *d_a_x_half,
+                            float *d_b_x_half, int nz, int nx, float dt,
+                            float dz, float dx, int nPml, int nPad, bool isFor);
 
 __global__ void ac_pressure(float *d_vz, float *d_vx, float *d_szz,
                             float *d_mem_dvz_dz, float *d_mem_dvx_dx,
@@ -148,28 +147,6 @@ __global__ void image_vel_time(float *d_szz, float *d_szz_plusone,
                                float dz, float dx, int nPml, int nPad,
                                float *d_Cp, float *d_Lambda, float *d_CpGrad);
 
-__global__ void el_stress_adj(
-    float *d_vz, float *d_vx, float *d_szz, float *d_sxx, float *d_sxz,
-    float *d_mem_dszz_dz, float *d_mem_dsxz_dx, float *d_mem_dsxz_dz,
-    float *d_mem_dsxx_dx, float *d_mem_dvz_dz, float *d_mem_dvz_dx,
-    float *d_mem_dvx_dz, float *d_mem_dvx_dx, float *d_Lambda, float *d_Mu,
-    float *d_ave_Mu, float *d_Den, float *d_ave_Byc_a, float *d_ave_Byc_b,
-    float *d_K_z_half, float *d_a_z_half, float *d_b_z_half, float *d_K_x_half,
-    float *d_a_x_half, float *d_b_x_half, float *d_K_z, float *d_a_z,
-    float *d_b_z, float *d_K_x, float *d_a_x, float *d_b_x, int nz, int nx,
-    float dt, float dz, float dx, int nPml, int nPad);
-
-__global__ void el_velocity_adj(
-    float *d_vz, float *d_vx, float *d_szz, float *d_sxx, float *d_sxz,
-    float *d_mem_dszz_dz, float *d_mem_dsxz_dx, float *d_mem_dsxz_dz,
-    float *d_mem_dsxx_dx, float *d_mem_dvz_dz, float *d_mem_dvz_dx,
-    float *d_mem_dvx_dz, float *d_mem_dvx_dx, float *d_Lambda, float *d_Mu,
-    float *d_ave_Mu, float *d_Den, float *d_ave_Byc_a, float *d_ave_Byc_b,
-    float *d_K_z_half, float *d_a_z_half, float *d_b_z_half, float *d_K_x_half,
-    float *d_a_x_half, float *d_b_x_half, float *d_K_z, float *d_a_z,
-    float *d_b_z, float *d_K_x, float *d_a_x, float *d_b_x, int nz, int nx,
-    float dt, float dz, float dx, int nPml, int nPad);
-
 // __global__ void update_stress_sh(float *d_vz, float *d_vx, float *d_szz, \
 //                                  float *d_sxx, float *d_sxz, float *d_mem_dvz_dz, float *d_mem_dvz_dx, \
 //                                  float *d_mem_dvx_dz, float *d_mem_dvx_dx, float *d_Lambda, float *d_Mu, float *d_ave_Mu, \
@@ -202,26 +179,20 @@ __global__ void el_velocity_adj(
 //                                      float *d_K_x_half, float *d_a_x_half, float *d_b_x_half, \
 //                                      int nz, int nx, float dt, float dh);
 
-__global__ void src_rec_gauss_amp(float *gauss_amp, int nz, int nx);
-
 __global__ void add_source(float *d_szz, float *d_sxx, float amp, int nz,
                            bool isFor, int z_loc, int x_loc, float dt,
-                           float *gauss_amp);
+                           float *d_Lambda);
 
-__global__ void recording(float *d_szz, float *d_sxx, int nz, float *d_data,
-                          int iShot, int it, int nSteps, int nrec, int *d_z_rec,
-                          int *d_x_rec);
-
-__global__ void res_injection(float *d_szz_adj, float *d_sxx_adj, int nz,
-                              float *d_res, int it, float dt, int nSteps,
+__global__ void res_injection(float *d_wavefield, int nz, float *d_res,
+                              float *d_Lambda, int it, float dt, int nSteps,
                               int nrec, int *d_z_rec, int *d_x_rec);
-
-__global__ void source_grad(float *d_szz_adj, float *d_sxx_adj, int nz,
-                            float *d_StfGrad, int it, float dt, int z_src,
-                            int x_src);
 
 __global__ void minus_source(float *d_szz, float *d_sxx, float amp, int nz,
                              int z_loc, int x_loc, float dt, float *d_Cp);
+
+__global__ void recording(float *d_wavefield, int nz, float *d_data, int iShot,
+                          int it, int nSteps, int nrec, int *d_z_rec,
+                          int *d_x_rec);
 
 __global__ void from_bnd(float *d_field, float *d_bnd, int nz, int nx,
                          int nzBnd, int nxBnd, int len_Bnd_vec, int nLayerStore,

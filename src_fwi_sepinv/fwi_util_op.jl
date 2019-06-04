@@ -2,7 +2,7 @@
 if Sys.islinux()
     py"""
     import tensorflow as tf
-    libFwiOp = tf.load_op_library('./build/libFwiOp.so')
+    libFwiOp = tf.load_op_library('../Ops/FWI/build/libFwiOp.so')
     @tf.custom_gradient
     def fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname):
         misfit = libFwiOp.fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname)
@@ -16,7 +16,7 @@ if Sys.islinux()
     elseif Sys.isapple()
     py"""
     import tensorflow as tf
-    libFwiOp = tf.load_op_library('./build/libFwiOp.dylib')
+    libFwiOp = tf.load_op_library('../Ops/FWI/build/libFwiOp.so')
     @tf.custom_gradient
     def fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname):
         misfit = libFwiOp.fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname)
@@ -30,7 +30,7 @@ if Sys.islinux()
     elseif Sys.iswindows()
     py"""
     import tensorflow as tf
-    libFwiOp = tf.load_op_library('./build/libFwiOp.dll')
+    libFwiOp = tf.load_op_library('../Ops/FWI/build/libFwiOp.so')
     @tf.custom_gradient
     def fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname):
         misfit = libFwiOp.fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname)

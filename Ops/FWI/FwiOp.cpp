@@ -14,19 +14,19 @@ using namespace tensorflow;
 
 REGISTER_OP("FwiOp")
 
-    .Input("cp : double")
-    .Input("cs : double")
+    .Input("lambda : double")
+    .Input("mu : double")
     .Input("den : double")
     .Input("stf : double")
     .Input("gpu_id : int32")
     .Input("shot_ids : int32")
     .Input("para_fname : string")
-    .Output("res : double")
+    .Output("misfit : double")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
-      shape_inference::ShapeHandle cp_shape;
-      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 2, &cp_shape));
-      shape_inference::ShapeHandle cs_shape;
-      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &cs_shape));
+      shape_inference::ShapeHandle lambda_shape;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 2, &lambda_shape));
+      shape_inference::ShapeHandle mu_shape;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &mu_shape));
       shape_inference::ShapeHandle den_shape;
       TF_RETURN_IF_ERROR(c->WithRank(c->input(2), 2, &den_shape));
       shape_inference::ShapeHandle stf_shape;
@@ -47,23 +47,23 @@ class FwiOpOp : public OpKernel {
   void Compute(OpKernelContext* context) override {
     DCHECK_EQ(7, context->num_inputs());
 
-    const Tensor& cp = context->input(0);
-    const Tensor& cs = context->input(1);
+    const Tensor& lambda = context->input(0);
+    const Tensor& mu = context->input(1);
     const Tensor& den = context->input(2);
     const Tensor& stf = context->input(3);
     const Tensor& gpu_id = context->input(4);
     const Tensor& shot_ids = context->input(5);
     const Tensor& para_fname = context->input(6);
 
-    const TensorShape& cp_shape = cp.shape();
-    const TensorShape& cs_shape = cs.shape();
+    const TensorShape& lambda_shape = lambda.shape();
+    const TensorShape& mu_shape = mu.shape();
     const TensorShape& den_shape = den.shape();
     const TensorShape& stf_shape = stf.shape();
     const TensorShape& gpu_id_shape = gpu_id.shape();
     const TensorShape& shot_ids_shape = shot_ids.shape();
 
-    DCHECK_EQ(cp_shape.dims(), 2);
-    DCHECK_EQ(cs_shape.dims(), 2);
+    DCHECK_EQ(lambda_shape.dims(), 2);
+    DCHECK_EQ(mu_shape.dims(), 2);
     DCHECK_EQ(den_shape.dims(), 2);
     DCHECK_EQ(stf_shape.dims(), 2);
     DCHECK_EQ(gpu_id_shape.dims(), 0);
@@ -72,32 +72,32 @@ class FwiOpOp : public OpKernel {
     // extra check
 
     // create output shape
-    // int nz = cp_shape.dim_size(0), nx = cp_shape.dim_size(1);
+    // int nz = lambda_shape.dim_size(0), nx = lambda_shape.dim_size(1);
     int group_size = shot_ids_shape.dim_size(0);
 
-    TensorShape res_shape({1});
+    TensorShape misfit_shape({1});
 
     // create output tensor
 
-    Tensor* res = NULL;
-    OP_REQUIRES_OK(context, context->allocate_output(0, res_shape, &res));
+    Tensor* misfit = NULL;
+    OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
 
     // get the corresponding Eigen tensors for data access
 
-    auto cp_tensor = cp.flat<double>().data();
-    auto cs_tensor = cs.flat<double>().data();
+    auto lambda_tensor = lambda.flat<double>().data();
+    auto mu_tensor = mu.flat<double>().data();
     auto den_tensor = den.flat<double>().data();
     auto stf_tensor = stf.flat<double>().data();
     auto gpu_id_tensor = gpu_id.flat<int32>().data();
     auto shot_ids_tensor = shot_ids.flat<int32>().data();
     auto para_fname_tensor = para_fname.flat<string>().data();
-    auto res_tensor = res->flat<double>().data();
+    auto misfit_tensor = misfit->flat<double>().data();
 
     // implement your forward function here
 
     // TODO:
-    std::cout << *para_fname_tensor << " !!!!!!!!" << std::endl;
-    forward(res_tensor, cp_tensor, cs_tensor, den_tensor, stf_tensor,
+    // std::cout << *para_fname_tensor << " !!!!!!!!" << std::endl;
+    forward(misfit_tensor, lambda_tensor, mu_tensor, den_tensor, stf_tensor,
             *gpu_id_tensor, group_size, shot_ids_tensor,
             string(*para_fname_tensor));
   }
@@ -106,17 +106,17 @@ REGISTER_KERNEL_BUILDER(Name("FwiOp").Device(DEVICE_CPU), FwiOpOp);
 
 REGISTER_OP("FwiOpGrad")
 
-    .Input("grad_res : double")
-    .Input("res : double")
-    .Input("cp : double")
-    .Input("cs : double")
+    .Input("grad_misfit : double")
+    .Input("misfit : double")
+    .Input("lambda : double")
+    .Input("mu : double")
     .Input("den : double")
     .Input("stf : double")
     .Input("gpu_id : int32")
     .Input("shot_ids : int32")
     .Input("para_fname: string")
-    .Output("grad_cp : double")
-    .Output("grad_cs : double")
+    .Output("grad_lambda : double")
+    .Output("grad_mu : double")
     .Output("grad_den : double")
     .Output("grad_stf : double")
     .Output("grad_gpu_id : int32")
@@ -128,30 +128,30 @@ class FwiOpGradOp : public OpKernel {
   explicit FwiOpGradOp(OpKernelConstruction* context) : OpKernel(context) {}
 
   void Compute(OpKernelContext* context) override {
-    const Tensor& grad_res = context->input(0);
-    const Tensor& res = context->input(1);
-    const Tensor& cp = context->input(2);
-    const Tensor& cs = context->input(3);
+    const Tensor& grad_misfit = context->input(0);
+    const Tensor& misfit = context->input(1);
+    const Tensor& lambda = context->input(2);
+    const Tensor& mu = context->input(3);
     const Tensor& den = context->input(4);
     const Tensor& stf = context->input(5);
     const Tensor& gpu_id = context->input(6);
     const Tensor& shot_ids = context->input(7);
     const Tensor& para_fname = context->input(8);
 
-    const TensorShape& grad_res_shape = grad_res.shape();
-    const TensorShape& res_shape = res.shape();
-    const TensorShape& cp_shape = cp.shape();
-    const TensorShape& cs_shape = cs.shape();
+    const TensorShape& grad_misfit_shape = grad_misfit.shape();
+    const TensorShape& misfit_shape = misfit.shape();
+    const TensorShape& lambda_shape = lambda.shape();
+    const TensorShape& mu_shape = mu.shape();
     const TensorShape& den_shape = den.shape();
     const TensorShape& stf_shape = stf.shape();
     const TensorShape& gpu_id_shape = gpu_id.shape();
     const TensorShape& shot_ids_shape = shot_ids.shape();
     const TensorShape& para_fname_shape = para_fname.shape();
 
-    DCHECK_EQ(grad_res_shape.dims(), 0);
-    DCHECK_EQ(res_shape.dims(), 0);
-    DCHECK_EQ(cp_shape.dims(), 2);
-    DCHECK_EQ(cs_shape.dims(), 2);
+    DCHECK_EQ(grad_misfit_shape.dims(), 0);
+    DCHECK_EQ(misfit_shape.dims(), 0);
+    DCHECK_EQ(lambda_shape.dims(), 2);
+    DCHECK_EQ(mu_shape.dims(), 2);
     DCHECK_EQ(den_shape.dims(), 2);
     DCHECK_EQ(stf_shape.dims(), 2);
     DCHECK_EQ(gpu_id_shape.dims(), 0);
@@ -163,8 +163,8 @@ class FwiOpGradOp : public OpKernel {
     // create output shape
     int group_size = shot_ids_shape.dim_size(0);
 
-    TensorShape grad_cp_shape(cp_shape);
-    TensorShape grad_cs_shape(cs_shape);
+    TensorShape grad_lambda_shape(lambda_shape);
+    TensorShape grad_mu_shape(mu_shape);
     TensorShape grad_den_shape(den_shape);
     TensorShape grad_stf_shape(stf_shape);
     TensorShape grad_gpu_id_shape(gpu_id_shape);
@@ -173,12 +173,12 @@ class FwiOpGradOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* grad_cp = NULL;
+    Tensor* grad_lambda = NULL;
     OP_REQUIRES_OK(context,
-                   context->allocate_output(0, grad_cp_shape, &grad_cp));
-    Tensor* grad_cs = NULL;
+                   context->allocate_output(0, grad_lambda_shape, &grad_lambda));
+    Tensor* grad_mu = NULL;
     OP_REQUIRES_OK(context,
-                   context->allocate_output(1, grad_cs_shape, &grad_cs));
+                   context->allocate_output(1, grad_mu_shape, &grad_mu));
     Tensor* grad_den = NULL;
     OP_REQUIRES_OK(context,
                    context->allocate_output(2, grad_den_shape, &grad_den));
@@ -197,17 +197,17 @@ class FwiOpGradOp : public OpKernel {
 
     // get the corresponding Eigen tensors for data access
 
-    auto cp_tensor = cp.flat<double>().data();
-    auto cs_tensor = cs.flat<double>().data();
+    auto lambda_tensor = lambda.flat<double>().data();
+    auto mu_tensor = mu.flat<double>().data();
     auto den_tensor = den.flat<double>().data();
     auto stf_tensor = stf.flat<double>().data();
     auto gpu_id_tensor = gpu_id.flat<int32>().data();
     auto shot_ids_tensor = shot_ids.flat<int32>().data();
     auto para_fname_tensor = para_fname.flat<string>().data();
-    auto grad_res_tensor = grad_res.flat<double>().data();
-    auto res_tensor = res.flat<double>().data();
-    auto grad_cp_tensor = grad_cp->flat<double>().data();
-    auto grad_cs_tensor = grad_cs->flat<double>().data();
+    auto grad_misfit_tensor = grad_misfit.flat<double>().data();
+    auto misfit_tensor = misfit.flat<double>().data();
+    auto grad_lambda_tensor = grad_lambda->flat<double>().data();
+    auto grad_mu_tensor = grad_mu->flat<double>().data();
     auto grad_den_tensor = grad_den->flat<double>().data();
     auto grad_stf_tensor = grad_stf->flat<double>().data();
     auto grad_gpu_id_tensor = grad_gpu_id->flat<int32>().data();
@@ -215,11 +215,10 @@ class FwiOpGradOp : public OpKernel {
     auto grad_para_fname_tensor = grad_para_fname->flat<string>().data();
 
     // implement your backward function here
-    std::cout << *grad_para_fname_tensor << " !!!!!" << std::endl;
-
+    // std::cout << *grad_para_fname_tensor << " !!!!!" << std::endl;
     // TODO:
-    backward(grad_cp_tensor, grad_cs_tensor, grad_den_tensor, grad_stf_tensor,
-             cp_tensor, cs_tensor, den_tensor, stf_tensor, *gpu_id_tensor,
+    backward(grad_lambda_tensor, grad_mu_tensor, grad_den_tensor, grad_stf_tensor,
+             lambda_tensor, mu_tensor, den_tensor, stf_tensor, *gpu_id_tensor,
              group_size, shot_ids_tensor, string(*para_fname_tensor));
   }
 };
@@ -228,19 +227,19 @@ REGISTER_KERNEL_BUILDER(Name("FwiOpGrad").Device(DEVICE_CPU), FwiOpGradOp);
 // To generate observed data for synthetic tests
 REGISTER_OP("FwiObsOp")
 
-    .Input("cp : double")
-    .Input("cs : double")
+    .Input("lambda : double")
+    .Input("mu : double")
     .Input("den : double")
     .Input("stf : double")
     .Input("gpu_id : int32")
     .Input("shot_ids : int32")
     .Input("para_fname : string")
-    .Output("res : double")
+    .Output("misfit : double")
     .SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
-      shape_inference::ShapeHandle cp_shape;
-      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 2, &cp_shape));
-      shape_inference::ShapeHandle cs_shape;
-      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &cs_shape));
+      shape_inference::ShapeHandle lambda_shape;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 2, &lambda_shape));
+      shape_inference::ShapeHandle mu_shape;
+      TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 2, &mu_shape));
       shape_inference::ShapeHandle den_shape;
       TF_RETURN_IF_ERROR(c->WithRank(c->input(2), 2, &den_shape));
       shape_inference::ShapeHandle stf_shape;
@@ -261,23 +260,23 @@ class FwiObsOpOp : public OpKernel {
   void Compute(OpKernelContext* context) override {
     DCHECK_EQ(7, context->num_inputs());
 
-    const Tensor& cp = context->input(0);
-    const Tensor& cs = context->input(1);
+    const Tensor& lambda = context->input(0);
+    const Tensor& mu = context->input(1);
     const Tensor& den = context->input(2);
     const Tensor& stf = context->input(3);
     const Tensor& gpu_id = context->input(4);
     const Tensor& shot_ids = context->input(5);
     const Tensor& para_fname = context->input(6);
 
-    const TensorShape& cp_shape = cp.shape();
-    const TensorShape& cs_shape = cs.shape();
+    const TensorShape& lambda_shape = lambda.shape();
+    const TensorShape& mu_shape = mu.shape();
     const TensorShape& den_shape = den.shape();
     const TensorShape& stf_shape = stf.shape();
     const TensorShape& gpu_id_shape = gpu_id.shape();
     const TensorShape& shot_ids_shape = shot_ids.shape();
 
-    DCHECK_EQ(cp_shape.dims(), 2);
-    DCHECK_EQ(cs_shape.dims(), 2);
+    DCHECK_EQ(lambda_shape.dims(), 2);
+    DCHECK_EQ(mu_shape.dims(), 2);
     DCHECK_EQ(den_shape.dims(), 2);
     DCHECK_EQ(stf_shape.dims(), 2);
     DCHECK_EQ(gpu_id_shape.dims(), 0);
@@ -286,35 +285,35 @@ class FwiObsOpOp : public OpKernel {
     // extra check
 
     // create output shape
-    // int nz = cp_shape.dim_size(0), nx = cp_shape.dim_size(1);
+    // int nz = lambda_shape.dim_size(0), nx = lambda_shape.dim_size(1);
     int group_size = shot_ids_shape.dim_size(0);
 
-    TensorShape res_shape({1});
+    TensorShape misfit_shape({1});
 
     // create output tensor
 
-    Tensor* res = NULL;
-    OP_REQUIRES_OK(context, context->allocate_output(0, res_shape, &res));
+    Tensor* misfit = NULL;
+    OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
 
     // get the corresponding Eigen tensors for data access
 
-    auto cp_tensor = cp.flat<double>().data();
-    auto cs_tensor = cs.flat<double>().data();
+    auto lambda_tensor = lambda.flat<double>().data();
+    auto mu_tensor = mu.flat<double>().data();
     auto den_tensor = den.flat<double>().data();
     auto stf_tensor = stf.flat<double>().data();
     auto gpu_id_tensor = gpu_id.flat<int32>().data();
     auto shot_ids_tensor = shot_ids.flat<int32>().data();
     auto para_fname_tensor = para_fname.flat<string>().data();
-    auto res_tensor = res->flat<double>().data();
+    auto misfit_tensor = misfit->flat<double>().data();
 
     // implement your forward function here
 
     // TODO:
-    std::cout << *para_fname_tensor << " !!!!!!!!" << std::endl;
-    obscalc(res_tensor, cp_tensor, cs_tensor, den_tensor, stf_tensor,
+    // std::cout << *para_fname_tensor << " !!!!!!!!" << std::endl;
+    obscalc(misfit_tensor, lambda_tensor, mu_tensor, den_tensor, stf_tensor,
             *gpu_id_tensor, group_size, shot_ids_tensor,
             string(*para_fname_tensor));
-    *res_tensor = 0.0;
+    *misfit_tensor = 0.0;
   }
 };
 REGISTER_KERNEL_BUILDER(Name("FwiObsOp").Device(DEVICE_CPU), FwiObsOpOp);

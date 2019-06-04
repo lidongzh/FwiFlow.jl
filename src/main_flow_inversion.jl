@@ -6,15 +6,17 @@ include("ops_imseq.jl")
 # const SRC_CONST = 5.6146
 # const GRAV_CONST = 1.0/144.0
 const ALPHA = 1.0
-const SRC_CONST = 1.0
+const SRC_CONST = 86400.0
 const GRAV_CONST = 1.0
+
+const K_CONST =  9.869232667160130e-16 * 86400.0
 
 m = 15
 n = 30
 h = 100.0 * 0.3048# ft
 # NT = 500
 NT  = 50
-Δt = 20.0 * 86400 # day
+Δt = 20.0 # day
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
 X, Z = np.meshgrid(x, z)
@@ -23,7 +25,7 @@ X, Z = np.meshgrid(x, z)
 μw = 1e-3 #1.0 # centi poise
 μo = 3e-3 #3.0
 K = 20.0 .* ones(m,n) # millidarcy
-K[8:10,:] .= 100.0
+K[8:10,:] .= 80.0
 # K[10:18, 14:18] .= 100.0
 # K[13:16,:] .= 80.0
 # K[8:13,14:18] .= 80.0
@@ -31,9 +33,9 @@ K[8:10,:] .= 100.0
 g = 9.8
 ϕ = 0.25 .* ones(m,n)
 qw = zeros(NT, m, n)
-qw[:,7,5] .= 0.004 * (1/h^2)/20/0.3048 * SRC_CONST
+qw[:,7,5] .= 0.002 * (1/h^2)/20/0.3048 * SRC_CONST
 qo = zeros(NT, m, n)
-qo[:,7,25] .= -0.004 * (1/h^2)/20/0.3048 * SRC_CONST
+qo[:,7,25] .= -0.002 * (1/h^2)/20/0.3048 * SRC_CONST
 
 sw0 = zeros(m, n)
 
@@ -121,7 +123,7 @@ end
 # config.intra_op_parallelism_threads = 24
 # config.inter_op_parallelism_threads = 24
 sess = Session(); init(sess);
-opt = ScipyOptimizerInterface(J, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (20.0, 100.0)), method="L-BFGS-B", 
+opt = ScipyOptimizerInterface(J, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (20.0, 80.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[J, tfCtxInit.K, gradK])
 

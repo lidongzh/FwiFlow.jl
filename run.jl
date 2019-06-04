@@ -1,6 +1,9 @@
 dir = @__DIR__
 
-jobs = ["FWI/Src", "FWI", "Laplacian", "Poisson", "Saturation", "Upwlap", "Upwps"]
+cd("Ops/FWI/Src")
+run(`make all -j`)
+cd(dir)
+jobs = ["FWI", "Laplacian", "Poisson", "Saturation", "Upwlap", "Upwps"]
 for j in jobs
     cd("Ops/$j")
     run(`rm -rf build`)

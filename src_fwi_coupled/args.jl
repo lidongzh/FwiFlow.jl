@@ -44,25 +44,20 @@ const GRAV_CONST = 1.0
 # NOTE Hyperparameter for flow simulation
 m = 15
 n = 30
-# scaling = (200-2nPml)/30
 h = 100.0 * 0.3048 # ft
-# NT = 500
+
 NT  = 50
 dt_survey = 5
 Δt = 20.0 # day
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
 X, Z = np.meshgrid(x, z)
-# ρw = 62.238 # lbm/scf (pound/ft^3)
-# ρo = 40.0 # lbm/scf (pound/ft^3)
-# μw = 1.0 # centi poise
-# μo = 3.0
+
 ρw = 996.9571
 ρo = 640.7385
 μw = 1e-3
 μo = 3e-3
-# K = 20.0 .* ones(m,n) # millidarcy
-# K[8:10,:] .= 100.0
+
 K_init = 20.0 .* ones(m,n)
 
 g = 9.8*GRAV_CONST
@@ -82,18 +77,14 @@ n_survey = length(survey_indices)
 # ENV["PARAMDIR"] = "Src/params/"
 # config = tf.ConfigProto(device_count = Dict("GPU"=>0))
 
-# nz = 100
-# nx = 200
 dz = 3 # meters
 dx = 3
 nz = Int64(round((m * h) / dz)) + 1
 nx = Int64(round((n * h) / dx)) + 1
-nPml = 63
+nPml = 32
 nSteps = 2001
 dt = 0.00025
 f0 = 50.0
-filter_para = [0, 0.1, 1000.0, 2000.0]
-isAc = true
 nPad = 32 - mod((nz+2*nPml), 32)
 nz_pad = nz + 2*nPml + nPad
 nx_pad = nx + 2*nPml
@@ -119,11 +110,11 @@ x_rec = (nx-5) .* ones(Int64, size(z_rec))
 # surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
 
 cp_nopad = 3000.0 .* ones(nz, nx) # initial cp
-cs = zeros(nz, nx)
-den = 1000.0 .* ones(nz, nx)
+cs = cp_nopad ./ sqrt(3.0)
+den = 2500.0 .* ones(nz, nx)
 cp_pad = 3000.0 .* ones(nz_pad, nx_pad) # initial cp
-cs_pad = zeros(nz_pad, nx_pad)
-den_pad = 1000.0 .* ones(nz_pad, nx_pad)
+cs_pad = cp_pad ./ sqrt(3.0)
+den_pad = 2500.0 .* ones(nz_pad, nx_pad)
 cp_pad_value = 3000.0
 
 # tf_cp = constant(cp)
@@ -146,12 +137,14 @@ tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 # NOTE Hyperparameter for rock physics
 tf_bulk_fl1 = constant(1.3e9)
 tf_bulk_fl2 = constant(3e9)
-tf_bulk_sat1 = constant(den .* (cp_nopad.^2 .- 4.0/3.0 .* cp_nopad.^2 ./3.0)) # poisson's ratio as sqrt(3)
+tf_bulk_sat1 = constant(den .* (cp_nopad.^2 .- 4.0/3.0 .* cp_nopad.^2 ./3.0)) # vp/vs ratio as sqrt(3)
 tf_bulk_min = constant(36.6e9)
 tf_shear_sat1 = constant(den .* cp_nopad.^2 ./3.0)
 tf_ϕ_pad = tf.image.resize_bilinear(tf.reshape(constant(ϕ), (1, m, n, 1)), (nz, nx)) # upsample the porosity
 tf_ϕ_pad = cast(tf_ϕ_pad, Float64)
 tf_ϕ_pad = squeeze(tf_ϕ_pad)
+tf_shear_pad = tf.pad(tf_shear_sat1, [nPml (nPml+nPad); nPml nPml], 
+    constant_values=den[1,1] * cp_nopad[1,1]^2 /3.0) / 1e6
 
 function Gassman(sw)
     tf_bulk_fl_mix = 1.0/( (1-sw)/tf_bulk_fl1 + sw/tf_bulk_fl2 )
@@ -160,6 +153,8 @@ function Gassman(sw)
     tf_bulk_new = tf_bulk_min / (1.0/temp + 1.0)
     # tf_den_new = constant(den) + tf_ϕ_pad .* sw * (ρw - ρo) *16.018463373960138;
     tf_den_new = constant(den) + tf_ϕ_pad .* sw * (ρw - ρo)
-    tf_cp_new = sqrt((tf_bulk_new + 4.0/3.0 * tf_shear_sat1)/tf_den_new)
+    # tf_cp_new = sqrt((tf_bulk_new + 4.0/3.0 * tf_shear_sat1)/tf_den_new)
+    tf_lambda_new = tf_bulk_new - 2.0/3.0 * tf_shear_sat1
+    return tf_lambda_new, tf_den_new
 end
 

@@ -55,7 +55,7 @@ class Parameter {
   int nPad() const { return nPad_; }
   std::string data_dir_name() const { return data_dir_name_; }
   std::string scratch_dir_name() const { return scratch_dir_name_; }
-  // bool isAc() const { return isAc_; }
+  bool isAc() const { return isAc_; }
   bool withAdj() const { return withAdj_; }
   bool if_res() const { return if_res_; }
   bool if_win() const { return if_win_; }

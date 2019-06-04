@@ -37,14 +37,6 @@ class Model {
 
   float *h_CpGrad;
   float *d_CpGrad;
-  float *h_LambdaGrad;
-  float *d_LambdaGrad;
-  float *h_MuGrad;
-  float *d_MuGrad;
-  float *h_DenGrad;
-  float *d_DenGrad;
-  float *h_StfGrad;
-  float *d_StfGrad;
 
   int nz() { return nz_; }
   int nx() { return nx_; }
