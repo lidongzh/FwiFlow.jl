@@ -81,8 +81,8 @@ dz = 3 # meters
 dx = 3
 nz = Int64(round((m * h) / dz)) + 1
 nx = Int64(round((n * h) / dx)) + 1
-nPml = 63
-nSteps = 2001
+nPml = 32
+nSteps = 3001
 dt = 0.00025
 f0 = 50.0
 nPad = 32 - mod((nz+2*nPml), 32)
@@ -130,8 +130,9 @@ tf_stf = constant(repeat(src, outer=length(z_src)))
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
 nGpus = 2
-tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
-tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
+# tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
+tf_gpu_id_array = constant([1,3], dtype=Int32)
+tf_shot_ids0 = constant(collect(Int32, 0:length(z_src)-1), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 
 # NOTE Hyperparameter for rock physics

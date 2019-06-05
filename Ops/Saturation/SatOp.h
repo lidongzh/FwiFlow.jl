@@ -56,7 +56,7 @@ double gradMobiW(double s) { return 2.0 * s / mu_w; }
 double compMobiO(double s) { return (1.0 - s) * (1.0 - s) / mu_o; }
 double gradMobiO(double s) { return (2.0 * s - 2.0) / mu_o; }
 
-void intialArray(double *ip, int size, double value) {
+void initialArray(double *ip, int size, double value) {
   for (int i = 0; i < size; i++) {
     ip[i] = value;
     // printf("value = %f\n", value);
@@ -259,7 +259,7 @@ void assembleJ(Eigen::SparseMatrix<double, Eigen::RowMajor> &Jac,
 /*
 Back-tracking line search
 */
-double linesearch(Eigen::MatrixXd sEg, const Eigen::MatrixXd &delta_sEg_mat,
+double linesearch(Eigen::MatrixXd &sEg, const Eigen::MatrixXd &delta_sEg_mat,
                   Eigen::MatrixXd &sEg_update, const double *s0,
                   const double *pt, const double *permi, const double *poro,
                   const double *qw, const double *qo, double dt, double h,
@@ -303,9 +303,10 @@ void forward(double *sat, const double *s0, const double *pt,
              const double *permi, const double *poro, const double *qw,
              const double *qo, const double *sref, double dt, double h, int nz,
              int nx) {
-  Eigen::VectorXd resEg(nz * nx);
-  Eigen::VectorXd negResEg(nz * nx);
+  Eigen::VectorXd resEg(nz * nx);     // residual vector in eigen
+  Eigen::VectorXd negResEg(nz * nx);  // negative of resEg
   Eigen::MatrixXd sEg(nz, nx);
+  Eigen::MatrixXd sEg_old(nz, nx);
   Eigen::MatrixXd delta_sEg_mat_tran(nx, nz);
   Eigen::MatrixXd delta_sEg_mat(nz, nx);
 
@@ -341,6 +342,7 @@ void forward(double *sat, const double *s0, const double *pt,
 
     compRes(resEg, sEg, s0, pt, permi, poro, qw, qo, dt, h, nz, nx);
     assembleJ(Jac, sEg, pt, permi, poro, qo, dt, h, nz, nx);
+    sEg_old = sEg;
 // ================ AMG ====================
 #ifdef DEBUG
     std::cout << "SatOp--" << __LINE__ << std::endl;
@@ -385,12 +387,13 @@ void forward(double *sat, const double *s0, const double *pt,
     // sEg += delta_sEg;
     Eigen::Map<Eigen::MatrixXd> delta_sEg_mat_tran(delta_sEg.data(), nx, nz);
     delta_sEg_mat = delta_sEg_mat_tran.transpose();
-    res_norm = linesearch(sEg, delta_sEg_mat, sEg, s0, pt, permi, poro, qw, qo,
-                          dt, h, nz, nx);
+    res_norm = linesearch(sEg_old, delta_sEg_mat, sEg, s0, pt, permi, poro, qw,
+                          qo, dt, h, nz, nx);
 #ifdef DEBUG
     printf("res_norm = %f\n", res_norm);
 #endif
   }
+  initialArray(sat, nz * nx, 0.0);
   // std::cout << "Finish one step" << std::endl;
   for (int i = 0; i < nz; i++) {
     for (int j = 0; j < nx; j++) {
@@ -419,7 +422,7 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
     }
   }
   for (int i = 0; i < nz * nx; i++) {
-    rhs(i) = grad_sat[i];
+    rhs(i) = grad_sat[i];  // row-major
   }
   assembleJ(Jac, sEg, pt, permi, poro, qo, dt, h, nz, nx);
   // ================ AMG ====================
@@ -473,6 +476,8 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
   // ================= END =====================
 
   // compute gradient with respect to s0
+  initialArray(grad_s0, nz * nx, 0.0);
+  initialArray(grad_poro, nz * nx, 0.0);
   for (int i = 0; i < nz; i++) {
     for (int j = 0; j < nx; j++) {
       grad_s0[i * nx + j] = -poro(i, j) * adjoint(i * nx + j);
@@ -612,6 +617,8 @@ void backward(const double *grad_sat, const double *sat, const double *s0,
 #ifdef DEBUG
   std::cout << "SatOpBackward--" << __LINE__ << std::endl;
 #endif
+  initialArray(grad_pt, nz * nx, 0.0);
+  initialArray(grad_permi, nz * nx, 0.0);
   for (int i = 0; i < nz * nx; i++) {
     grad_pt[i] = Trans_J_pt(i);
     grad_permi[i] = Trans_J_permi(i);

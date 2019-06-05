@@ -45,7 +45,9 @@ REGISTER_OP("SatOp")
       shape_inference::ShapeHandle h_shape;
       TF_RETURN_IF_ERROR(c->WithRank(c->input(10), 0, &h_shape));
 
-      c->set_output(0, c->Matrix(-1, -1));
+      // c->set_output(0, c->Matrix(-1, -1));
+      c->set_output(0,
+                    c->Matrix(c->Dim(c->input(0), 0), c->Dim(c->input(0), 1)));
       return Status::OK();
     });
 class SatOpOp : public OpKernel {

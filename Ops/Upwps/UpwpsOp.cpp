@@ -33,7 +33,9 @@ REGISTER_OP("UpwpsOp")
       shape_inference::ShapeHandle index_shape;
       TF_RETURN_IF_ERROR(c->WithRank(c->input(6), 0, &index_shape));
 
-      c->set_output(0, c->Matrix(-1, -1));
+      // c->set_output(0, c->Matrix(-1, -1));
+      c->set_output(0,
+                    c->Matrix(c->Dim(c->input(0), 0), c->Dim(c->input(0), 1)));
       return Status::OK();
     });
 class UpwpsOpOp : public OpKernel {

@@ -126,22 +126,24 @@ end
 
 
 # TODO: 
-const ALPHA = 0.006323996017182
-const SRC_CONST = 5.6146
+# const ALPHA = 0.006323996017182
+const ALPHA = 1.0
+const SRC_CONST = 86400.0
+const K_CONST =  9.869232667160130e-16 * 86400
 nz=20
 nx=30
 sw = constant(zeros(nz, nx))
 swref = constant(zeros(nz,nx))
-μw = constant(1.0)
-μo = constant(1.0)
+μw = constant(0.001)
+μo = constant(0.003)
 K = constant(100.0 .* ones(nz, nx))
 ϕ = constant(0.25 .* ones(nz, nx))
 dt = constant(30.0)
-h = constant(100.0)
+h = constant(100.0 * 0.3048)
 q1 = zeros(nz,nx)
 q2 = zeros(nz,nx)
-q1[10,5] = 1400.0 / 100.0^3 * SRC_CONST
-q2[10,25] = -2200.0 /100.0^3 * SRC_CONST
+q1[10,5] = 0.002 * (1/(100.0 * 0.3048)^2)/20.0/0.3048 * SRC_CONST
+q2[10,25] = -0.002 * (1/(100.0 * 0.3048)^2)/20.0/0.3048 * SRC_CONST
 qw = constant(q1)
 qo = constant(q2)
 
@@ -152,11 +154,11 @@ f = λw/λ
 q = qw + qo + λw/(λo+1e-16).*qo
 
 # Θ = laplacian_op(K.*λo, potential_c, h, constant(0.0))
-Θ = upwlap_op(K, λo, constant(zeros(nz,nx)), h, constant(0.0))
+Θ = upwlap_op(K*K_CONST, λo, constant(zeros(nz,nx)), h, constant(0.0))
 
 load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA, nz, nx)
 
-tf_comp_p0 = upwps_op(K, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(2))
+tf_comp_p0 = upwps_op(K*K_CONST, λ, load_normal, constant(zeros(nz,nx)), h, constant(0.0), constant(2))
 sess = Session()
 init(sess)
 p0 = run(sess, tf_comp_p0)
@@ -224,18 +226,24 @@ tf_p0 = constant(p0)
 
 # gradient check -- v
 function scalar_function(m)
-    # return sum(tanh(sat_op(m,tf_p0,K,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
-    # return sum(tanh(sat_op(sw,m,K,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    return sum(tanh(sat_op(m,tf_p0,K*K_CONST,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(sw,m,K*K_CONST,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
     # return sum(tanh(sat_op(sw,tf_p0,m,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
-    return sum(tanh(sat_op(sw,tf_p0,K,m,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(sw,tf_p0,K*K_CONST,m,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
 end
 
-# m_ = sw
-# m_ = tf_p0
-# m_ = K
-m_ = ϕ
+m_ = sw
+v_ = 0.1 * rand(nz,nx)
 
-v_ = rand(nz,nx)
+# m_ = tf_p0
+# v_ = 1e4 .* rand(nz,nx)
+
+# m_ = K*K_CONST
+# v_ = 10 .* rand(nz,nx) *K_CONST
+
+# m_ = ϕ
+# v_ = 0.1 * rand(nz,nx)
+
 y_ = scalar_function(m_)
 dy_ = gradients(y_, m_)
 ms_ = Array{Any}(undef, 5)
