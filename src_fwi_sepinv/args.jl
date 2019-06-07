@@ -44,7 +44,7 @@ const GRAV_CONST = 1.0
 # NOTE Hyperparameter for flow simulation
 m = 15
 n = 30
-h = 100.0 * 0.3048 # ft
+h = 30.0 # meter
 
 NT  = 50
 dt_survey = 5
@@ -53,19 +53,23 @@ z = (1:m)*h|>collect
 x = (1:n)*h|>collect
 X, Z = np.meshgrid(x, z)
 
-ρw = 996.9571
-ρo = 640.7385
-μw = 1e-3
-μo = 3e-3
+# ρw = 996.9571
+# ρo = 640.7385
+# μw = 1.0
+# μo = 3.0
+ρw = 501.9
+ρo = 1053.0
+μw = 0.1
+μo = 1.0
 
 K_init = 20.0 .* ones(m,n)
 
 g = 9.8*GRAV_CONST
 ϕ = 0.25 .* ones(m,n)
 qw = zeros(NT, m, n)
-qw[:,7,5] .= 0.002 * (1/h^2)/20.0/0.3048 * SRC_CONST
+qw[:,9,3] .= 0.005 * (1/h^2)/10.0 * SRC_CONST
 qo = zeros(NT, m, n)
-qo[:,7,25] .= -0.002 * (1/h^2)/20.0/0.3048 * SRC_CONST
+qo[:,9,28] .= -0.005 * (1/h^2)/10.0 * SRC_CONST
 sw0 = zeros(m, n)
 survey_indices = collect(1:dt_survey:NT+1) # 10 stages
 n_survey = length(survey_indices)
@@ -109,13 +113,13 @@ x_rec = (nx-5) .* ones(Int64, size(z_rec))
 # paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, data_dir_name)
 # surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)
 
-cp_nopad = 3000.0 .* ones(nz, nx) # initial cp
+cp_nopad = 3500.0 .* ones(nz, nx) # initial cp
 cs = cp_nopad ./ sqrt(3.0)
-den = 2500.0 .* ones(nz, nx)
-cp_pad = 3000.0 .* ones(nz_pad, nx_pad) # initial cp
+den = 2200.0 .* ones(nz, nx)
+cp_pad = 3500.0 .* ones(nz_pad, nx_pad) # initial cp
 cs_pad = cp_pad ./ sqrt(3.0)
-den_pad = 2500.0 .* ones(nz_pad, nx_pad)
-cp_pad_value = 3000.0
+den_pad = 2200.0 .* ones(nz_pad, nx_pad)
+cp_pad_value = 3500.0
 
 # tf_cp = constant(cp)
 tf_cs = constant(cs_pad)
@@ -129,15 +133,15 @@ tf_stf = constant(repeat(src, outer=length(z_src)))
 # tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
-nGpus = 2
+nGpus = 3
 # tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
-tf_gpu_id_array = constant([1,3], dtype=Int32)
-tf_shot_ids0 = constant(collect(Int32, 0:length(z_src)-1), dtype=Int32)
+tf_gpu_id_array = constant([0,2,3], dtype=Int32)
+tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 
 # NOTE Hyperparameter for rock physics
-tf_bulk_fl1 = constant(1.3e9)
-tf_bulk_fl2 = constant(3e9)
+tf_bulk_fl1 = constant(2.735e9)
+tf_bulk_fl2 = constant(0.125e9) # to displace fl1
 tf_bulk_sat1 = constant(den .* (cp_nopad.^2 .- 4.0/3.0 .* cp_nopad.^2 ./3.0)) # vp/vs ratio as sqrt(3)
 tf_bulk_min = constant(36.6e9)
 tf_shear_sat1 = constant(den .* cp_nopad.^2 ./3.0)
@@ -156,6 +160,25 @@ function Gassman(sw)
     tf_den_new = constant(den) + tf_ϕ_pad .* sw * (ρw - ρo)
     # tf_cp_new = sqrt((tf_bulk_new + 4.0/3.0 * tf_shear_sat1)/tf_den_new)
     tf_lambda_new = tf_bulk_new - 2.0/3.0 * tf_shear_sat1
+    return tf_lambda_new, tf_den_new
+end
+
+function RockLinear(sw)
+    # tf_lambda_new = constant(7500.0*1e6 .* ones(nz,nx)) + (17400.0-7500.0)*1e6 * sw
+    tf_lambda_new = constant(7500.0*1e6 .* ones(nz,nx)) + (9200.0-7500.0)*1e6 * sw
+    tf_den_new = constant(den) + tf_ϕ_pad .* sw * (ρw - ρo)
+    return tf_lambda_new, tf_den_new
+end
+
+tf_patch_temp = tf_bulk_sat1/(tf_bulk_min - tf_bulk_sat1) - 
+    tf_bulk_fl1/tf_ϕ_pad /(tf_bulk_min - tf_bulk_fl1) + 
+    tf_bulk_fl2/tf_ϕ_pad /(tf_bulk_min - tf_bulk_fl2)
+tf_bulk_sat2 = tf_bulk_min/(1.0/tf_patch_temp + 1.0)
+function Patchy(sw)
+    tf_bulk_new = 1/( (1-sw)/(tf_bulk_sat1+4.0/3.0*tf_shear_sat1) 
+            + sw/(tf_bulk_sat2+4.0/3.0*tf_shear_sat1) ) - 4.0/3.0*tf_shear_sat1
+    tf_lambda_new = tf_bulk_new - 2.0/3.0 * tf_shear_sat1
+    tf_den_new = constant(den) + tf_ϕ_pad .* sw * (ρw - ρo)
     return tf_lambda_new, tf_den_new
 end
 

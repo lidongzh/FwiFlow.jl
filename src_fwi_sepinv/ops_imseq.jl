@@ -11,7 +11,7 @@ include("poisson_op.jl")
 include("laplacian_op.jl")
 include("sat_op.jl")
 
-const K_CONST =  9.869232667160130e-16 * 86400
+const K_CONST =  9.869232667160130e-16 * 86400 * 1e3
 
 mutable struct Ctx
   m; n; h; NT; Δt; Z; X; ρw; ρo;

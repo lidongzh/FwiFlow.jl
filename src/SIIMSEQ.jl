@@ -8,12 +8,12 @@ include("poisson_op.jl")
 include("laplacian_op.jl")
 include("sat_op.jl")
 
-const K_CONST =  9.869232667160130e-16 * 86400.0
+const K_CONST =  9.869232667160130e-16 * 86400.0 * 1e3
 
 # Solver parameters
 m = 15
 n = 30
-h = 100.0 * 0.3048
+h = 30.0
 # T = 100 # 100 days
 # NT = 100
 # Δt = T/(NT+1)
@@ -33,12 +33,16 @@ const ALPHA = 1.0  # conversion coefficient for field unit
 const SRC_CONST = 86400.0  # conversion from stb to standard cubic feet
 # const SRC_CONST = 1.0
 const GRAV_CONST = 1.0 # conversion to psi
-ρw = constant(996.9571)
-ρo = constant(640.7385)
-μw = constant(1e-3)
-μo = constant(3e-3)
+# ρw = constant(996.9571)
+# ρo = constant(640.7385)
+# μw = constant(1.0)
+# μo = constant(3.0)
+ρw = constant(501.9)
+ρo = constant(1053.0)
+μw = constant(0.1)
+μo = constant(1.0)
 K_np = 20. .* ones(m,n)
-K_np[8:10, :] .= 80.0
+K_np[8:10, :] .= 120.0
 # K_np[16:20,:] .= 100.0
 # for i = 1:m
 #     for j = 1:n
@@ -78,17 +82,17 @@ function onestep2(sw, p, qw, qo, sw_ref, Δt_dyn)
     q = qw + qo + λw/λo.*qo
     potential_c = (ρw-ρo)*g .* tf_Z
 
-    # Θ = laplacian_op(K.*λo, potential_c, tf_h, constant(0.0))
+    # Θ = laplacian_op(K.*λo* K_CONST, potential_c, tf_h, constant(0.0))
     Θ = upwlap_op(K * K_CONST, λo, potential_c, tf_h, constant(0.0))
     # Θ = upwlap_op(K, λo*(ρw-ρo)*g, tf_Z, tf_h, constant(0.0)) # temp 
     load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA,m,n)
 
-    # p = poisson_op(λ.*K, load_normal, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
+    # p = poisson_op(λ.*K* K_CONST, load_normal, tf_h, constant(0.0), constant(1)) # potential p = pw - ρw*g*h 
     p = upwps_op(K * K_CONST, λ, load_normal, p, tf_h, constant(0.0), constant(0)) # potential p = pw - ρw*g*h 
 
-    # Θ = -upwlap_op(K, (λw*ρw+λo*ρo)*g, tf_Z, tf_h, constant(1.0))
+    # Θ = -upwlap_op(K * K_CONST, (λw*ρw+λo*ρo)*g, tf_Z, tf_h, constant(1.0))
     # load_normal = (Θ+q/ALPHA) - ave_normal(Θ+q/ALPHA,m,n)
-    # p = upwps_op(K, λ, load_normal, p, tf_h, ρo*g, constant(0)) # oil pressure
+    # p = upwps_op(K * K_CONST, λ, load_normal, p, tf_h, ρo*g, constant(0)) # oil pressure
     # p = p - ρw*g*tf_Z; # now it is water potential again
 
     # step 2: update u, v
@@ -160,11 +164,11 @@ Gaussian2 = exp.(-1.0.*((xx.-25).^2+(yy.-7).^2))
 qw = zeros(NT, m, n)
 
 # qw[:,12,5] .= (0.0026/h^3)
-qw[:,7,5] .= 0.002 * (1/h^2)/20.0/0.3048 * SRC_CONST
+qw[:,9,5] .= 0.005 * (1/h^2)/10.0 * SRC_CONST
 qo = zeros(NT, m, n)
 
 # qo[:,12,25] .= -(0.004/h^3)
-qo[:,7,25] .= -0.002 * (1/h^2)/20.0/0.3048 * SRC_CONST
+qo[:,9,25] .= -0.005 * (1/h^2)/10.0 * SRC_CONST
 sw0 = zeros(m,n)
 # sw0[10:12,16:18] .= 0.3
 

@@ -1,8 +1,8 @@
 function padding(lambda, den)
     tran_lambda = cast(lambda, Float64)
     tran_den = cast(den, Float64)
-    lambda_pad = tf.pad(tran_lambda, [nPml (nPml+nPad); nPml nPml], constant_values=1.0/3.0*3000.0^2*2500.0/1e6)
-    den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2500.0)
+    lambda_pad = tf.pad(tran_lambda, [nPml (nPml+nPad); nPml nPml], constant_values=1.0/3.0*3500.0^2*2200.0/1e6)
+    den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2200.0)
     return lambda_pad, den_pad
 end
 
@@ -20,6 +20,7 @@ function fwi_sep(iSur)
     Lp = Int64((lp[end,1]))
     lambda_init = readdlm("./$(args["version"])/FWI_stage$(iSur-1)/Lambda$Lp.txt")
     den_init = readdlm("./$(args["version"])/FWI_stage$(iSur-1)/Den$Lp.txt")
+    # den_init = den
   end
 
   tf_lambda_inv = Variable(lambda_init, dtype=Float64)
@@ -99,9 +100,15 @@ function fwi_sep(iSur)
   config.inter_op_parallelism_threads = 24
   sess = Session(config=config); init(sess);
 
-  lambda_lb = (2500.0^2 - 2.0 * 3000.0^2/3.0) * 2000.0 /1e6
-  lambda_ub = (4000.0^2 - 2.0 * 3000.0^2/3.0) * 3000.0 /1e6
-  opt = ScipyOptimizerInterface(loss, var_list=[tf_lambda_inv, tf_den_inv], var_to_bounds=Dict(tf_lambda_inv=> (lambda_lb, lambda_ub),tf_den_inv=> (2000.0, 3000.0)), method="L-BFGS-B", options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
+  lambda_lb = 5800.0
+  lambda_ub = 9000.0
+  opt = ScipyOptimizerInterface(loss, var_list=[tf_lambda_inv, tf_den_inv], var_to_bounds=Dict(tf_lambda_inv=> (lambda_lb, lambda_ub),tf_den_inv=> (2100.0, 2200.0)), method="L-BFGS-B", options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
+
+# #   lambda_lb = (2500.0^2 - 2.0 * 3000.0^2/3.0) * 2500.0 /1e6
+# #   lambda_ub = (4000.0^2 - 2.0 * 3000.0^2/3.0) * 2500.0 /1e6
+#   lambda_lb = 5800.0
+#   lambda_ub = 9000.0
+#   opt = ScipyOptimizerInterface(loss, var_list=[tf_lambda_inv], var_to_bounds=Dict(tf_lambda_inv=> (lambda_lb, lambda_ub)), method="L-BFGS-B", options=Dict("maxiter"=> 100, "ftol"=>1e-12, "gtol"=>1e-12))
   @info "Optimization Starts..."
   ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tf_lambda_inv,tf_den_inv,gradLambda,gradDen])
 end

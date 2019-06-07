@@ -226,17 +226,17 @@ tf_p0 = constant(p0)
 
 # gradient check -- v
 function scalar_function(m)
-    return sum(tanh(sat_op(m,tf_p0,K*K_CONST,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
-    # return sum(tanh(sat_op(sw,m,K*K_CONST,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    # return sum(tanh(sat_op(m,tf_p0,K*K_CONST,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
+    return sum(tanh(sat_op(sw,m,K*K_CONST,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
     # return sum(tanh(sat_op(sw,tf_p0,m,ϕ,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
     # return sum(tanh(sat_op(sw,tf_p0,K*K_CONST,m,qw,qo,μw,μo,constant(zeros(nz,nx)),dt,h)))
 end
 
-m_ = sw
-v_ = 0.1 * rand(nz,nx)
+# m_ = sw
+# v_ = 0.1 * rand(nz,nx)
 
-# m_ = tf_p0
-# v_ = 1e4 .* rand(nz,nx)
+m_ = tf_p0
+v_ = 5e5 .* rand(nz,nx)
 
 # m_ = K*K_CONST
 # v_ = 10 .* rand(nz,nx) *K_CONST

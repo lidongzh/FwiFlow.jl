@@ -15,9 +15,11 @@ function sw_p_to_lambda_den(sw, p)
     p = cast(p, Float64)
     sw = squeeze(sw)
     p = squeeze(p)
-    tran_lambda, tran_den = Gassman(sw)
-    tran_lambda_pad =  tf.pad(tran_lambda, [nPml (nPml+nPad); nPml nPml], constant_values=1.0/3.0*3000.0^2*2500.0) /1e6
-    tran_den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2500.0)
+    # tran_lambda, tran_den = Gassman(sw)
+    # tran_lambda, tran_den = RockLinear(sw) # test linear relationship
+    tran_lambda, tran_den = Patchy(sw)
+    tran_lambda_pad =  tf.pad(tran_lambda, [nPml (nPml+nPad); nPml nPml], constant_values=3500.0^2*2200.0/3.0) /1e6
+    tran_den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2200.0)
     return tran_lambda_pad, tran_den_pad
 end
 
@@ -25,7 +27,7 @@ end
 if args["generate_data"]
     println("Generate Test Data...")
     K = 20.0 .* ones(m,n) # millidarcy
-    K[8:10,:] .= 80.0
+    K[8:10,:] .= 120.0
     # K[17:21,:] .= 100.0
     # for i = 1:m
     #     for j = 1:n

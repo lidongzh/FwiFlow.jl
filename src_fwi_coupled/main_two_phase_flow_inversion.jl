@@ -14,9 +14,11 @@ function sw_p_to_lambda_den(sw, p)
     p = cast(p, Float64)
     sw = squeeze(sw)
     p = squeeze(p)
-    tran_lambda, tran_den = Gassman(sw)
-    tran_lambda_pad =  tf.pad(tran_lambda, [nPml (nPml+nPad); nPml nPml], constant_values=1.0/3.0*3000.0^2*2500.0) /1e6
-    tran_den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2500.0)
+    # tran_lambda, tran_den = Gassman(sw)
+    # tran_lambda, tran_den = RockLinear(sw) # test linear relationship
+    tran_lambda, tran_den = Patchy(sw)
+    tran_lambda_pad =  tf.pad(tran_lambda, [nPml (nPml+nPad); nPml nPml], constant_values=3500.0^2*2200.0/3.0) /1e6
+    tran_den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2200.0)
     return tran_lambda_pad, tran_den_pad
 end
 
@@ -24,7 +26,7 @@ end
 if args["generate_data"]
     println("Generate Test Data...")
     K = 20.0 .* ones(m,n) # millidarcy
-    K[8:10,:] .= 80.0
+    K[8:10,:] .= 120.0
     # K[17:21,:] .= 100.0
     # for i = 1:m
     #     for j = 1:n
@@ -86,7 +88,7 @@ for i = 1:n_survey
     # shot_inds = i
     shot_inds = collect(1:length(z_src)) # all sources
     tf_shot_ids0 = constant(collect(0:length(shot_inds)-1), dtype=Int32)
-    loss += fwi_op(lambdas[i], tf_shear_pad, dens[i], tf_stf, tf_gpu_id_array[mod(i,2)], tf_shot_ids0, para_fname) # mod(i,2)
+    loss += fwi_op(lambdas[i], tf_shear_pad, dens[i], tf_stf, tf_gpu_id_array[mod(i,nGpus)], tf_shot_ids0, para_fname) # mod(i,2)
 end
 gradK = gradients(loss, tfCtxInit.K)
 
@@ -136,7 +138,7 @@ config = tf.ConfigProto()
 config.intra_op_parallelism_threads = 24
 config.inter_op_parallelism_threads = 24
 sess = Session(config=config); init(sess);
-opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 90.0)), method="L-BFGS-B", 
+opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
 @info "Optimization Starts..."
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K,gradK])
