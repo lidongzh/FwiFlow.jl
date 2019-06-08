@@ -17,29 +17,36 @@ function sw_p_to_lambda_den(sw, p)
     return tran_lambda, tran_den
 end
 
-lambdasObs = Array{PyObject}(undef, n_survey-1)
-densObs = Array{PyObject}(undef, n_survey-1)
+args["version"] = "CO2"
+lambdasObs = Array{PyObject}(undef, n_survey)
+densObs = Array{PyObject}(undef, n_survey)
 for iSur = 2:n_survey
   lp = readdlm("./$(args["version"])/FWI_stage$(iSur)/loss.txt")
   Lp = Int64((lp[end,1]))
-  lambdasObs[iSur-1] = constant(readdlm("./$(args["version"])/FWI_stage$(iSur)/Lambda$Lp.txt"))
-  densObs[iSur-1] = constant(readdlm("./$(args["version"])/FWI_stage$(iSur)/Den$Lp.txt"))
+  lambdasObs[iSur] = constant(readdlm("./$(args["version"])/FWI_stage$(iSur)/Lambda$Lp.txt")*1e6)
+  densObs[iSur] = constant(readdlm("./$(args["version"])/FWI_stage$(iSur)/Den$Lp.txt")*1e6)
 end
 
 tfCtxInit = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K_init,g,ϕ,qw,qo, sw0, false)
 out_sw_init, out_p_init = imseq(tfCtxInit)
-lambdas = Array{PyObject}(undef, n_survey-1)
-dens = Array{PyObject}(undef, n_survey-1)
-for i = 2:n_survey
+lambdas = Array{PyObject}(undef, n_survey)
+dens = Array{PyObject}(undef, n_survey)
+for i = 1:n_survey
     sw = out_sw_init[survey_indices[i]]
     p = out_p_init[survey_indices[i]]
-    lambdas[i-1], dens[i-1] = sw_p_to_lambda_den(sw, p)
+    lambdas[i], dens[i] = sw_p_to_lambda_den(sw, p)
 end
+lambdasObs[1] = lambdas[1]
+densObs[1] = dens[1]
 
 function objective_function(lambdasObs, lambdas, densObs, dens)
     # tf.nn.l2_loss(lambdasObs - lambdas) + tf.nn.l2_loss(densObs - dens)
-    tf.nn.l2_loss(lambdasObs - lambdas)
     # tf.nn.l2_loss(densObs - dens)
+    loss = constant(0.0)
+    for i=1:n_survey
+        loss += tf.nn.l2_loss(lambdasObs[i][10:nz-10,10:nx-10] - lambdas[i][10:nz-10,10:nx-10])
+    end
+    return loss
 end
 
 J = objective_function(lambdasObs, lambdas, densObs, dens)
