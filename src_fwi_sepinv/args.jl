@@ -85,7 +85,7 @@ dz = 3 # meters
 dx = 3
 nz = Int64(round((m * h) / dz)) + 1
 nx = Int64(round((n * h) / dx)) + 1
-nPml = 32
+nPml = 64
 nSteps = 3001
 dt = 0.00025
 f0 = 50.0
@@ -133,9 +133,9 @@ tf_stf = constant(repeat(src, outer=length(z_src)))
 # tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
-nGpus = 3
+nGpus = 4
 # tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
-tf_gpu_id_array = constant([0,2,3], dtype=Int32)
+tf_gpu_id_array = constant([0,1,2,3], dtype=Int32)
 tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 

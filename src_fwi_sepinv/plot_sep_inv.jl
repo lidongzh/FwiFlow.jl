@@ -59,7 +59,7 @@ for iPrj = 1:3
       axs[iPrj,jPrj].set_xlabel("Distance (m)")
     end
     cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
-    cb.set_label("Vp")
+    cb.set_label("λ")
     axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
     axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
   end

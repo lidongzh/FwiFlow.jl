@@ -20,7 +20,7 @@ if !isdir("figures_summary")
 end
 
 K = 20.0 .* ones(m,n) # millidarcy
-# K[8:10,:] .= 120.0
+K[8:10,:] .= 120.0
 # K[17:21,:] .= 100.0
 # for i = 1:m
 #     for j = 1:n
@@ -78,7 +78,7 @@ fig1.subplots_adjust(wspace=0.02, hspace=0.042)
 # cb = fig.colorbar(ims[2], cax=cbar_ax)
 # cb.clim([3000, 3500])
 # cb.set_label("Lambda")
-savefig("figures_summary/Vp_evo_patchy_init.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary/Vp_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 fig2,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
@@ -101,7 +101,7 @@ for iPrj = 1:3
   end
 end
 fig2.subplots_adjust(wspace=0.04, hspace=0.042)
-savefig("figures_summary/Saturation_evo_patchy_init.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary/Saturation_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 # iter = 100
