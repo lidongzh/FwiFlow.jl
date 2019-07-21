@@ -9,6 +9,12 @@ end
 
 Prj_names = ["CO2", "CO2_1src", "CO2_2surveys"]
 
+rc("axes", titlesize=14)
+rc("axes", labelsize=14)
+rc("xtick", labelsize=14)
+rc("ytick", labelsize=14)
+rc("legend", fontsize=14)
+
 L1 = readdlm("$(Prj_names[1])/loss.txt")
 l1=semilogy(L1[:,1], L1[:,2]/L1[1,2], label="Baseline")
 legend()

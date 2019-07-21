@@ -46,27 +46,11 @@ x_inj = (3-1)*h + h/2.0
 z_prod = (9-1)*h + h/2.0
 x_prod = (28-1)*h + h/2.0
 
-fig1,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
-ims = Array{Any}(undef, 9)
-for iPrj = 1:3
-  for jPrj = 1:3
-    ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(lambdasObs[(iPrj-1)*3+jPrj], extent=[0,n*h,m*h,0]);
-    axs[iPrj,jPrj].title.set_text("Stage $((iPrj-1)*3+jPrj+1)")
-    if jPrj == 1 || jPrj == 1
-      axs[iPrj,jPrj].set_ylabel("Depth (m)")
-    end
-    if iPrj == 3 || iPrj == 3
-      axs[iPrj,jPrj].set_xlabel("Distance (m)")
-    end
-    cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
-    cb.set_label("λ")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
-  end
-end
-fig1.subplots_adjust(wspace=0.02, hspace=0.042)
-savefig("figures_summary/Lambda_FWI_sep_inv.pdf",bbox_inches="tight",pad_inches = 0);
-
+rc("axes", titlesize=20)
+rc("axes", labelsize=18)
+rc("xtick", labelsize=18)
+rc("ytick", labelsize=18)
+rc("legend", fontsize=20)
 figure()
 K = readdlm("CO2/flow_fit_results/K100.txt")
 imshow(K, extent=[0,n*h,m*h,0]);
@@ -81,3 +65,33 @@ scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
 scatter(x_inj, z_inj, c="r", marker=">")
 scatter(x_prod, z_prod, c="r", marker="<")
 savefig("figures_summary/K_sep_fit.pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
+
+rc("axes", titlesize=30)
+rc("axes", labelsize=30)
+rc("xtick", labelsize=28)
+rc("ytick", labelsize=28)
+rc("legend", fontsize=30)
+fig1,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
+ims = Array{Any}(undef, 9)
+for iPrj = 1:3
+  for jPrj = 1:3
+    ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(lambdasObs[(iPrj-1)*3+jPrj], extent=[0,n*h,m*h,0], vmin=5500, vmax=9000);
+    axs[iPrj,jPrj].title.set_text("Stage $((iPrj-1)*3+jPrj+1)")
+    if jPrj == 1 || jPrj == 1
+      axs[iPrj,jPrj].set_ylabel("Depth (m)")
+    end
+    if iPrj == 3 || iPrj == 3
+      axs[iPrj,jPrj].set_xlabel("Distance (m)")
+    end
+    # cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
+    # cb.set_label("λ")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+  end
+end
+# fig1.subplots_adjust(wspace=0.02, hspace=0.042)
+fig1.subplots_adjust(wspace=0.02, hspace=0.18)
+cbar_ax = fig1.add_axes([0.91, 0.08, 0.01, 0.82])
+cb1 = fig1.colorbar(ims[1], cax=cbar_ax)
+cb1.set_label("λ (MPa)")
+savefig("figures_summary/Lambda_FWI_sep_inv.pdf",bbox_inches="tight",pad_inches = 0);
