@@ -26,11 +26,18 @@ iter = 100
 Prj_names = ["CO2", "CO2_1src", "CO2_2surveys"]
 K_name = "/K$iter.txt"
 
+rc("axes", titlesize=20)
+rc("axes", labelsize=18)
+rc("xtick", labelsize=18)
+rc("ytick", labelsize=18)
+rc("legend", fontsize=20)
 # true model
 figure()
 K = 20.0 .* ones(m,n)
 K[8:10,:] .= 120.0
 imshow(K, extent=[0,n*h,m*h,0]);
+xlabel("Distance (m)")
+ylabel("Depth (m)")
 cb = colorbar()
 clim([20, 120])
 cb.set_label("Permeability (md)")

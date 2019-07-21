@@ -53,11 +53,16 @@ x_inj = (3-1)*h + h/2.0
 z_prod = (9-1)*h + h/2.0
 x_prod = (28-1)*h + h/2.0
 
+rc("axes", titlesize=30)
+rc("axes", labelsize=30)
+rc("xtick", labelsize=28)
+rc("ytick", labelsize=28)
+rc("legend", fontsize=30)
 fig1,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
 ims = Array{Any}(undef, 9)
 for iPrj = 1:3
   for jPrj = 1:3
-    ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(V[(iPrj-1)*3+jPrj], extent=[0,n*h,m*h,0]);
+    ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(V[(iPrj-1)*3+jPrj], extent=[0,n*h,m*h,0], vmin=3350, vmax=3500);
     axs[iPrj,jPrj].title.set_text("Stage $((iPrj-1)*3+jPrj)")
     if jPrj == 1 || jPrj == 1
       axs[iPrj,jPrj].set_ylabel("Depth (m)")
@@ -65,19 +70,16 @@ for iPrj = 1:3
     if iPrj == 3 || iPrj == 3
       axs[iPrj,jPrj].set_xlabel("Distance (m)")
     end
-    cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
-    cb.set_label("Vp")
+    # cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
+    # cb.set_label("Vp")
     axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
     axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
   end
 end
-fig1.subplots_adjust(wspace=0.02, hspace=0.042)
-# imm = axs[1,1].imshow(L[1], extent=[0,n*h,m*h,0])
-# fig.subplots_adjust(right=0.9)
-# cbar_ax = fig.add_axes([0.92, 0.10, 0.02, 0.8])
-# cb = fig.colorbar(ims[2], cax=cbar_ax)
-# cb.clim([3000, 3500])
-# cb.set_label("Lambda")
+fig1.subplots_adjust(wspace=0.02, hspace=0.18)
+cbar_ax = fig1.add_axes([0.91, 0.08, 0.01, 0.82])
+cb1 = fig1.colorbar(ims[1], cax=cbar_ax)
+cb1.set_label("Vp (m/s)")
 savefig("figures_summary/Vp_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
@@ -85,7 +87,7 @@ fig2,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
 ims = Array{Any}(undef, 9)
 for iPrj = 1:3
   for jPrj = 1:3
-    ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(S[survey_indices[(iPrj-1)*3+jPrj], :, :], extent=[0,n*h,m*h,0]);
+    ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(S[survey_indices[(iPrj-1)*3+jPrj], :, :], extent=[0,n*h,m*h,0], vmin=0.0, vmax=0.6);
     axs[iPrj,jPrj].title.set_text("Stage $((iPrj-1)*3+jPrj)")
     if jPrj == 1 || jPrj == 1
       axs[iPrj,jPrj].set_ylabel("Depth (m)")
@@ -94,13 +96,17 @@ for iPrj = 1:3
       axs[iPrj,jPrj].set_xlabel("Distance (m)")
     end
     # if iPrj ==2 && jPrj == 3
-    cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
-    cb.set_label("Saturation")
+    # cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
+    # cb.set_label("Saturation")
     axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
     axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
   end
 end
-fig2.subplots_adjust(wspace=0.04, hspace=0.042)
+# fig2.subplots_adjust(wspace=0.04, hspace=0.042)
+fig2.subplots_adjust(wspace=0.02, hspace=0.18)
+cbar_ax = fig2.add_axes([0.91, 0.08, 0.01, 0.82])
+cb2 = fig2.colorbar(ims[1], cax=cbar_ax)
+cb2.set_label("Saturation")
 savefig("figures_summary/Saturation_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
