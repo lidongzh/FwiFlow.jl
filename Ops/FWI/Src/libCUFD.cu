@@ -92,7 +92,6 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
   std::cout << "Src_Rec time: " << elapsedSrc.count() << " second(s)"
             << std::endl;
   std::cout << "number of shots " << src_rec.d_vec_z_rec.size() << std::endl;
-  std::cout << "number of d_data " << src_rec.d_vec_data.size() << std::endl;
 #endif
 
   // compute Courant number
@@ -112,6 +111,9 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
   h_l2Obj_temp = (float *)malloc(sizeof(float));
   float h_l2Obj = 0.0;
   float *d_gauss_amp;
+  float *d_data;
+  float *d_data_obs;
+  float *d_res;
   CHECK(cudaMalloc((void **)&d_vz, nz * nx * sizeof(float)));
   CHECK(cudaMalloc((void **)&d_vx, nz * nx * sizeof(float)));
   CHECK(cudaMalloc((void **)&d_szz, nz * nx * sizeof(float)));
@@ -182,12 +184,19 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
     intialArrayGPU<<<blocks, threads>>>(d_mem_dsxz_dx, nz, nx, 0.0);
 
     nrec = src_rec.vec_nrec.at(iShot);
+
+    CHECK(cudaMalloc((void **)&d_data, nrec * nSteps * sizeof(float)));
+    intialArrayGPU<<<blocks, threads>>>(d_data, nrec, nSteps, 0.0);
+
     if (para.if_res()) {
       fileBinLoad(src_rec.vec_data_obs.at(iShot), nSteps * nrec,
                   para.data_dir_name() + "/Shot" +
                       std::to_string(shot_ids[iShot]) + ".bin");
-      CHECK(cudaMemcpyAsync(src_rec.d_vec_data_obs.at(iShot),
-                            src_rec.vec_data_obs.at(iShot),
+      CHECK(cudaMalloc((void **)&d_data_obs, nrec * nSteps * sizeof(float)));
+      CHECK(cudaMalloc((void **)&d_res, nrec * nSteps * sizeof(float)));
+      intialArrayGPU<<<blocks, threads>>>(d_data_obs, nrec, nSteps, 0.0);
+      intialArrayGPU<<<blocks, threads>>>(d_res, nrec, nSteps, 0.0);
+      CHECK(cudaMemcpyAsync(d_data_obs, src_rec.vec_data_obs.at(iShot),
                             nrec * nSteps * sizeof(float),
                             cudaMemcpyHostToDevice, streams[iShot]));
     }
@@ -228,15 +237,15 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
           d_vx_adj, model.d_DenGrad);
 
       recording<<<(nrec + 31) / 32, 32>>>(
-          d_szz, d_sxx, nz, src_rec.d_vec_data.at(iShot), iShot, it + 1, nSteps,
-          nrec, src_rec.d_vec_z_rec.at(iShot), src_rec.d_vec_x_rec.at(iShot));
+          d_szz, d_sxx, nz, d_data, iShot, it + 1, nSteps, nrec,
+          src_rec.d_vec_z_rec.at(iShot), src_rec.d_vec_x_rec.at(iShot));
     }  // end of forward time loop
 
     if (!para.if_res()) {
-      CHECK(cudaMemcpyAsync(
-          src_rec.vec_data.at(iShot), src_rec.d_vec_data.at(iShot),
-          nSteps * nrec * sizeof(float), cudaMemcpyDeviceToHost,
-          streams[iShot]));  // test
+      CHECK(cudaMemcpyAsync(src_rec.vec_data.at(iShot), d_data,
+                            nSteps * nrec * sizeof(float),
+                            cudaMemcpyDeviceToHost,
+                            streams[iShot]));  // test
     }
 
 #ifdef DEBUG
@@ -252,31 +261,27 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
         cuda_window<<<blocksT, threads>>>(
             nSteps, nrec, dt, src_rec.d_vec_win_start.at(iShot),
             src_rec.d_vec_win_end.at(iShot), src_rec.d_vec_weights.at(iShot),
-            win_ratio, src_rec.d_vec_data_obs.at(iShot));
+            win_ratio, d_data_obs);
         cuda_window<<<blocksT, threads>>>(
             nSteps, nrec, dt, src_rec.d_vec_win_start.at(iShot),
             src_rec.d_vec_win_end.at(iShot), src_rec.d_vec_weights.at(iShot),
-            win_ratio, src_rec.d_vec_data.at(iShot));
+            win_ratio, d_data);
       } else {
         cuda_window<<<blocksT, threads>>>(nSteps, nrec, dt, win_ratio,
-                                          src_rec.d_vec_data_obs.at(iShot));
-        cuda_window<<<blocksT, threads>>>(nSteps, nrec, dt, win_ratio,
-                                          src_rec.d_vec_data.at(iShot));
+                                          d_data_obs);
+        cuda_window<<<blocksT, threads>>>(nSteps, nrec, dt, win_ratio, d_data);
       }
 
       // filtering
       if (para.if_filter()) {
-        bp_filter1d(nSteps, dt, nrec, src_rec.d_vec_data_obs.at(iShot),
-                    para.filter());
-        bp_filter1d(nSteps, dt, nrec, src_rec.d_vec_data.at(iShot),
-                    para.filter());
+        bp_filter1d(nSteps, dt, nrec, d_data_obs, para.filter());
+        bp_filter1d(nSteps, dt, nrec, d_data, para.filter());
       }
 
       // Calculate source update and filter calculated data
       if (para.if_src_update()) {
         amp_ratio =
-            source_update(nSteps, dt, nrec, src_rec.d_vec_data_obs.at(iShot),
-                          src_rec.d_vec_data.at(iShot),
+            source_update(nSteps, dt, nrec, d_data_obs, d_data,
                           src_rec.d_vec_source.at(iShot), src_rec.d_coef);
         printf("	Source update => Processing shot %d, amp_ratio = %f\n",
                iShot, amp_ratio);
@@ -284,51 +289,43 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
       amp_ratio = 1.0;  // amplitude not used, so set to 1.0
 
       // objective function
-      gpuMinus<<<blocksT, threads>>>(
-          src_rec.d_vec_res.at(iShot), src_rec.d_vec_data_obs.at(iShot),
-          src_rec.d_vec_data.at(iShot), nSteps, nrec);
-      cuda_cal_objective<<<1, 512>>>(d_l2Obj_temp, src_rec.d_vec_res.at(iShot),
-                                     nSteps * nrec);
+      gpuMinus<<<blocksT, threads>>>(d_res, d_data_obs, d_data, nSteps, nrec);
+      cuda_cal_objective<<<1, 512>>>(d_l2Obj_temp, d_res, nSteps * nrec);
       CHECK(cudaMemcpy(h_l2Obj_temp, d_l2Obj_temp, sizeof(float),
                        cudaMemcpyDeviceToHost));
       h_l2Obj += h_l2Obj_temp[0];
 
       //  update source again (adjoint)
       if (para.if_src_update()) {
-        source_update_adj(nSteps, dt, nrec, src_rec.d_vec_res.at(iShot),
-                          amp_ratio, src_rec.d_coef);
+        source_update_adj(nSteps, dt, nrec, d_res, amp_ratio, src_rec.d_coef);
       }
 
       // filtering again (adjoint)
       if (para.if_filter()) {
-        bp_filter1d(nSteps, dt, nrec, src_rec.d_vec_res.at(iShot),
-                    para.filter());
+        bp_filter1d(nSteps, dt, nrec, d_res, para.filter());
       }
       // windowing again (adjoint)
       if (para.if_win()) {
         cuda_window<<<blocksT, threads>>>(
             nSteps, nrec, dt, src_rec.d_vec_win_start.at(iShot),
             src_rec.d_vec_win_end.at(iShot), src_rec.d_vec_weights.at(iShot),
-            0.1, src_rec.d_vec_res.at(iShot));
+            0.1, d_res);
       } else {
-        cuda_window<<<blocksT, threads>>>(nSteps, nrec, dt, win_ratio,
-                                          src_rec.d_vec_res.at(iShot));
+        cuda_window<<<blocksT, threads>>>(nSteps, nrec, dt, win_ratio, d_res);
       }
 
-      CHECK(cudaMemcpyAsync(
-          src_rec.vec_res.at(iShot), src_rec.d_vec_res.at(iShot),
-          nSteps * nrec * sizeof(float), cudaMemcpyDeviceToHost,
-          streams[iShot]));  // test
-      // CHECK(cudaMemcpy(src_rec.vec_res.at(iShot), src_rec.d_vec_res.at(iShot), \
-			// 	nSteps*nrec*sizeof(float), cudaMemcpyDeviceToHost)); // test
-      CHECK(cudaMemcpyAsync(
-          src_rec.vec_data.at(iShot), src_rec.d_vec_data.at(iShot),
-          nSteps * nrec * sizeof(float), cudaMemcpyDeviceToHost,
-          streams[iShot]));  // test
-      CHECK(cudaMemcpyAsync(
-          src_rec.vec_data_obs.at(iShot), src_rec.d_vec_data_obs.at(iShot),
-          nSteps * nrec * sizeof(float), cudaMemcpyDeviceToHost,
-          streams[iShot]));  // save preconditioned observed
+      CHECK(cudaMemcpyAsync(src_rec.vec_res.at(iShot), d_res,
+                            nSteps * nrec * sizeof(float),
+                            cudaMemcpyDeviceToHost,
+                            streams[iShot]));  // test
+      CHECK(cudaMemcpyAsync(src_rec.vec_data.at(iShot), d_data,
+                            nSteps * nrec * sizeof(float),
+                            cudaMemcpyDeviceToHost,
+                            streams[iShot]));  // test
+      CHECK(cudaMemcpyAsync(src_rec.vec_data_obs.at(iShot), d_data_obs,
+                            nSteps * nrec * sizeof(float),
+                            cudaMemcpyDeviceToHost,
+                            streams[iShot]));  // save preconditioned observed
       CHECK(cudaMemcpy(src_rec.vec_source.at(iShot),
                        src_rec.d_vec_source.at(iShot), nSteps * sizeof(float),
                        cudaMemcpyDeviceToHost));
@@ -365,9 +362,8 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
           cpml.d_K_x, cpml.d_a_x, cpml.d_b_x, nz, nx, dt, dz, dx, nPml, nPad);
 
       res_injection<<<(nrec + 31) / 32, 32>>>(
-          d_szz_adj, d_sxx_adj, nz, src_rec.d_vec_res.at(iShot), nSteps - 1, dt,
-          nSteps, nrec, src_rec.d_vec_z_rec.at(iShot),
-          src_rec.d_vec_x_rec.at(iShot));
+          d_szz_adj, d_sxx_adj, nz, d_res, nSteps - 1, dt, nSteps, nrec,
+          src_rec.d_vec_z_rec.at(iShot), src_rec.d_vec_x_rec.at(iShot));
 
       el_stress_adj<<<blocks, threads>>>(
           d_vz_adj, d_vx_adj, d_szz_adj, d_sxx_adj, d_sxz_adj, d_mem_dszz_dz,
@@ -419,9 +415,8 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
             cpml.d_b_x, nz, nx, dt, dz, dx, nPml, nPad);
 
         res_injection<<<(nrec + 31) / 32, 32>>>(
-            d_szz_adj, d_sxx_adj, nz, src_rec.d_vec_res.at(iShot), it, dt,
-            nSteps, nrec, src_rec.d_vec_z_rec.at(iShot),
-            src_rec.d_vec_x_rec.at(iShot));
+            d_szz_adj, d_sxx_adj, nz, d_res, it, dt, nSteps, nrec,
+            src_rec.d_vec_z_rec.at(iShot), src_rec.d_vec_x_rec.at(iShot));
 
         el_stress_adj<<<blocks, threads>>>(
             d_vz_adj, d_vx_adj, d_szz_adj, d_sxx_adj, d_sxz_adj, d_mem_dszz_dz,
@@ -462,7 +457,12 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
         grad_stf[iShot * nSteps + it] = model.h_StfGrad[it];
       }
     }  // end bracket of if adj
-  }    // the end of shot loop
+    CHECK(cudaFree(d_data));
+    if (para.if_res()) {
+      CHECK(cudaFree(d_data_obs));
+      CHECK(cudaFree(d_res));
+    }
+  }  // the end of shot loop
 
   auto finish = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = finish - start;

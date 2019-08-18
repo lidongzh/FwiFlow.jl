@@ -67,6 +67,7 @@ function onestep(sw, p, m, n, h, Δt, Z, ρw, ρo, μw, μo, K, g, ϕ, qw, qo)
     λo = (1-sw).*(1-sw)/μo
     λ = λw + λo
     q = qw + qo + λw/(λo+1e-16).*qo
+    # q = qw + qo
     potential_c = (ρw - ρo)*g .* Z
 
     # Step 1: implicit potential

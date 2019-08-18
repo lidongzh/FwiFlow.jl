@@ -18,6 +18,8 @@
 #define TX 32
 #define TY 16
 
+#define RSXXZZ 3.0
+
 __constant__ float coef[2];
 
 #define CHECK(call)                                                      \

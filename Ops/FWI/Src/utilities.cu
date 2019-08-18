@@ -533,7 +533,7 @@ __global__ void add_source(float *d_szz, float *d_sxx, float amp, int nz,
           scale * amp * dt * gauss_amp[gidz + gidx * 9];
       // crosswell borehole source (can be modified) assume cp/cs = sqrt(3.0)
       d_sxx[(z_loc + idz) + nz * (x_loc + idx)] +=
-          3.0 * scale * amp * dt * gauss_amp[gidz + gidx * 9];
+          RSXXZZ * scale * amp * dt * gauss_amp[gidz + gidx * 9];
     } else {
       return;
     }
@@ -545,7 +545,7 @@ __global__ void add_source(float *d_szz, float *d_sxx, float amp, int nz,
       d_szz[(z_loc + idz) + nz * (x_loc + idx)] -=
           scale * amp * dt * gauss_amp[gidz + gidx * 9];
       d_sxx[(z_loc + idz) + nz * (x_loc + idx)] -=
-          3.0 * scale * amp * dt * gauss_amp[gidz + gidx * 9];
+          RSXXZZ * scale * amp * dt * gauss_amp[gidz + gidx * 9];
     } else {
       return;
     }
@@ -561,7 +561,7 @@ __global__ void recording(float *d_szz, float *d_sxx, int nz, float *d_data,
   }
   d_data[(iRec) * (nSteps) + (it)] =
       d_szz[d_z_rec[iRec] + d_x_rec[iRec] * nz] +
-      3.0 * d_sxx[d_z_rec[iRec] + d_x_rec[iRec] * nz];
+      RSXXZZ * d_sxx[d_z_rec[iRec] + d_x_rec[iRec] * nz];
 }
 
 __global__ void res_injection(float *d_szz_adj, float *d_sxx_adj, int nz,
@@ -574,7 +574,7 @@ __global__ void res_injection(float *d_szz_adj, float *d_sxx_adj, int nz,
   d_szz_adj[d_z_rec[iRec] + nz * d_x_rec[iRec]] +=
       d_res[(iRec) * (nSteps) + (it)];
   d_sxx_adj[d_z_rec[iRec] + nz * d_x_rec[iRec]] +=
-      3.0 * d_res[(iRec) * (nSteps) + (it)];
+      RSXXZZ * d_res[(iRec) * (nSteps) + (it)];
 }
 
 __global__ void source_grad(float *d_szz_adj, float *d_sxx_adj, int nz,
@@ -582,9 +582,9 @@ __global__ void source_grad(float *d_szz_adj, float *d_sxx_adj, int nz,
                             int x_src) {
   int id = threadIdx.x + blockDim.x * blockIdx.x;
   if (id == 0) {
-    d_StfGrad[it] =
-        -(d_szz_adj[z_src + nz * x_src] + 3.0 * d_sxx_adj[z_src + nz * x_src]) *
-        dt;
+    d_StfGrad[it] = -(d_szz_adj[z_src + nz * x_src] +
+                      RSXXZZ * d_sxx_adj[z_src + nz * x_src]) *
+                    dt;
   } else {
     return;
   }

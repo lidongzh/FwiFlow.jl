@@ -133,9 +133,9 @@ tf_stf = constant(repeat(src, outer=length(z_src)))
 # tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
-nGpus = 3
+nGpus = 2
 # tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
-tf_gpu_id_array = constant([0,1,2], dtype=Int32)
+tf_gpu_id_array = constant([2,3], dtype=Int32)
 tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 
@@ -153,6 +153,20 @@ tf_shear_pad = tf.pad(tf_shear_sat1, [nPml (nPml+nPad); nPml nPml],
 
 function Gassman(sw)
     tf_bulk_fl_mix = 1.0/( (1-sw)/tf_bulk_fl1 + sw/tf_bulk_fl2 )
+    temp = tf_bulk_sat1/(tf_bulk_min - tf_bulk_sat1) - tf_bulk_fl1/tf_ϕ_pad /(tf_bulk_min - tf_bulk_fl1) + tf_bulk_fl_mix/tf_ϕ_pad /(tf_bulk_min - tf_bulk_fl_mix)
+
+    tf_bulk_new = tf_bulk_min / (1.0/temp + 1.0)
+    # tf_den_new = constant(den) + tf_ϕ_pad .* sw * (ρw - ρo) *16.018463373960138;
+    tf_den_new = constant(den) + tf_ϕ_pad .* sw * (ρw - ρo)
+    # tf_cp_new = sqrt((tf_bulk_new + 4.0/3.0 * tf_shear_sat1)/tf_den_new)
+    tf_lambda_new = tf_bulk_new - 2.0/3.0 * tf_shear_sat1
+    return tf_lambda_new, tf_den_new
+end
+
+tf_brie_coef = Variable(2.0)
+# tf_brie_coef = constant(3.0)
+function Brie(sw)
+    tf_bulk_fl_mix = (tf_bulk_fl1-tf_bulk_fl2)*(1-sw)^tf.round(tf_brie_coef) + tf_bulk_fl2
     temp = tf_bulk_sat1/(tf_bulk_min - tf_bulk_sat1) - tf_bulk_fl1/tf_ϕ_pad /(tf_bulk_min - tf_bulk_fl1) + tf_bulk_fl_mix/tf_ϕ_pad /(tf_bulk_min - tf_bulk_fl_mix)
 
     tf_bulk_new = tf_bulk_min / (1.0/temp + 1.0)

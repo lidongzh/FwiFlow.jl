@@ -16,7 +16,8 @@ function sw_p_to_lambda_den(sw, p)
     p = squeeze(p)
     # tran_lambda, tran_den = Gassman(sw)
     # tran_lambda, tran_den = RockLinear(sw) # test linear relationship
-    tran_lambda, tran_den = Patchy(sw)
+    # tran_lambda, tran_den = Patchy(sw)
+    tran_lambda, tran_den = Brie(sw)
     tran_lambda_pad =  tf.pad(tran_lambda, [nPml (nPml+nPad); nPml nPml], constant_values=3500.0^2*2200.0/3.0) /1e6
     tran_den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2200.0)
     return tran_lambda_pad, tran_den_pad
@@ -104,8 +105,8 @@ end
 # Optimization
 __cnt = 0
 # invK = zeros(m,n)
-function print_loss(l, K, gradK)
-    global __cnt, __l, __K, __gradK
+function print_loss(l, K, gradK, brie_coef)
+    global __cnt, __l, __K, __gradK, __brie_coef
     if mod(__cnt,1)==0
         println("\niter=$__iter, eval=$__cnt, current loss=",l)
         # println("a=$a, b1=$b1, b2=$b2")
@@ -114,6 +115,7 @@ function print_loss(l, K, gradK)
     __l = l
     __K = K
     __gradK = gradK
+    __brie_coef = brie_coef
 end
 
 __iter = 0
@@ -132,14 +134,20 @@ function print_iter(rk)
     open("./$(args["version"])/gradK$__iter.txt", "w") do io 
         writedlm(io, __gradK)
     end
+    open("./$(args["version"])/brie_coef.txt", "a") do io 
+        writedlm(io, Any[__iter __brie_coef])
+    end
 end
 
 config = tf.ConfigProto()
 config.intra_op_parallelism_threads = 24
 config.inter_op_parallelism_threads = 24
 sess = Session(config=config); init(sess);
-opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0)), method="L-BFGS-B", 
+# opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0)), method="L-BFGS-B", 
+#     options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
+opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K, tf_brie_coef], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0), tf_brie_coef=>(1.0,100.0)), method="L-BFGS-B", 
     options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
 @info "Optimization Starts..."
-ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K,gradK])
+# ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K,gradK])
+ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K,gradK, tf_brie_coef])
 

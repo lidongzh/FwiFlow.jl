@@ -2,7 +2,11 @@
 if Sys.islinux()
     py"""
     import tensorflow as tf
-    libFwiOp = tf.load_op_library('./build/libFwiOp.so')
+    import socket
+    if socket.gethostname() != "Dolores":
+        libFwiOp = tf.load_op_library('./build/libFwiOp.so')
+    else:
+        libFwiOp = tf.load_op_library('./build_dolores/libFwiOp.so')
     @tf.custom_gradient
     def fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname):
         misfit = libFwiOp.fwi_op(λ,μ,ρ,stf,gpu_id,shot_ids,para_fname)

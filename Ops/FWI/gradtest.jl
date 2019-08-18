@@ -32,16 +32,16 @@ nPad = 0
 x_src = [200-nPml]
 z_src = [200-nPml]
 
-# z = (5:10:nz-2nPml-5)|>collect
-# x = (5:10:nx-2nPml-5)|>collect
-# x_rec, z_rec = np.meshgrid(x, z)
-# x_rec = x_rec[:]
-# z_rec = z_rec[:]
+z = (5:10:nz-2nPml-5)|>collect
+x = (5:10:nx-2nPml-5)|>collect
+x_rec, z_rec = np.meshgrid(x, z)
+x_rec = x_rec[:]
+z_rec = z_rec[:]
 
-x_src = 5
-z_src = [300-nPml]
-z_rec = collect(5:1:nz-2nPml-5)
-x_rec = (nx-2nPml-100) .* ones(Int64, size(z_rec))
+# x_src = 5
+# z_src = [300-nPml]
+# z_rec = collect(5:1:nz-2nPml-5)
+# x_rec = (nx-2nPml-100) .* ones(Int64, size(z_rec))
 
 para_fname = "./para_file.json"
 survey_fname = "./survey_file.json"
@@ -85,7 +85,7 @@ res1 = fwi_obs_op(tf_lambda, tf_mu, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, tf
 
 sess=Session();init(sess);
 @time run(sess, res1)
-error("")
+# error("")
 
 # gradient check -- v
 function scalar_function(m)

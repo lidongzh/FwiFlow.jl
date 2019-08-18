@@ -1,6 +1,7 @@
 # input: nz, nx, dz, dx, nSteps, nPoints_pml, nPad, dt, f0, survey_fname, data_dir_name, scratch_dir_name, isAc
 using JSON
 using DataStructures
+using Dierckx
 
 function paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, para_fname, survey_fname, data_dir_name; if_win=false, filter_para=nothing, if_src_update=false, scratch_dir_name::String="")
 
@@ -28,6 +29,9 @@ function paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, para_fname, survey_
   if !isdir(data_dir_name)
     mkdir(data_dir_name)
   end
+  # if nStepsWrap != nothing
+  #   para["nStepsWrap"] = nStepsWrap
+  # end
 
 	if(scratch_dir_name != "")
       para["scratch_dir_name"] = scratch_dir_name
@@ -60,7 +64,8 @@ function surveyGen(z_src, x_src, z_rec, x_rec, survey_fname; Windows=nothing, We
       shot["win_end"] = Windows["shot$(i-1)"][:end]
     end
     if Weights != nothing
-      shot["weights"] = Int64.(Weights["shot$(i-1)"][:weights])
+      # shot["weights"] = Int64.(Weights["shot$(i-1)"][:weights])
+      shot["weights"] = Weights["shot$(i-1)"][:weights]
     end
     survey["shot$(i-1)"] = shot
   end
@@ -90,57 +95,58 @@ function sourceGene(f, nStep, delta_t)
   source = source * delta_t;
 end
 
+# get vs high and low bounds from log point cloud 
+# 1st row of Bounds: vp ref line
+# 2nd row of Bounds: vs high ref line
+# 3rd row of Bounds: vs low ref line
+function cs_bounds_cloud(cpImg, Bounds)
+  cs_high_itp = Spline1D(Bounds[1,:], Bounds[2,:]; k=1)
+  cs_low_itp = Spline1D(Bounds[1,:], Bounds[3,:]; k=1)
+  csHigh = zeros(size(cpImg))
+  csLow = zeros(size(cpImg))
+  for i = 1:size(cpImg, 1)
+    for j = 1:size(cpImg, 2)
+      csHigh[i,j] = cs_high_itp(cpImg[i,j])
+      csLow[i,j] = cs_low_itp(cpImg[i,j])
+    end
+  end
+  return csHigh, csLow
+end
 
+function klauderWave(fmin, fmax, t_sweep, nStepTotal, nStepDelay, delta_t)
+#  Klauder wavelet
+#  Dongzhuo Li @ Stanford
+#  August, 2019
+  nStep = nStepTotal - nStepDelay
+  source = Matrix{Float64}(undef, 1, nStep+nStep-1)
+  source_half = Matrix{Float64}(undef, 1, nStep-1)
+  K = (fmax - fmin) / t_sweep
+  f0 = (fmin + fmax) / 2.0
+  t_axis = delta_t:delta_t:(nStep-1)*delta_t
+  source_half = sin.(pi * K .* t_axis .* (t_sweep .- t_axis)) .* cos.(2.0 * pi * f0 .* t_axis) ./ (pi*K.*t_axis*t_sweep)
+  for i = 1:nStep-1
+    source[i] = source_half[end-i+1]
+  end
+  for i = nStep+1:2*nStep-1
+    source[i] = source_half[i-nStep]
+  end
+  source[nStep] = 1.0
+  source_crop = source[:,nStep-nStepDelay:end]
+  return source_crop
+end
 
-# __cnt = 0
-# # invK = zeros(m,n)
-# function print_loss(l, Lambda, Mu, Den, gradLambda, gradMu, gradDen, Stf)
-#     global __cnt, __l, __Lambda, __gradLambda, __Mu, __gradMu, __Den, __gradDen, __Stf
-#     if mod(__cnt,1)==0
-#         println("\niter=$__iter, eval=$__cnt, current loss=",l)
-#         # println("a=$a, b1=$b1, b2=$b2")
-#     end
-#     __cnt += 1
-#     __l = l
-#     __Lambda = Lambda
-#     __gradLambda = gradLambda
-#     __Mu = Mu
-#     __gradMu = gradMu
-#     __Den = Den
-#     __gradDen = gradDen
-#     __Stf = Stf
+# function klauderWave(fmin, fmax, t_sweep, nStep, delta_t)
+# #  Klauder wavelet
+# #  Dongzhuo Li @ Stanford
+# #  August, 2019
+#   source = Matrix{Float64}(undef, 1, nStep)
+#   K = (fmax - fmin) / t_sweep
+#   f0 = (fmin + fmax) / 2.0
+#   t_axis = delta_t:delta_t:(nStep-1)*delta_t
+#   source_part = sin.(pi * K .* t_axis .* (t_sweep .- t_axis)) .* cos.(2.0 * pi * f0 .* t_axis) ./ (pi*K.*t_axis*t_sweep)
+#   for i = 2:nStep
+#     source[i] = source_part[i-1]
+#   end
+#   source[1] = 1.0
+#   return source
 # end
-
-# __iter = 0
-# function print_iter(rk)
-#     global __iter
-#     if mod(__iter,1)==0
-#         println("\n************* ITER=$__iter *************\n")
-#     end
-#     __iter += 1
-#     open("./$(args["version"])/loss.txt", "a") do io 
-#         writedlm(io, Any[__iter __l])
-#     end
-#     open("./$(args["version"])/Lambda$__iter.txt", "w") do io 
-#         writedlm(io, __Lambda)
-#     end
-#     open("./$(args["version"])/gradLambda$__iter.txt", "w") do io
-#          writedlm(io, __gradLambda)
-#     end
-#     open("./$(args["version"])/Mu$__iter.txt", "w") do io 
-#         writedlm(io, __Mu)
-#     end
-#     open("./$(args["version"])/gradMu$__iter.txt", "w") do io
-#          writedlm(io, __gradMu)
-#     end
-#     open("./$(args["version"])/Den$__iter.txt", "w") do io 
-#         writedlm(io, __Den)
-#     end
-#     open("./$(args["version"])/gradDen$__iter.txt", "w") do io
-#          writedlm(io, __gradDen)
-#     end
-#     open("./$(args["version"])/Stf$__iter.txt", "w") do io
-#          writedlm(io, __Stf)
-#     end
-# end
-

@@ -23,11 +23,11 @@ class Src_Rec {
   std::vector<float *> vec_source;
   std::vector<float *> d_vec_source;
   std::vector<float *> vec_data;
-  std::vector<float *> d_vec_data;
+  //   std::vector<float *> d_vec_data;
   std::vector<float *> vec_data_obs;
-  std::vector<float *> d_vec_data_obs;
-  std::vector<float *> vec_res;    // host side data residual
-  std::vector<float *> d_vec_res;  // device side data residual
+  //   std::vector<float *> d_vec_data_obs;
+  std::vector<float *> vec_res;  // host side data residual
+  //   std::vector<float *> d_vec_res;  // device side data residual
   cuFloatComplex *d_coef;
   int nShots;
 
