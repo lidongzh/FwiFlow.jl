@@ -1,4 +1,5 @@
 include("args.jl")
+using DelimitedFiles
 
 function sw_p_to_lambda_den(sw, p)
     sw = tf.reshape(sw, (1, m, n, 1))
@@ -19,16 +20,11 @@ if !isdir("figures_summary")
   mkdir("figures_summary")
 end
 
-K = 20.0 .* ones(m,n) # millidarcy
-K[8:10,:] .= 120.0
-# K[17:21,:] .= 100.0
-# for i = 1:m
-#     for j = 1:n
-#         if i <= (14 - 24)/(30 - 1)*(j-1) + 24 && i >= (12 - 18)/(30 - 1)*(j-1) + 18
-#             K[i,j] = 100.0
-#         end
-#     end
-# end
+iter = 100
+Prj_names = "Brie_true3_set2_noupdate";
+K_name = "/K$iter.txt"
+K = readdlm(Prj_names*K_name)
+
 tfCtxTrue = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K,g,ϕ,qw,qo, sw0, true)
 out_sw_true, out_p_true = imseq(tfCtxTrue)
 lambdas = Array{PyObject}(undef, n_survey)
@@ -81,7 +77,7 @@ fig1.subplots_adjust(wspace=0.02, hspace=0.18)
 cbar_ax = fig1.add_axes([0.91, 0.08, 0.01, 0.82])
 cb1 = fig1.colorbar(ims[1], cax=cbar_ax)
 cb1.set_label("Vp (m/s)")
-savefig("figures_summary/Vp_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary/predicted_Vp_evo.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 fig2,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
@@ -108,34 +104,34 @@ fig2.subplots_adjust(wspace=0.02, hspace=0.18)
 cbar_ax = fig2.add_axes([0.91, 0.08, 0.01, 0.82])
 cb2 = fig2.colorbar(ims[1], cax=cbar_ax)
 cb2.set_label("Saturation")
-savefig("figures_summary/Saturation_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary/predicted_Saturation_evo.pdf",bbox_inches="tight",pad_inches = 0);
 
 
-fig3,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
-ims = Array{Any}(undef, 9)
-for iPrj = 1:3
-  for jPrj = 1:3
-    ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(P[survey_indices[(iPrj-1)*3+jPrj], :, :]*1.4504e-04, extent=[0,n*h,m*h,0], vmin=-2500.0, vmax=500);
-    axs[iPrj,jPrj].title.set_text("Snapshot $((iPrj-1)*3+jPrj)")
-    if jPrj == 1 || jPrj == 1
-      axs[iPrj,jPrj].set_ylabel("Depth (m)")
-    end
-    if iPrj == 3 || iPrj == 3
-      axs[iPrj,jPrj].set_xlabel("Distance (m)")
-    end
-    # if iPrj ==2 && jPrj == 3
-    # cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
-    # cb.set_label("Saturation")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
-  end
-end
-# fig2.subplots_adjust(wspace=0.04, hspace=0.042)
-fig3.subplots_adjust(wspace=0.02, hspace=0.18)
-cbar_ax = fig3.add_axes([0.91, 0.08, 0.01, 0.82])
-cb3 = fig3.colorbar(ims[1], cax=cbar_ax)
-cb3.set_label("Potential (psi)")
-savefig("figures_summary/Potential_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
+# fig3,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
+# ims = Array{Any}(undef, 9)
+# for iPrj = 1:3
+#   for jPrj = 1:3
+#     ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(P[survey_indices[(iPrj-1)*3+jPrj], :, :]*1.4504e-04, extent=[0,n*h,m*h,0], vmin=-2500.0, vmax=500);
+#     axs[iPrj,jPrj].title.set_text("Snapshot $((iPrj-1)*3+jPrj)")
+#     if jPrj == 1 || jPrj == 1
+#       axs[iPrj,jPrj].set_ylabel("Depth (m)")
+#     end
+#     if iPrj == 3 || iPrj == 3
+#       axs[iPrj,jPrj].set_xlabel("Distance (m)")
+#     end
+#     # if iPrj ==2 && jPrj == 3
+#     # cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
+#     # cb.set_label("Saturation")
+#     axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
+#     axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+#   end
+# end
+# # fig2.subplots_adjust(wspace=0.04, hspace=0.042)
+# fig3.subplots_adjust(wspace=0.02, hspace=0.18)
+# cbar_ax = fig3.add_axes([0.91, 0.08, 0.01, 0.82])
+# cb3 = fig3.colorbar(ims[1], cax=cbar_ax)
+# cb3.set_label("Potential (psi)")
+# savefig("figures_summary/Potential_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 

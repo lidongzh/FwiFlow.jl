@@ -42,13 +42,27 @@ const SRC_CONST = 86400.0
 const GRAV_CONST = 1.0
 
 # NOTE Hyperparameter for flow simulation
-m = 15
-n = 30
-h = 30.0 # meter
-
 NT  = 50
 dt_survey = 5
 Δt = 20.0 # day
+if args["generate_data"]
+    m = 90
+    n = 180
+    h = 5.0 # meter
+    qw = zeros(NT, m, n)
+    qw[:,54,18] .= 0.005 * (1/h^2)/10.0 * SRC_CONST
+    qo = zeros(NT, m, n)
+    qo[:,54,168] .= -0.005 * (1/h^2)/10.0 * SRC_CONST
+else
+    m = 45
+    n = 90
+    h = 10.0 # meter
+    qw = zeros(NT, m, n)
+    qw[:,27,9] .= 0.005 * (1/h^2)/10.0 * SRC_CONST
+    qo = zeros(NT, m, n)
+    qo[:,27,84] .= -0.005 * (1/h^2)/10.0 * SRC_CONST
+end
+
 z = (1:m)*h|>collect
 x = (1:n)*h|>collect
 X, Z = np.meshgrid(x, z)
@@ -66,10 +80,10 @@ K_init = 20.0 .* ones(m,n)
 
 g = 9.8*GRAV_CONST
 ϕ = 0.25 .* ones(m,n)
-qw = zeros(NT, m, n)
-qw[:,9,3] .= 0.005 * (1/h^2)/10.0 * SRC_CONST
-qo = zeros(NT, m, n)
-qo[:,9,28] .= -0.005 * (1/h^2)/10.0 * SRC_CONST
+# qw = zeros(NT, m, n)
+# qw[:,54,18] .= 0.005 * (1/h^2)/10.0 * SRC_CONST
+# qo = zeros(NT, m, n)
+# qo[:,54,168] .= -0.005 * (1/h^2)/10.0 * SRC_CONST
 sw0 = zeros(m, n)
 survey_indices = collect(1:dt_survey:NT+1) # 10 stages
 n_survey = length(survey_indices)
@@ -133,9 +147,9 @@ tf_stf = constant(repeat(src, outer=length(z_src)))
 # tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
-nGpus = 1
+nGpus = 2
 # tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
-tf_gpu_id_array = constant([0], dtype=Int32)
+tf_gpu_id_array = constant([1,2], dtype=Int32)
 tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 

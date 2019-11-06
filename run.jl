@@ -1,7 +1,9 @@
 dir = @__DIR__
 
 cd("Ops/FWI/Src")
-run(`make all -j`)
+run(`. compile.sh`)
+cd("../")
+run(`. compile.sh`)
 cd(dir)
 jobs = ["FWI", "Laplacian", "Poisson", "Saturation", "Upwlap", "Upwps"]
 for j in jobs
