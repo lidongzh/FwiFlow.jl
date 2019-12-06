@@ -10,6 +10,12 @@ function parse_commandline()
         "--version"
             arg_type = String
             default = "0000"
+        "--gpuIds"
+            arg_type = String
+            default = "0"
+        "--indStage"
+            arg_type = Int64
+            default = 2
         "--verbose"
             arg_type = Bool
             default = false
@@ -21,6 +27,9 @@ end
 args = parse_commandline()
 if !isdir("./$(args["version"])")
     mkdir("./$(args["version"])")
+end
+if !isdir("./$(args["version"])/Stage$(args["indStage"])")
+  mkdir("./$(args["version"])/Stage$(args["indStage"])")
 end
 
 using PyTensorFlow
@@ -76,7 +85,7 @@ X, Z = np.meshgrid(x, z)
 μw = 0.1
 μo = 1.0
 
-K_init = 20.0 .* ones(m,n)
+# K_init = 20.0 .* ones(m,n)
 
 g = 9.8*GRAV_CONST
 ϕ = 0.25 .* ones(m,n)
@@ -147,9 +156,9 @@ tf_stf = constant(repeat(src, outer=length(z_src)))
 # tf_para_fname = tf.strings.join([para_fname])
 tf_gpu_id0 = constant(0, dtype=Int32)
 tf_gpu_id1 = constant(1, dtype=Int32)
-nGpus = 2
-# tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
-tf_gpu_id_array = constant([1,2], dtype=Int32)
+gpu_id_array = [parse(Int, ss) for ss in split(args["gpuIds"],"_")]
+nGpus = length(gpu_id_array)
+tf_gpu_id_array = constant(gpu_id_array, dtype=Int32)
 tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
 tf_shot_ids1 = constant(collect(Int32, 13:25), dtype=Int32)
 

@@ -72,16 +72,6 @@ if args["generate_data"]
     error("Generate Data: Stop")
 end
 
-if args["indStage"] == 2
-    K_init = 20.0 .* ones(m,n)
-elseif args["indStage"] == 1
-    error("indStage == 1")
-else
-    ls = readdlm("./$(args["version"])/Stage$(args["indStage"]-1)/loss.txt")
-    Ls = Int64((ls[end,1]))
-    K_init = readdlm("./$(args["version"])/Stage$(args["indStage"]-1)/K$Ls.txt")
-end
-
 tfCtxInit = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K_init,g,ϕ,qw,qo, sw0, false)
 out_sw_init, out_p_init = imseq(tfCtxInit)
 lambdas = Array{PyObject}(undef, n_survey)
@@ -94,7 +84,7 @@ end
 
 # NOTE Compute FWI loss
 loss = constant(0.0)
-for i = 1:args["indStage"]
+for i = 1:n_survey
     global loss
     para_fname = "./$(args["version"])/para_file$i.json"
     survey_fname = "./$(args["version"])/survey_file$i.json"
@@ -138,16 +128,16 @@ function print_iter(rk)
         println("\n************* ITER=$__iter *************\n")
     end
     __iter += 1
-    open("./$(args["version"])/Stage$(args["indStage"])/loss.txt", "a") do io 
+    open("./$(args["version"])/loss.txt", "a") do io 
         writedlm(io, Any[__iter __l])
     end
-    open("./$(args["version"])/Stage$(args["indStage"])/K$__iter.txt", "w") do io 
+    open("./$(args["version"])/K$__iter.txt", "w") do io 
         writedlm(io, __K)
     end
-    open("./$(args["version"])/Stage$(args["indStage"])/gradK$__iter.txt", "w") do io 
+    open("./$(args["version"])/gradK$__iter.txt", "w") do io 
         writedlm(io, __gradK)
     end
-    open("./$(args["version"])/Stage$(args["indStage"])/brie_coef.txt", "a") do io 
+    open("./$(args["version"])/brie_coef.txt", "a") do io 
         writedlm(io, Any[__iter __brie_coef])
     end
 end
@@ -156,10 +146,10 @@ config = tf.ConfigProto()
 config.intra_op_parallelism_threads = 24
 config.inter_op_parallelism_threads = 24
 sess = Session(config=config); init(sess);
-opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0)), method="L-BFGS-B", 
-    options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
-# opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K, tf_brie_coef], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0), tf_brie_coef=>(1.0,100.0)), method="L-BFGS-B", 
+# opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0)), method="L-BFGS-B", 
 #     options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
+opt = ScipyOptimizerInterface(loss, var_list=[tfCtxInit.K, tf_brie_coef], var_to_bounds=Dict(tfCtxInit.K=> (10.0, 130.0), tf_brie_coef=>(1.0,100.0)), method="L-BFGS-B", 
+    options=Dict("maxiter"=> 100, "ftol"=>1e-6, "gtol"=>1e-6))
 @info "Optimization Starts..."
 # ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K,gradK])
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, step_callback=print_iter, fetches=[loss,tfCtxInit.K,gradK, tf_brie_coef])

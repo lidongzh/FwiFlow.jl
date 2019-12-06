@@ -69,8 +69,8 @@ for iPrj = 1:3
     end
     # cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("Vp")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 fig1.subplots_adjust(wspace=0.02, hspace=0.18)
@@ -95,8 +95,8 @@ for iPrj = 1:3
     # if iPrj ==2 && jPrj == 3
     # cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("Saturation")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 # fig2.subplots_adjust(wspace=0.04, hspace=0.042)

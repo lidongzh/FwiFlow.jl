@@ -7,7 +7,7 @@ if !isdir("figures_summary")
   mkdir("figures_summary")
 end
 
-Prj_names = ["CO2", "CO2_1src", "CO2_2surveys", "Brie_3_nocoefupdate", "Brie_tune_coef_true3_start2"]
+Prj_names = ["CO2", "CO2_1src", "CO2_2surveys", "Brie_3_nocoefupdate", "Brie_tune_coef_true3_start2_scale30"]
 
 rc("axes", titlesize=14)
 rc("axes", labelsize=14)

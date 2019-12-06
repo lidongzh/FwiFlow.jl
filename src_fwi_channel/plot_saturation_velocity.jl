@@ -15,20 +15,21 @@ function sw_p_to_lambda_den(sw, p)
     return tran_lambda, tran_den
 end
 
-if !isdir("figures_summary")
-  mkdir("figures_summary")
+if !isdir("figures_summary_channel")
+  mkdir("figures_summary_channel")
 end
 
 K = 20.0 .* ones(m,n) # millidarcy
-K[8:10,:] .= 120.0
-# K[17:21,:] .= 100.0
-# for i = 1:m
-#     for j = 1:n
-#         if i <= (14 - 24)/(30 - 1)*(j-1) + 24 && i >= (12 - 18)/(30 - 1)*(j-1) + 18
-#             K[i,j] = 100.0
-#         end
-#     end
-# end
+ix = 1:n
+y1 = 45. .+ 10. .* sin.(ix./120.0 .* 2.0 .* pi)
+y2 = 55. .+ 10. .* sin.(ix./120.0 .* 2.0 .* pi)
+for j = 1:n
+    for i = 1:m
+        if (i > y1[j] && i < y2[j])
+            K[i, j] = 120;
+        end
+    end
+end
 tfCtxTrue = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K,g,ϕ,qw,qo, sw0, true)
 out_sw_true, out_p_true = imseq(tfCtxTrue)
 lambdas = Array{PyObject}(undef, n_survey)
@@ -49,10 +50,10 @@ V = run(sess, vps);
 S = run(sess, out_sw_true);
 P = run(sess, out_p_true);
 
-z_inj = (9-1)*h + h/2.0
-x_inj = (3-1)*h + h/2.0
-z_prod = (9-1)*h + h/2.0
-x_prod = (28-1)*h + h/2.0
+z_inj = (54-1)*h + h/2.0
+x_inj = (18-1)*h + h/2.0
+z_prod = (54-1)*h + h/2.0
+x_prod = (168-1)*h + h/2.0
 
 rc("axes", titlesize=30)
 rc("axes", labelsize=30)
@@ -73,15 +74,15 @@ for iPrj = 1:3
     end
     # cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("Vp")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 fig1.subplots_adjust(wspace=0.02, hspace=0.18)
 cbar_ax = fig1.add_axes([0.91, 0.08, 0.01, 0.82])
 cb1 = fig1.colorbar(ims[1], cax=cbar_ax)
 cb1.set_label("Vp (m/s)")
-savefig("figures_summary/Vp_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary_channel/Vp_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 fig2,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
@@ -99,8 +100,8 @@ for iPrj = 1:3
     # if iPrj ==2 && jPrj == 3
     # cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("Saturation")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 # fig2.subplots_adjust(wspace=0.04, hspace=0.042)
@@ -108,7 +109,7 @@ fig2.subplots_adjust(wspace=0.02, hspace=0.18)
 cbar_ax = fig2.add_axes([0.91, 0.08, 0.01, 0.82])
 cb2 = fig2.colorbar(ims[1], cax=cbar_ax)
 cb2.set_label("Saturation")
-savefig("figures_summary/Saturation_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary_channel/Saturation_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 fig3,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
@@ -126,8 +127,8 @@ for iPrj = 1:3
     # if iPrj ==2 && jPrj == 3
     # cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("Saturation")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 # fig2.subplots_adjust(wspace=0.04, hspace=0.042)
@@ -135,7 +136,7 @@ fig3.subplots_adjust(wspace=0.02, hspace=0.18)
 cbar_ax = fig3.add_axes([0.91, 0.08, 0.01, 0.82])
 cb3 = fig3.colorbar(ims[1], cax=cbar_ax)
 cb3.set_label("Potential (psi)")
-savefig("figures_summary/Potential_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary_channel/Potential_evo_patchy_true.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 

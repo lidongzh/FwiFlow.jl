@@ -21,7 +21,8 @@ if !isdir("figures_summary")
 end
 
 iter = 100
-Prj_names = "Brie_true3_set2_noupdate";
+# Prj_names = "Brie_true3_set2_noupdate";
+Prj_names = "CO2"
 K_name = "/K$iter.txt"
 K = readdlm(Prj_names*K_name)
 
@@ -69,15 +70,15 @@ for iPrj = 1:3
     end
     # cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("Vp")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 fig1.subplots_adjust(wspace=0.02, hspace=0.18)
 cbar_ax = fig1.add_axes([0.91, 0.08, 0.01, 0.82])
 cb1 = fig1.colorbar(ims[1], cax=cbar_ax)
 cb1.set_label("Vp (m/s)")
-savefig("figures_summary/predicted_Vp_evo.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary/predicted_Vp_evo_CO2.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 fig2,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
@@ -95,8 +96,8 @@ for iPrj = 1:3
     # if iPrj ==2 && jPrj == 3
     # cb = fig2.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("Saturation")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 # fig2.subplots_adjust(wspace=0.04, hspace=0.042)
@@ -104,7 +105,7 @@ fig2.subplots_adjust(wspace=0.02, hspace=0.18)
 cbar_ax = fig2.add_axes([0.91, 0.08, 0.01, 0.82])
 cb2 = fig2.colorbar(ims[1], cax=cbar_ax)
 cb2.set_label("Saturation")
-savefig("figures_summary/predicted_Saturation_evo.pdf",bbox_inches="tight",pad_inches = 0);
+savefig("figures_summary/predicted_Saturation_evo_CO2.pdf",bbox_inches="tight",pad_inches = 0);
 
 
 # fig3,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)

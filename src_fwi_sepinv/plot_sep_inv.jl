@@ -76,7 +76,7 @@ ims = Array{Any}(undef, 9)
 for iPrj = 1:3
   for jPrj = 1:3
     ims[(iPrj-1)*3+jPrj] = axs[iPrj,jPrj].imshow(lambdasObs[(iPrj-1)*3+jPrj], extent=[0,n*h,m*h,0], vmin=5500, vmax=9000);
-    axs[iPrj,jPrj].title.set_text("Stage $((iPrj-1)*3+jPrj+1)")
+    axs[iPrj,jPrj].title.set_text("Snapshot $((iPrj-1)*3+jPrj+1)")
     if jPrj == 1 || jPrj == 1
       axs[iPrj,jPrj].set_ylabel("Depth (m)")
     end
@@ -85,8 +85,8 @@ for iPrj = 1:3
     end
     # cb = fig1.colorbar(ims[(iPrj-1)*3+jPrj], ax=axs[iPrj,jPrj])
     # cb.set_label("λ")
-    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">")
-    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<")
+    axs[iPrj,jPrj].scatter(x_inj, z_inj, c="r", marker=">", s=128)
+    axs[iPrj,jPrj].scatter(x_prod, z_prod, c="r", marker="<", s=128)
   end
 end
 # fig1.subplots_adjust(wspace=0.02, hspace=0.042)

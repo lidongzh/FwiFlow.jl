@@ -23,7 +23,7 @@ z_prod = (9-1)*h + h/2.0
 x_prod = (28-1)*h + h/2.0
 
 iter = 100
-Prj_names = ["CO2", "CO2_1src", "CO2_2surveys", "Brie_3_nocoefupdate", "Brie_tune_coef_true3_start2", "Brie_true3_set2_noupdate"]
+Prj_names = ["CO2", "CO2_1src", "CO2_2surveys", "Brie_3_nocoefupdate", "Brie_tune_coef_true3_start2", "Brie_true3_set2_noupdate", "Brie_tune_coef_true3_start2_scale30"]
 K_name = "/K$iter.txt"
 
 rc("axes", titlesize=20)
@@ -44,8 +44,8 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_true.pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 # init model
@@ -60,8 +60,8 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_init.pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 figure()
@@ -76,8 +76,8 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_$(Prj_names[iPrj]).pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 figure()
@@ -92,8 +92,8 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_$(Prj_names[iPrj]).pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 figure()
@@ -108,8 +108,8 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_$(Prj_names[iPrj]).pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 figure()
@@ -124,8 +124,8 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_$(Prj_names[iPrj]).pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 figure()
@@ -140,8 +140,24 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
+savefig("figures_summary/K_$(Prj_names[iPrj]).pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
+
+figure()
+iPrj = 7
+K = readdlm(Prj_names[iPrj] * K_name)
+imshow(K, extent=[0,n*h,m*h,0]);
+xlabel("Distance (m)")
+ylabel("Depth (m)")
+cb = colorbar()
+clim([20, 120])
+cb.set_label("Permeability (md)")
+shot_inds = collect(1:length(z_src))
+scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
+scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_$(Prj_names[iPrj]).pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 figure()
@@ -158,8 +174,8 @@ cb.set_label("Permeability (md)")
 shot_inds = collect(1:length(z_src))
 scatter(x_src[shot_inds], z_src[shot_inds], c="w", marker="*")
 scatter(x_rec, z_rec, s=16.0, c="r", marker="v")
-scatter(x_inj, z_inj, c="r", marker=">")
-scatter(x_prod, z_prod, c="r", marker="<")
+scatter(x_inj, z_inj, c="r", marker=">", s=64)
+scatter(x_prod, z_prod, c="r", marker="<", s=64)
 savefig("figures_summary/K_$(Prj_names[iPrj]).pdf", bbox_inches="tight",pad_inches = 0, dpi = 300);
 
 rc("axes", titlesize=14)
@@ -168,8 +184,8 @@ rc("xtick", labelsize=14)
 rc("ytick", labelsize=14)
 rc("legend", fontsize=14)
 figure()
-iPrj = 5
-brie_coef = readdlm(Prj_names[iPrj] * "/brie_coef.txt")[:,2]
+iPrj = 7
+brie_coef = readdlm(Prj_names[iPrj] * "/brie_coef.txt")[:,2]./30.0
 plot(0:100,[2;brie_coef], "k");grid(ls="--")
 # plot(1:100, 3ones(100))
 xlabel("Iterations")
