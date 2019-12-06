@@ -24,3 +24,4 @@ amgcl/
 .vscode/
 *.DS_Store*
 *0000*
+!*CMakeLists.txt
