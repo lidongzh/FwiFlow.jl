@@ -9,7 +9,7 @@ This framework uses waveform data to invert for intrinsic parameters (e.g., perm
 The flow physics component maps from intrinsic properties such as permeability to flow properties, such as fluid saturation. We use a model of two-phase flow in porous media as an example. The governing equations are convervation of mass, Darcy's law, and other relationships.
 
 ### Rock Physics
-The rock physics model describes the relationship
+The rock physics model describes the relationship between fluid properties and rock elastic properties. When one fluid phase displaces the other, 
 
 ### Wave Physics
 
