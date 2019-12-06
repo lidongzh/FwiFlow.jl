@@ -1,0 +1,14 @@
+name = "FwiFlow"
+uuid = "a6a960b4-e246-4968-83bc-819d1955448a"
+authors = ["Dongzhuo Li <lidongzh512@gmail.com>", "Kailai Xu <kailaix@hotmail.com>"]
+version = "0.1.0"
+
+[deps]
+ADCME = "07b341a0-ce75-57c6-b2de-414ffdc00be5"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
+
+
+[compat]
+ADCME = "^0.3"
+PyCall = "^1.91"
+julia = "^1"
