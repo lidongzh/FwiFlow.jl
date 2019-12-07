@@ -1,3 +1,4 @@
+push!(LOAD_PATH, "@stdlib")
 using Conda
 
 CC = joinpath(Conda.BINDIR, "gcc")
@@ -11,7 +12,9 @@ CUR_DIR = @__DIR__
 # install dependencies
 if !isdir("$SRC_DIR/amgcl")
     download("https://github.com/ddemidov/amgcl/archive/master.zip", "$SRC_DIR/amgcl.zip")
-    run(`unzip $SRC_DIR/amgcl.zip -d $SRC_DIR`)
+    run(`unzip -o $SRC_DIR/amgcl.zip -d $SRC_DIR`)
+    run(`mv $SRC_DIR/amgcl-master $SRC_DIR/amgcl`)
+    run(`rm $SRC_DIR/amgcl.zip`)
 end
 
 function compile_op(DIR)
@@ -26,13 +29,14 @@ function compile_op(DIR)
             flag = true
             break
         end
-        if Sys.apple() && endswith(file, ".dylib")
+        if Sys.isapple() && endswith(file, ".dylib")
             flag = true
             break
         end
     end
     if flag
         @info "Library exists"
+        return 
     end
     cd("build")
     run(`$CMAKE ..`)
@@ -52,6 +56,6 @@ try
     run(`nvcc`)
     DIR = joinpath(SRC_DIR, "Ops/$name")
     compile_op(DIR)
-else
+catch
     error("`nvcc` is not found. The core module of `FwiFlow` only has a GPU kernel.")
 end

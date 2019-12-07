@@ -17,3 +17,9 @@ The elastic wave equation maps from elastic properties to wavefields, such as pa
 
 ## Intelligent Automatic Differentiation
 The Intelligent Automatic Differentiation method provides three levels of user control with (1) built-in differentiable operators from modern deep-learning infrastructures (TensorFlow), and customized operators that can either (2) encapsulate analytic adjoint gradient computation or (3) handle the forward simulation and compute the corresponding gradient for a single time step. This intelligent strategy strikes a good balance between computational efficiency and programming efficiency and would serve as a paradigm for a wide range of PDE-constrained geophysical inverse problems.
+
+### The Adjoint Method & Automatic Differentation
+
+### Customized Operators
+
+
