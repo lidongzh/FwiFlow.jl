@@ -1,3 +1,6 @@
 using FwiFlow
-using Tests
+using Test
 using PyCall
+using PyPlot
+
+matplotlib.use("Agg")
