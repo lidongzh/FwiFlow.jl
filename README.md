@@ -4,7 +4,7 @@
 ![](https://travis-ci.org/lidongzh/FwiFlow.jl.svg?branch=master)
 ![Coverage Status](https://coveralls.io/repos/github/lidongzh/FwiFlow.jl/badge.svg?branch=master)
 
-<img src="../assets/diagram.png" style="zoom:67%;" />
+<img src="docs/assets/diagram.png" style="zoom:67%;" />
 
 | Documentation                                                |
 | ------------------------------------------------------------ |
