@@ -1,4 +1,4 @@
-export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op
+export laplacian, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op
 
 OPS_DIR = @__DIR__
 
