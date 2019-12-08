@@ -25,7 +25,6 @@ end
         h::Union{PyObject, Float64}, ρ::Union{PyObject, Float64}, index::Union{Integer, PyObject}=0)
 
 Solves the Poisson equation 
-
 $\begin{aligned}
 -\nabla\cdot(c(x) \nabla u(x)) &=  & x\in \Omega\\
 \frac{\partial u(x)}{\partial n} &=  & x\in \Omega\\
