@@ -54,8 +54,8 @@ end
 
 try
     run(`nvcc`)
-    DIR = joinpath(SRC_DIR, "Ops/$name")
+    DIR = joinpath(SRC_DIR, "Ops/FWI/Src")
     compile_op(DIR)
 catch
-    error("`nvcc` is not found. The core module of `FwiFlow` only has a GPU kernel.")
+    @warn("`nvcc` is not found. The core module of `FwiFlow` only has a GPU kernel.")
 end
