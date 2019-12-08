@@ -1,16 +1,29 @@
 # FwiFlow: Wave and Flow Inversion with Intelligent Automatic Differentiation
 
-
 ![](https://travis-ci.org/lidongzh/FwiFlow.jl.svg?branch=master)
 ![Coverage Status](https://coveralls.io/repos/github/lidongzh/FwiFlow.jl/badge.svg?branch=master)
 
+
+
+
+
 <img src="docs/assets/diagram.png" style="zoom:67%;" />
+
+
+
+FwiFlow is a package for XXX that implements the idea of **intelligent automatic differentiation**.  FwiFlow modularizes different components of numerical PDE simulation by It includes a GPU-accelerated [high performance full-waveform inversion module](./src/Ops/FWI/Src).
+
+
 
 | Documentation                                                |
 | ------------------------------------------------------------ |
 | [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lidongzh.github.io/FwiFlow.jl/dev) |
 
-## Tutorial 
+
+
+
+
+## Tutorial on Custom Operators
 
 The core library in FwiFlow provides several numerical solvers or operators for linear and nonlinear PDEs. They are equipped with automatic differentiation functionalities (the solution is differentiable with respect to certain parameters) and can be used as a submodule in a system model. 
 
@@ -24,10 +37,6 @@ The list of operators provided are
 | `sat_op`     | Saturation Equation Solver |                                   |
 
 For example, we can solve the Poisson equation with `poisson_op`
-
-
-
-Solves the Poisson equation 
 
 $\begin{aligned}
 
@@ -55,6 +64,7 @@ where $A$ is the finite difference coefficient matrix,
 
 ![](docs/assets/doc_domain.png)
 
+##  Example
 
 
 

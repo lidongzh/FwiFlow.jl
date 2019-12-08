@@ -25,19 +25,19 @@ end
         h::Union{PyObject, Float64}, ρ::Union{PyObject, Float64}, index::Union{Integer, PyObject}=0)
 
 Solves the Poisson equation 
+
 $\begin{aligned}
 -\nabla\cdot(c(x) \nabla u(x)) &=  & x\in \Omega\\
 \frac{\partial u(x)}{\partial n} &=  & x\in \Omega\\
 \end{aligned}$
+
 where $\Omega=[0,n_zh]\times [0, n_xh]$. The equation is solved using finite difference method, where the step size in each direction is $h$. Mathematically, the solution to the PDE is determined up to a constant. Numerically, we discretize the equation with the scheme
 ```math
 (A+E_{11})\mathbf{u} = \mathbf{f}
 ```
 where $A$ is the finite difference coefficient matrix,
-```math
-(E_{11})_{ij} = \begin{cases}1 & i=j=1 \\ 0 & \mbox{ otherwise }\end{cases}
-```
-![](../../docs/assets/doc_domain.png)
+
+$(E_{11})_{ij} = \begin{cases}1 & i=j=1 \\ 0 & \mbox{ otherwise }\end{cases}$
 """
 function poisson_op(c::Union{PyObject, Float64}, g::Union{PyObject, Float64}, h::Union{PyObject, Float64}, ρ::Union{PyObject, Float64}, index::Union{Integer, PyObject}=0)
     c = convert_to_tensor(c, dtype=Float64)
