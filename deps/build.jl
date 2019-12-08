@@ -1,5 +1,5 @@
 push!(LOAD_PATH, "@stdlib")
-using Conda
+import Pkg; Pkg.add("Conda"); using Conda
 
 CC = joinpath(Conda.BINDIR, "gcc")
 CXX = joinpath(Conda.BINDIR, "g++")
