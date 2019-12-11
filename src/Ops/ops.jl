@@ -101,16 +101,32 @@ function poisson_op(c::Union{PyObject, Array{Float64}}, g::Union{PyObject, Array
 end
 
 @doc raw"""
-   
-- `s0` : $n_z\times n_x$, saturation of fluid 
-- `pt` : $n_z\times n_x$, 
-- `permi` : $n_z\times n_x$, permeability 
-- `poro` : $n_z\times n_x$, porosity
-- `qw` : $n_z\times n_x$, injection or production rate of ﬂuid 1
-- `qo` : $n_z\times n_x$, injection or production rate of ﬂuid 2
-- `muw` : viscosity of fluid 1
-- `muo` : viscosity of fluid 2
-- `sref` : $n_z\times n_x$, reference saturation 
+    sat_op(s0::Union{PyObject, Array{Float64}},pt::Union{PyObject, Array{Float64}},
+    permi::Union{PyObject, Array{Float64}},poro::Union{PyObject, Array{Float64}},
+    qw::Union{PyObject, Array{Float64}},qo::Union{PyObject, Array{Float64}},
+    muw::Union{PyObject, Float64},muo::Union{PyObject, Float64},
+    sref::Union{PyObject, Array{Float64}},dt::Union{PyObject, Float64},h::Union{PyObject, Float64})
+
+Solves the following discretized equation 
+```math
+\phi (S_2^{n + 1} - S_2^n) - \nabla  \cdot \left( {{m_2}(S_2^{n + 1})K\nabla \Psi _2^n} \right) \Delta t= \left(q_2^n + q_1^n \frac{m_2(S^{n+1}_2)}{m_1(S^{n+1}_2)}\right) \Delta t
+```
+where
+```math
+m_2(s) = \frac{s^2}{\mu_w}\qquad m_1(s) = \frac{(1-s)^2}{\mu_o}
+```
+This is a nonlinear equation and is solved with the Newton-Raphson method. 
+
+
+- `s0` : $n_z\times n_x$, saturation of fluid, i.e., $S_2^n$
+- `pt` : $n_z\times n_x$, potential of fluid, i.e., $\Psi_2^n$
+- `permi` : $n_z\times n_x$, permeability, i.e., $K$ 
+- `poro` : $n_z\times n_x$, porosity, i.e., $\phi$
+- `qw` : $n_z\times n_x$, injection or production rate of ﬂuid 1, $q_2^n$
+- `qo` : $n_z\times n_x$, injection or production rate of ﬂuid 2, $q_1^n$
+- `muw` : viscosity of fluid 1, i.e., $\mu_w$
+- `muo` : viscosity of fluid 2, i.e., $\mu_o$
+- `sref` : $n_z\times n_x$, initial guess for $S_2^{n+1}$
 - `dt` : Time step size  
 - `h` : Spatial step size
 """
