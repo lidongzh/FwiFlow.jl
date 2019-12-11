@@ -150,10 +150,35 @@ function sat_op(s0::Union{PyObject, Array{Float64}},pt::Union{PyObject, Array{Fl
     sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
 end
 
+@doc raw"""
+    upwlap_op(perm::Union{PyObject, Array{Float64}},
+    mobi::Union{PyObject, Array{Float64}},
+    func::Union{PyObject, Array{Float64}},
+    h::Union{PyObject, Float64},
+    rhograv::Union{PyObject, Float64})
 
-function upwlap_op(args...)
+Computes the Laplacian of function $f(\mathbf{x})$ with the upwind scheme; here $\mathbf{x}=[z\quad x]^T$.
+```math 
+\nabla\cdot\left(m_1(\mathbf{x})K(\mathbf{x}) \nabla \left(f(\mathbf{x}) -\rho \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
+``` 
+
+- `perm` : $n_z\times n_x$, permeability of fluid, i.e., $K$
+- `mobi` : $n_z\times n_x$, permeability of fluid, i.e., $m_1$
+- `func` : $n_z\times n_x$, permeability of fluid, i.e., $f$
+- `h` : `Float64`, spatial step size 
+- `rhograv` : `Float64`, i.e., $\rho$
+"""
+function upwlap_op(perm::Union{PyObject, Array{Float64}},
+    mobi::Union{PyObject, Array{Float64}},
+    func::Union{PyObject, Array{Float64}},
+    h::Union{PyObject, Float64},rhograv::Union{PyObject, Float64})
+    perm = convert_to_tensor(perm, dtype=Float64)
+    mobi = convert_to_tensor(mobi, dtype=Float64)
+    func = convert_to_tensor(func, dtype=Float64)
+    h = convert_to_tensor(h, dtype=Float64)
+    rhograv = convert_to_tensor(rhograv, dtype=Float64)
     upwlap_op = load_op_and_grad("$OPS_DIR/Upwlap/build/libUpwlapOp", "upwlap_op")
-    upwlap_op(args...)
+    upwlap_op(perm,mobi,func,h,rhograv)
 end
 
 function upwps_op(args...)
