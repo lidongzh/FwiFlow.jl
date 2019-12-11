@@ -18,7 +18,7 @@ list(GET PY_OUT 0 TF_INC)
 list(GET PY_OUT 1 TF_LIB)
 list(GET PY_OUT 2 TF_ABI)
 list(GET PY_OUT 3 TF_LIB_FILE)
-include_directories(${CONDA_INC})
+
 
 message("Python path=${PYTHON}")
 message("EIGEN_INC=${EIGEN_INC}")
@@ -33,7 +33,7 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION
 endif()
 message(${CMAKE_CXX_FLAGS})
 include_directories(${TF_INC})
-link_directories(${TF_LIB})
+include_directories(${TF_LIB} ${CONDA_INC})
 
 include_directories(/home/lidongzh/TwoPhaseFlowFWI/eigen)
 
