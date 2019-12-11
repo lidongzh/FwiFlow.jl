@@ -18,7 +18,7 @@ list(GET PY_OUT 0 TF_INC)
 list(GET PY_OUT 1 TF_LIB)
 list(GET PY_OUT 2 TF_ABI)
 list(GET PY_OUT 3 TF_LIB_FILE)
-include_directories(CONDA_INC)
+include_directories(${CONDA_INC})
 
 message("Python path=${PYTHON}")
 message("EIGEN_INC=${EIGEN_INC}")
