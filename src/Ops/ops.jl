@@ -1,6 +1,10 @@
-export laplacian, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op
+export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op
 
 OPS_DIR = @__DIR__
+
+const PA = Union{PyObject, Array{Float64}}
+const PD = Union{PyObject, Float64}
+const PI = Union{PyObject, Integer}
 
 """
 """
@@ -15,9 +19,23 @@ function fwi_obs_op(args...)
     fwi_obs_op(args...)
 end
 
-function laplacian(args...)
+
+@doc raw"""
+    laplacian_op(coef::Union{PyObject, Array{Float64}}, f::Union{PyObject, Array{Float64}}, 
+            h::Union{PyObject, Float64}, ρ::Union{PyObject, Float64})
+
+Computes the Laplacian of function $f(\mathbf{x})$; here ($\mathbf{x}=[z x]^T$)
+```math 
+-\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho\nabla \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
+``` 
+"""
+function laplacian_op(coef::PA, f::PA, h::PD, ρ::PD)
+    coef = convert_to_tensor(coef, dtype=Float64)
+    f = convert_to_tensor(f, dtype=Float64)
+    h = convert_to_tensor(h, dtype=Float64)
+    ρ = convert_to_tensor(ρ, dtype=Float64)
     laplacian = load_op_and_grad("$OPS_DIR/Laplacian/build/libLaplacian", "laplacian")
-    laplacian(args...)
+    laplacian_op(coef, f, h, ρ)
 end
 
 @doc raw"""
@@ -42,8 +60,8 @@ where $A$ is the finite difference coefficient matrix,
 
 When `index=1`, the Eigen `SparseLU` is used to solve the linear system; otherwise the function invokes algebraic multigrid method from `amgcl`. 
 """
-function poisson_op(c::Union{PyObject, Float64}, g::Union{PyObject, Float64}, h::Union{PyObject, Float64}, 
-            ρ::Union{PyObject, Float64}, index::Union{Integer, PyObject}=0)
+function poisson_op(c::PA, g::PA, h::PD, 
+            ρ::PD, index::PI=0)
     c = convert_to_tensor(c, dtype=Float64)
     g = convert_to_tensor(g, dtype=Float64)
     h = convert_to_tensor(h, dtype=Float64)
