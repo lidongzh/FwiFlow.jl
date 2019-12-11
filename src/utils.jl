@@ -61,6 +61,8 @@ end
 
 # all shots share the same number of receivers
 @doc raw"""
+  surveyGen(z_src::Array{T}, x_src::Array{T}, 
+    z_rec::Array{T}, x_rec::Array{T}, survey_fname::String; Windows=nothing, Weights=nothing) where T<:Integer
 
 Generates the survey parameter file. 
 
@@ -72,7 +74,8 @@ Generates the survey parameter file.
 - `Windows` : 
 - `Weights` : 
 """
-function surveyGen(z_src::Array{Integer}, x_src, z_rec, x_rec, survey_fname; Windows=nothing, Weights=nothing)
+function surveyGen(z_src::Array{T}, x_src::Array{T}, 
+  z_rec::Array{T}, x_rec::Array{T}, survey_fname::String; Windows=nothing, Weights=nothing) where T<:Integer
   nsrc = length(x_src)
   nrec = length(x_rec)
   survey = OrderedDict()

@@ -53,7 +53,7 @@ end
 
 
 
-for name in ["Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation"]
+for name in ["FWI", "Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation"]
     DIR = joinpath(SRC_DIR, "Ops/$name")
     compile_op(DIR)
 end
