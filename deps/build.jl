@@ -57,5 +57,5 @@ try
     DIR = joinpath(SRC_DIR, "Ops/FWI/Src")
     compile_op(DIR)
 catch
-    @warn("`nvcc` is not found. The core module of `FwiFlow` only has a GPU kernel.")
+    @warn("`nvcc` is not found. The FWI module of `FwiFlow` only has a GPU kernel.")
 end
