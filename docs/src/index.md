@@ -1,5 +1,10 @@
 # Getting Started
 
+
+## Installation
+
+
+
 ### General Problem
 
 This framework uses waveform data to invert for intrinsic parameters (e.g., permeability and porosity) in subsurface problems, with coupled flow physics, rock physics, and wave physics models.

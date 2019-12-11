@@ -12,7 +12,7 @@ upwlap_op
 ```
 
 
-```@autodoc
+```@autodocs
 Modules = [FwiFlow]
 Pages   = ["utils.jl"]
 ```

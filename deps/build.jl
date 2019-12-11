@@ -6,6 +6,13 @@ CXX = joinpath(Conda.BINDIR, "g++")
 CMAKE = joinpath(Conda.BINDIR, "cmake")
 MAKE = joinpath(Conda.BINDIR, "make")
 
+@info "Install CONDA dependencies..."
+pkgs = Conda._installed_packages()
+if !("boost" in pkgs)
+    Conda.add("boost", channel="anaconda")
+end
+
+
 
 SRC_DIR = "$(@__DIR__)/../src"
 CUR_DIR = @__DIR__
