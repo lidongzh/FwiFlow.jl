@@ -9,3 +9,8 @@ fwi_obs_op
 fwi_op
 ```
 
+
+```@autodoc
+Modules = [FwiFlow]
+Pages   = ["utils.jl"]
+```

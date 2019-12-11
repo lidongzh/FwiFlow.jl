@@ -6,6 +6,11 @@ module FwiFlow
     using LinearAlgebra
     using PyPlot
     using Random
+    using JSON
+    using DataStructures
+    using Dierckx
 
     include("$(@__DIR__)/Ops/ops.jl")
+    include("utils.jl")
+    
 end
