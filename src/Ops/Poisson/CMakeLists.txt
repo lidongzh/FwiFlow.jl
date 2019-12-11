@@ -34,7 +34,7 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION
 endif()
 message(${CMAKE_CXX_FLAGS})
 include_directories(${TF_INC})
-include_directories(${TF_LIB})
+link_directories(${TF_LIB})
 # --- Find AMGCL ------------------------------------------------------------
 include_directories("../../amgcl")
 include_directories(../../eigen)
