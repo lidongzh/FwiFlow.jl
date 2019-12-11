@@ -22,31 +22,26 @@ x_rec = collect(3:381)
 z_rec = 2ones(Int64, size(x_rec))</code></pre><p>Now we generate the parameter files </p><pre><code class="language-julia">para_fname = &quot;./para_file.json&quot;
 survey_fname = &quot;./survey_file.json&quot;
 data_dir_name = &quot;./Data&quot;
-paraGen(nz_pad, nx_pad, dz, dx, nSteps, dt, f0, nPml, nPad, filter_para, isAc, para_fname, survey_fname, data_dir_name)
-surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)</code></pre><p>We load a true model from the file <code>Model_Cp_true.bin</code> and specify all necessary parameters to run on 2 GPUs</p><pre><code class="language-julia">tf_cp = constant(reshape(reinterpret(Float32,read(&quot;Mar_models/Model_Cp_true.bin&quot;)),(nz_pad, nx_pad)), dtype=Float64)
+paraGen(nz, nx, dz, dx, nSteps, dt, f0, nPml, nPad, para_fname, survey_fname, data_dir_name)
+surveyGen(z_src, x_src, z_rec, x_rec, survey_fname)</code></pre><p>The parameter file <code>param_file.json</code> will have the following format:</p><pre><code class="language-json">{&quot;nz&quot;:134,&quot;nx&quot;:384,&quot;dz&quot;:24.0,&quot;dx&quot;:24.0,&quot;nSteps&quot;:2001,&quot;dt&quot;:0.0025,&quot;f0&quot;:4.5,&quot;nPoints_pml&quot;:32,&quot;nPad&quot;:26,&quot;survey_fname&quot;:&quot;./survey_file.json&quot;,&quot;data_dir_name&quot;:&quot;./Data&quot;}</code></pre><p>and the survey file will have the following format:</p><pre><code class="language-json">{&quot;nShots&quot;:48,&quot;shot0&quot;:{&quot;z_src&quot;:2,&quot;x_src&quot;:4,&quot;nrec&quot;:379,&quot;z_rec&quot;:[...]}, &quot;shot1&quot;:{&quot;z_src&quot;:2,&quot;x_src&quot;:12,&quot;nrec&quot;:379,&quot;z_rec&quot;:[...]}, &quot;shot2&quot;:...}</code></pre><p>We load a true model from the file <code>Model_Cp_true.bin</code> and specify all necessary parameters to run on 2 GPUs</p><pre><code class="language-julia"># tf_cp = constant(reshape(reinterpret(Float32,read(&quot;Mar_models/Model_Cp_true.bin&quot;)),(nz_pad, nx_pad)), dtype=Float64)
+
+cp = 2000 * ones(nz_pad, nx_pad)
 cs = zeros(nz_pad, nx_pad)
 den = 1000.0 .* ones(nz_pad, nx_pad)
 cp_pad_value = 3000.0
 
-tf_cs = constant(cs)
-tf_den = constant(den)
-
 src = Matrix{Float64}(undef, 1, 2001)
 src[1,:] = Float64.(reinterpret(Float32, read(&quot;../Ops/FWI/Src/params/Mar_source_2001.bin&quot;)))
-tf_stf = constant(repeat(src, outer=length(z_src)))
-
-tf_gpu_id0 = constant(0, dtype=Int32)
-tf_gpu_id1 = constant(1, dtype=Int32)
-nGpus = 2
-tf_gpu_id_array = constant(collect(0:nGpus-1), dtype=Int32)
-tf_shot_ids0 = constant(collect(Int32, 0:length(x_src)-1), dtype=Int32)
-shot_id_points = Int32.(trunc.(collect(LinRange(0, length(z_src)-1, nGpus+1))))</code></pre><p>Now it&#39;s ready to generate the observation data. </p><pre><code class="language-julia">res = fwi_obs_op(tf_cp, tf_cs, tf_den, tf_stf, tf_gpu_id0, tf_shot_ids0, para_fname)
+stf = repeat(src, outer=length(z_src))
+stf = ones(size(stf)...)
+shot_ids = collect(Int32, 0:length(x_src)-1)</code></pre><p>Now it&#39;s ready to generate the observation data. </p><pre><code class="language-julia">res = fwi_obs_op(cp, cs, den, stf, 0, shot_ids, para_fname)
 sess = Session(); init(sess);
-run(sess, res)</code></pre><p>We can see some files are generated in the folder XXXX. We now consider inversion: <code>cp</code> is not known. The idea is to make <code>cp</code> as an independent variable to be updated; this can be done by specifying <code>cp</code> with <code>Variable</code></p><pre><code class="language-julia">cp_init = reshape(reinterpret(Float32,read(&quot;Mar_models/Model_Cp_init_1D.bin&quot;)),(nz_pad, nx_pad))
-tf_cp_inv = Variable(cp_init, dtype=Float64)
+run(sess, res)</code></pre><p>We can see some files are generated in the folder XXXX. We now consider inversion: <code>cp</code> is not known. The idea is to make <code>cp</code> as an independent variable to be updated; this can be done by specifying <code>cp</code> with <code>Variable</code></p><pre><code class="language-julia"># cp_init = reshape(reinterpret(Float32,read(&quot;Mar_models/Model_Cp_init_1D.bin&quot;)),(nz_pad, nx_pad))
+cp_init = cp
+cp_inv = Variable(cp_init)
 
 Mask = ones(nz_pad, nx_pad)
 Mask[nPml+1:nPml+10,:] .= 0.0
-tf_cp_inv_msk = tf_cp_inv .* constant(Mask) + constant(cp_init[1,1] .* (1. .- Mask))</code></pre><p>We have used the mask trick to make the computation numerically stable. </p><p>Now we can form the loss function with <a href="../api/#FwiFlow.fwi_op"><code>fwi_op</code></a> and optimizes it with ADCME</p><pre><code class="language-julia">loss = fwi_op(tf_cp_inv_msk, tf_cs, tf_den, tf_stf, tf_gpu_id_array[1], tf_shot_ids0, para_fname)
+cp_inv_msk = cp_inv .* constant(Mask) + constant(cp_init[1,1] .* (1. .- Mask))</code></pre><p>We have used the mask trick to make the computation numerically stable. </p><p>Now we can form the loss function with <a href="../api/#FwiFlow.fwi_op"><code>fwi_op</code></a> and optimizes it with ADCME</p><pre><code class="language-julia">loss = fwi_op(cp_inv_msk, cs, den, stf, 0, shot_ids, para_fname)
 sess = Session(); init(sess)
-BFGS!(sess, loss)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Getting Started</a><a class="docs-footer-nextpage" href="../api/">API Reference »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 11 December 2019 20:38">Wednesday 11 December 2019</span>. Using Julia version 1.2.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+BFGS!(sess, loss)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Getting Started</a><a class="docs-footer-nextpage" href="../api/">API Reference »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 11 December 2019 21:12">Wednesday 11 December 2019</span>. Using Julia version 1.2.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
