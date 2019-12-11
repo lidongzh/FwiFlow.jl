@@ -33,12 +33,11 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION
 endif()
 message(${CMAKE_CXX_FLAGS})
 include_directories(${TF_INC})
-include_directories(${TF_LIB} ${CONDA_INC})
-
+include_directories(${TF_LIB})
 # --- Find AMGCL ------------------------------------------------------------
 include_directories("../../amgcl")
 include_directories(../../eigen)
-include_directories(/usr/local/include)
+include_directories(/usr/local/include ${CONDA_INC})
 # target_compile_options(eigen_target INTERFACE
 #     $<$<CXX_COMPILER_ID:GNU>:-Wno-int-in-bool-context>
 #     $<$<CXX_COMPILER_ID:GNU>:-Wno-maybe-uninitialized>

@@ -33,8 +33,7 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION
 endif()
 message(${CMAKE_CXX_FLAGS})
 include_directories(${TF_INC})
-include_directories(${TF_LIB} ${CONDA_INC})
-
+include_directories(${TF_LIB})
 include_directories(/home/lidongzh/TwoPhaseFlowFWI/eigen)
 
 add_library(Laplacian SHARED Laplacian.cpp)

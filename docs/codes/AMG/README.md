@@ -10,14 +10,14 @@ set (CMAKE_CXX_STANDARD 11)
 # --- Find AMGCL ------------------------------------------------------------
 include_directories("../../amgcl")
 include_directories(/usr/local/include/eigen3)
-include_directories(/usr/local/include)
+include_directories(/usr/local/include ${CONDA_INC})
 
 # ---------------------------------------------------------------------------
 add_executable(main main.cpp)
 # target_link_libraries(amgcl_eigen)
 ```
 
-* Replace `include_directories(/usr/local/include)` here with include directory of `boost` library
+* Replace `include_directories(/usr/local/include ${CONDA_INC})` here with include directory of `boost` library
 
 * `cmake` and `make` in the `build` directory
 

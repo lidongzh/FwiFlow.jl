@@ -34,12 +34,11 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION
 endif()
 message(${CMAKE_CXX_FLAGS})
 include_directories(${TF_INC})
-include_directories(${TF_LIB} ${CONDA_INC})
-
+include_directories(${TF_LIB})
 # --- Find AMGCL ------------------------------------------------------------
 include_directories("../../amgcl")
 include_directories(../../eigen)
-include_directories(/usr/local/include)
+include_directories(/usr/local/include ${CONDA_INC})
 
 add_library(PoissonOp SHARED PoissonOp.cpp)
 set_property(TARGET PoissonOp PROPERTY POSITION_INDEPENDENT_CODE ON)

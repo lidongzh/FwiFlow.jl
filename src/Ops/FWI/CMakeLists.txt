@@ -31,8 +31,7 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION
 endif()
 message(${CMAKE_CXX_FLAGS})
 include_directories(${TF_INC})
-include_directories(${TF_LIB} ${CONDA_INC})
-
+include_directories(${TF_LIB})
 find_program (HOSTNAME_CMD NAMES hostname)
 execute_process (COMMAND ${HOSTNAME_CMD}
                  OUTPUT_VARIABLE HOSTNAME
