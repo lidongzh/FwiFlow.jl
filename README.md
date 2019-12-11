@@ -20,9 +20,6 @@ FwiFlow is a package for XXX that implements the idea of **intelligent automatic
 | [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lidongzh.github.io/FwiFlow.jl/dev) |
 
 
-
-
-
 ## Tutorial on Custom Operators
 
 The core library in FwiFlow provides several numerical solvers or operators for linear and nonlinear PDEs. They are equipped with automatic differentiation functionalities (the solution is differentiable with respect to certain parameters) and can be used as a submodule in a system model. 
