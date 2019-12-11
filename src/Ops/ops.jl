@@ -16,9 +16,9 @@ Computes the FWI loss function.
 - `cs` : S-wave velocity
 - `den` : Density 
 - `stf` : Source time functions  
-- `gpu_id` : the ID of GPU to run this FWI operator
-- `shot_ids` : the source function IDs (determining the location of sources)
-- `para_fname` : parameter file location
+- `gpu_id` : The ID of GPU to run this FWI operator
+- `shot_ids` : The source function IDs (determining the location of sources)
+- `para_fname` : Parameter file location
 """
 function fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
         den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
@@ -34,7 +34,17 @@ function fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Fl
 end
 
 
-function fwi_obs_op(args...)
+"""
+    fwi_obs_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+        den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
+        gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
+
+Generates the observation data and store them as files which will be used by [`fwi_op`](@ref)
+For the meaning of parameters, see [`fwi_op`](@ref).
+"""
+function fwi_obs_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+    den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
+    gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
     fwi_obs_op = load_op("$OPS_DIR/FWI/build/libFwiOp", "fwi_obs_op")
     fwi_obs_op(args...)
 end
