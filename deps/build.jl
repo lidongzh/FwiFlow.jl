@@ -60,7 +60,7 @@ end
 
 
 try
-    run(`nvcc`)
+    run(`nvcc --version`)
     DIR = joinpath(SRC_DIR, "Ops/FWI/Src")
     compile_op(DIR)
 catch
