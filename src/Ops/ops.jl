@@ -2,10 +2,6 @@ export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op
 
 OPS_DIR = @__DIR__
 
-const PA = Union{PyObject, Array{Float64}}
-const PD = Union{PyObject, Float64}
-const PI = Union{PyObject, Integer}
-
 @doc raw"""
     fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
     den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
@@ -60,7 +56,8 @@ Computes the Laplacian of function $f(\mathbf{x})$; here ($\mathbf{x}=[z\quad x]
 -\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
 ``` 
 """
-function laplacian_op(coef::PA, f::PA, h::PD, ρ::PD)
+function laplacian_op(coef::Union{PyObject, Array{Float64}}, f::Union{PyObject, Array{Float64}}, 
+    h::Union{PyObject, Float64}, ρ::Union{PyObject, Float64})
     coef = convert_to_tensor(coef, dtype=Float64)
     f = convert_to_tensor(f, dtype=Float64)
     h = convert_to_tensor(h, dtype=Float64)
