@@ -6,12 +6,13 @@ const PA = Union{PyObject, Array{Float64}}
 const PD = Union{PyObject, Float64}
 const PI = Union{PyObject, Integer}
 
-"""
-fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+@doc raw"""
+    fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
     den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
     gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
 
 Computes the FWI loss function. 
+
 - `cp` : P-wave velocity
 - `cs` : S-wave velocity
 - `den` : Density 
@@ -34,7 +35,7 @@ function fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Fl
 end
 
 
-"""
+@doc raw"""
     fwi_obs_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
         den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
         gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
@@ -54,7 +55,7 @@ end
     laplacian_op(coef::Union{PyObject, Array{Float64}}, f::Union{PyObject, Array{Float64}}, 
             h::Union{PyObject, Float64}, ρ::Union{PyObject, Float64})
 
-Computes the Laplacian of function $f(\mathbf{x})$; here ($\mathbf{x}=[z x]^T$)
+Computes the Laplacian of function $f(\mathbf{x})$; here ($\mathbf{x}=[z\quad x]^T$)
 ```math 
 -\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
 ``` 
@@ -72,7 +73,7 @@ end
     poisson_op(c::Union{PyObject, Float64}, g::Union{PyObject, Float64}, 
         h::Union{PyObject, Float64}, ρ::Union{PyObject, Float64}, index::Union{Integer, PyObject}=0)
 
-Solves the Poisson equation ($\mathbf{x}=[z x]^T$)
+Solves the Poisson equation ($\mathbf{x}=[z\quad x]^T$)
 
 $\begin{aligned}
 -\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho  \begin{bmatrix}z \\ 0\end{bmatrix}   \right)\right) &=  g(\mathbf{x}) & \mathbf{x}\in \Omega\\
@@ -85,7 +86,7 @@ Here $\Omega=[0,n_zh]\times [0, n_xh]$. The equation is solved using finite diff
 ```
 where $A$ is the finite difference coefficient matrix,
 ```math
-(E_{11})_{ij} = \begin{cases}1 & i=j=1 \\ 0 & \mbox{ otherwise }\end{cases}
+(E_{11})_{ij} = \left\{ \begin{matrix}1 & i=j=1 \\ 0 & \mbox{ otherwise }\end{matrix}\right.
 ```
 
 When `index=1`, the Eigen `SparseLU` is used to solve the linear system; otherwise the function invokes algebraic multigrid method from `amgcl`. 
