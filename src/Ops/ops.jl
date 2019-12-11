@@ -88,8 +88,9 @@ where $A$ is the finite difference coefficient matrix,
 
 When `index=1`, the Eigen `SparseLU` is used to solve the linear system; otherwise the function invokes algebraic multigrid method from `amgcl`. 
 """
-function poisson_op(c::PA, g::PA, h::PD, 
-            ρ::PD, index::PI=0)
+function poisson_op(c::Union{PyObject, Array{Float64}}, g::Union{PyObject, Array{Float64}}, 
+    h::Union{PyObject, Float64}, 
+    ρ::Union{PyObject, Float64}, index::Union{PyObject, Integer}=0)
     c = convert_to_tensor(c, dtype=Float64)
     g = convert_to_tensor(g, dtype=Float64)
     h = convert_to_tensor(h, dtype=Float64)
@@ -99,9 +100,38 @@ function poisson_op(c::PA, g::PA, h::PD,
     poisson_op(c, g, h, ρ, index)
 end
 
-function sat_op(args...)
+@doc raw"""
+   
+- `s0` : $n_z\times n_x$, saturation of fluid 
+- `pt` : $n_z\times n_x$, 
+- `permi` : $n_z\times n_x$, permeability 
+- `poro` : $n_z\times n_x$, porosity
+- `qw` : $n_z\times n_x$, injection or production rate of ﬂuid 1
+- `qo` : $n_z\times n_x$, injection or production rate of ﬂuid 2
+- `muw` : viscosity of fluid 1
+- `muo` : viscosity of fluid 2
+- `sref` : $n_z\times n_x$, reference saturation 
+- `dt` : Time step size  
+- `h` : Spatial step size
+"""
+function sat_op(s0::Union{PyObject, Array{Float64}},pt::Union{PyObject, Array{Float64}},
+    permi::Union{PyObject, Array{Float64}},poro::Union{PyObject, Array{Float64}},
+    qw::Union{PyObject, Array{Float64}},qo::Union{PyObject, Array{Float64}},
+    muw::Union{PyObject, Float64},muo::Union{PyObject, Float64},
+    sref::Union{PyObject, Array{Float64}},dt::Union{PyObject, Float64},h::Union{PyObject, Float64})
+    s0 = convert_to_tensor(s0, dtype=Float64)
+    pt = convert_to_tensor(pt, dtype=Float64)
+    permi = convert_to_tensor(permi, dtype=Float64)
+    poro = convert_to_tensor(poro, dtype=Float64)
+    qw = convert_to_tensor(qw, dtype=Float64)
+    qo = convert_to_tensor(qo, dtype=Float64)
+    muw = convert_to_tensor(muw, dtype=Float64)
+    muo = convert_to_tensor(muo, dtype=Float64)
+    sref = convert_to_tensor(sref, dtype=Float64)
+    dt = convert_to_tensor(dt, dtype=Float64)
+    h = convert_to_tensor(h, dtype=Float64)
     sat_op = load_op_and_grad("$OPS_DIR/Saturation/build/libSatOp", "sat_op")
-    sat_op(args...)
+    sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
 end
 
 
