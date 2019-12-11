@@ -1,7 +1,6 @@
 # Tutorial 
 
 ## FWI
-
 We consider a standard FWI problem. First of all, we load necessary packages
 ```julia
 using FwiFlow
@@ -28,6 +27,8 @@ nPad = 32 - mod((nz+2*nPml), 32)
 nz_pad = nz + 2*nPml + nPad
 nx_pad = nx + 2*nPml
 ```
+
+![](assets/doc_domain.png)
 
 We will use the reflection type of problem: sources on one side and receivers on the other side. 
 ```julia
@@ -64,7 +65,7 @@ den = 1000.0 .* ones(nz_pad, nx_pad)
 cp_pad_value = 3000.0
 
 src = Matrix{Float64}(undef, 1, 2001)
-src[1,:] = Float64.(reinterpret(Float32, read("../Ops/FWI/Src/params/Mar_source_2001.bin")))
+# src[1,:] = Float64.(reinterpret(Float32, read("../Ops/FWI/Src/params/Mar_source_2001.bin")))
 stf = repeat(src, outer=length(z_src))
 stf = ones(size(stf)...)
 shot_ids = collect(Int32, 0:length(x_src)-1)

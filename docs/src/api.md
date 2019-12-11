@@ -1,6 +1,6 @@
 # API Reference
 
-![](../assets/doc_domain.png)
+![](assets/doc_domain.png)
 
 ```@docs
 poisson_op

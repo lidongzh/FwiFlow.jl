@@ -62,7 +62,7 @@ where $A$ is the finite difference coefficient matrix,
 
 \```
 
-![](docs/assets/doc_domain.png)
+![](docs/src/assets/doc_domain.png)
 
 ##  Example
 

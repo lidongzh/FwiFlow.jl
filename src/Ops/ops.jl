@@ -42,8 +42,14 @@ For the meaning of parameters, see [`fwi_op`](@ref).
 function fwi_obs_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
     den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
     gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
+    cp = convert_to_tensor(cp, dtype=Float64)
+    cs = convert_to_tensor(cs, dtype=Float64)
+    den = convert_to_tensor(den, dtype=Float64)
+    stf = convert_to_tensor(stf, dtype=Float64)
+    gpu_id = convert_to_tensor(gpu_id, dtype=Int32)
+    shot_ids = convert_to_tensor(shot_ids, dtype=Int32)
     fwi_obs_op = load_op("$OPS_DIR/FWI/build/libFwiOp", "fwi_obs_op")
-    fwi_obs_op(args...)
+    fwi_obs_op(cp, cs, den, stf, gpu_id, shot_ids, para_fname)
 end
 
 

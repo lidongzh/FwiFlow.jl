@@ -1,6 +1,6 @@
 # FwiFlow
 
-<img src="../assets/diagram.png" style="zoom:67%;" />
+<img src="assets/diagram.png" style="zoom:67%;" />
 
 This project consider the coupling of the wave equation and a two-phase incompressible immiscible flow equation, mainly for CO2 injection or water injection monitoring
 
