@@ -7,10 +7,30 @@ const PD = Union{PyObject, Float64}
 const PI = Union{PyObject, Integer}
 
 """
+fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+    den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
+    gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
+
+Computes the FWI loss function. 
+- `cp` : P-wave velocity
+- `cs` : S-wave velocity
+- `den` : Density 
+- `stf` : Source time functions  
+- `gpu_id` : the ID of GPU to run this FWI operator
+- `shot_ids` : the source function IDs (determining the location of sources)
+- `para_fname` : parameter file location
 """
-function fwi_op(args...)
+function fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+        den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
+        gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
+    cp = convert_to_tensor(cp, dtype=Float64)
+    cs = convert_to_tensor(cs, dtype=Float64)
+    den = convert_to_tensor(den, dtype=Float64)
+    stf = convert_to_tensor(stf, dtype=Float64)
+    gpu_id = convert_to_tensor(gpu_id, dtype=Int32)
+    shot_ids = convert_to_tensor(shot_ids, dtype=Int32)
     fwi_op = load_op_and_grad("$OPS_DIR/FWI/build/libFwiOp", "fwi_op")
-    fwi_op(args...)
+    fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
 end
 
 
@@ -26,7 +46,7 @@ end
 
 Computes the Laplacian of function $f(\mathbf{x})$; here ($\mathbf{x}=[z x]^T$)
 ```math 
--\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho\nabla \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
+-\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
 ``` 
 """
 function laplacian_op(coef::PA, f::PA, h::PD, ρ::PD)
@@ -45,7 +65,7 @@ end
 Solves the Poisson equation ($\mathbf{x}=[z x]^T$)
 
 $\begin{aligned}
--\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho\nabla z  \right)\right) &=  g(\mathbf{x}) & \mathbf{x}\in \Omega\\
+-\nabla\cdot\left(c(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho  \begin{bmatrix}z \\ 0\end{bmatrix}   \right)\right) &=  g(\mathbf{x}) & \mathbf{x}\in \Omega\\
 \frac{\partial u(x)}{\partial n} &=  0 & \mathbf{x}\in \Omega\\
 \end{aligned}$
 
