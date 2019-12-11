@@ -26,6 +26,7 @@ message("TF_INC=${TF_INC}")
 message("TF_LIB=${TF_LIB}")
 message("TF_ABI=${TF_ABI}")
 message("TF_LIB_FILE=${TF_LIB_FILE}")
+message("CONDA_INC=${CONDA_INC}")
 # https://github.com/tensorflow/tensorflow/issues/1569
 # if GCC > 5
 if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 5.0)
