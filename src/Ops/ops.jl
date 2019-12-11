@@ -86,7 +86,7 @@ where $A$ is the finite difference coefficient matrix,
 (E_{11})_{ij} = \left\{ \begin{matrix}1 & i=j=1 \\ 0 & \mbox{ otherwise }\end{matrix}\right.
 ```
 
-When `index=1`, the Eigen `SparseLU` is used to solve the linear system; otherwise the function invokes algebraic multigrid method from `amgcl`. 
+- `index` : `Int32`, when `index=1`, `SparseLU` is used to solve the linear system; otherwise the function invokes algebraic multigrid method from `amgcl`. 
 """
 function poisson_op(c::Union{PyObject, Array{Float64}}, g::Union{PyObject, Array{Float64}}, 
     h::Union{PyObject, Float64}, 
@@ -157,14 +157,16 @@ end
     h::Union{PyObject, Float64},
     rhograv::Union{PyObject, Float64})
 
-Computes the Laplacian of function $f(\mathbf{x})$ with the upwind scheme; here $\mathbf{x}=[z\quad x]^T$.
+Computes the Laplacian of function $f(\mathbf{x})$; here $\mathbf{x}=[z\quad x]^T$.
 ```math 
-\nabla\cdot\left(m_1(\mathbf{x})K(\mathbf{x}) \nabla \left(f(\mathbf{x}) -\rho \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
+\nabla\cdot\left(m(\mathbf{x})K(\mathbf{x}) \nabla \left(f(\mathbf{x}) -\rho \begin{bmatrix}z \\ 0\end{bmatrix}  \right)\right)
 ``` 
+The permeability on the computational grid is computed with Harmonic mean; 
+the mobility is computed with upwind scheme. 
 
 - `perm` : $n_z\times n_x$, permeability of fluid, i.e., $K$
-- `mobi` : $n_z\times n_x$, permeability of fluid, i.e., $m_1$
-- `func` : $n_z\times n_x$, permeability of fluid, i.e., $f$
+- `mobi` : $n_z\times n_x$, mobility of fluid, i.e., $m$
+- `func` : $n_z\times n_x$, potential of fluid, i.e., $f$
 - `h` : `Float64`, spatial step size 
 - `rhograv` : `Float64`, i.e., $\rho$
 """
@@ -181,7 +183,30 @@ function upwlap_op(perm::Union{PyObject, Array{Float64}},
     upwlap_op(perm,mobi,func,h,rhograv)
 end
 
-function upwps_op(args...)
+@doc raw"""
+
+Solves the Poisson equation 
+```math
+-\nabla\cdot\left(m(\mathbf{x})K(\mathbf{x}) \nabla \left(u(\mathbf{x}) -\rho  \begin{bmatrix}z \\ 0\end{bmatrix}   \right)\right) =  g(\mathbf{x}) 
+```
+See [`upwps_op`](@ref) for detailed description. 
+
+- `perm` : $n_z\times n_x$, permeability of fluid, i.e., $K$
+- `mobi` : $n_z\times n_x$, mobility of fluid, i.e., $m$
+- `src` : $n_z\times n_x$, source function, i.e., $g(\mathbf{x})$
+- `funcref` : $n_z\times n_x$, currently it is not not used
+- `h` : `Float64`, spatial step size 
+- `rhograv` : `Float64`, i.e., $\rho$
+- `index` : `Int32`, when `index=1`, `SparseLU` is used to solve the linear system; otherwise the function invokes algebraic multigrid method from `amgcl`. 
+"""
+function upwps_op(perm::Union{PyObject, Array{Float64}},mobi::Union{PyObject, Array{Float64}},
+    src,funcref,h::Union{PyObject, Float64},rhograv::Union{PyObject, Float64},index::Union{PyObject, Integer})
+    perm = convert_to_tensor(perm, dtype=Float64)
+    mobi = convert_to_tensor(mobi, dtype=Float64)
+    funcref = convert_to_tensor(func, dtype=Float64)
+    h = convert_to_tensor(h, dtype=Float64)
+    rhograv = convert_to_tensor(rhograv, dtype=Float64)
+    index = convert_to_tensor(index, dtype=Int32)
     upwps_op = load_op_and_grad("$OPS_DIR/Upwps/build/libUpwpsOp", "upwps_op")
-    upwps_op(args...)
+    upwps_op(perm,mobi,src,funcref,h,rhograv,index)
 end
