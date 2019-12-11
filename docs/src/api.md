@@ -1,6 +1,7 @@
 # API Reference
 
-```@autodocs
-Modules = [FwiFlow]
-Pages   = ["Ops/ops.jl"]
+```@docs
+poisson_op
 ```
+
+![](../assets/doc_domain.png)
