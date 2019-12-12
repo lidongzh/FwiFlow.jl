@@ -12,6 +12,14 @@ FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful sta
   <img src="docs/src/assets/op.png" width="50%">
 </p>
 
+## Tutorials
+
+Here are some examples to start with (`*` denotes advanced examples)
+
+- [FWI](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/)
+- [Two Phase Flow Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/)
+- *[Coupled Inversion](https://github.com/lidongzh/FwiFlow.jl/tree/master/docs/codes/src_fwi_coupled)
+- *[Coupled Inversion: Channel Flow](https://github.com/lidongzh/FwiFlow.jl/tree/master/docs/codes/src_fwi_channel)
 
 
 ## FwiFlow: Application of IAD to FWI and Two Phase Flow Coupled Inversion
