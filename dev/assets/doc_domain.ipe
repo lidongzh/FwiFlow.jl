@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE ipe SYSTEM "ipe.dtd">
 <ipe version="70212" creator="Ipe 7.2.12">
-<info created="D:20191207172723" modified="D:20191207172723"/>
+<info created="D:20191207172723" modified="D:20191212003204"/>
 <ipestyle name="basic">
 <symbol name="arrow/arc(spx)">
 <path stroke="sym-stroke" fill="sym-stroke" pen="sym-pen">
@@ -254,19 +254,108 @@ h
 <page>
 <layer name="alpha"/>
 <view layers="alpha" active="alpha"/>
-<path layer="alpha" stroke="black">
+<path layer="alpha" stroke="black" pen="fat">
 128 768 m
 128 656 l
 336 656 l
 336 768 l
 h
 </path>
-<text matrix="1 0 0 1 -32 0" transformations="translations" pos="80 704" stroke="black" type="label" width="59.66" height="11.957" depth="2.58" valign="baseline" size="LARGE" style="math">L=n_zh</text>
-<text matrix="1 0 0 1 112 -80" transformations="translations" pos="80 704" stroke="black" type="label" width="64.169" height="11.957" depth="2.58" valign="baseline" size="LARGE" style="math">H=n_xh</text>
-<text transformations="translations" pos="96 784" stroke="black" type="label" width="32.281" height="12.896" depth="4.29" valign="baseline" size="LARGE">(1,1)</text>
-<text matrix="1 0 0 1 240 0" transformations="translations" pos="96 784" stroke="black" type="label" width="44.852" height="12.896" depth="4.29" valign="baseline" size="LARGE" style="math">(1,n_x)</text>
-<text matrix="1 0 0 1 256 -144" transformations="translations" pos="96 784" stroke="black" type="label" width="53.488" height="12.896" depth="4.29" valign="baseline" size="LARGE" style="math">(n_z, n_x)</text>
-<text matrix="1 0 0 1 -16 -144" transformations="translations" pos="96 784" stroke="black" type="label" width="44.171" height="12.896" depth="4.29" valign="baseline" size="LARGE" style="math">(n_z,1)</text>
-<use name="mark/disk(sx)" pos="128 768" size="large" stroke="red"/>
+<path matrix="1 0 0 1 32 0" stroke="black" pen="fat" arrow="normal/normal">
+64 768 m
+64 656 l
+</path>
+<path stroke="black" pen="fat" arrow="normal/normal">
+128 800 m
+336 800 l
+</path>
+<text matrix="1 0 0 1 32 -16" transformations="translations" pos="32 720" stroke="black" type="label" width="8.598" height="7.412" depth="0" valign="baseline" size="LARGE" style="math">z</text>
+<text matrix="1 0 0 1 192 96" transformations="translations" pos="32 720" stroke="black" type="label" width="9.579" height="7.412" depth="0" valign="baseline" size="LARGE" style="math">x</text>
+<path stroke="black" pen="fat">
+128 752 m
+336 752 l
+</path>
+<path matrix="1 0 0 1 0 -16" stroke="black" pen="fat">
+128 752 m
+336 752 l
+</path>
+<path matrix="1 0 0 1 0 -32" stroke="black" pen="fat">
+128 752 m
+336 752 l
+</path>
+<path matrix="1 0 0 1 0 -48" stroke="black" pen="fat">
+128 752 m
+336 752 l
+</path>
+<path matrix="1 0 0 1 0 -64" stroke="black" pen="fat">
+128 752 m
+336 752 l
+</path>
+<path matrix="1 0 0 1 0 -80" stroke="black" pen="fat">
+128 752 m
+336 752 l
+</path>
+<path stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 16 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 32 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 48 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 64 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 80 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 96 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 112 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 128 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 144 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 160 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<path matrix="1 0 0 1 176 0" stroke="black" pen="fat">
+144 768 m
+144 656 l
+144 656 l
+</path>
+<text matrix="1 0 0 1 -26.8633 113.654" transformations="translations" pos="128 640" stroke="black" type="label" width="21.889" height="11.761" depth="0" valign="baseline" size="LARGE" style="math">\Delta z</text>
+<text matrix="1 0 0 1 -0.0662696 135.516" transformations="translations" pos="128 640" stroke="black" type="label" width="22.871" height="11.761" depth="0" valign="baseline" size="LARGE" style="math">\Delta x</text>
 </page>
 </ipe>
