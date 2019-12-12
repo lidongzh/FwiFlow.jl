@@ -50,9 +50,7 @@ The elastic wave equation maps from elastic properties to wavefields, such as pa
 
 ###	The Adjoint Method & Automatic Differentation
 
-<p align="center">
-  <img src="./assets/flow_comp_graph.png" width="50%">
-</p>
+![](./assets/flow_comp_graph.png)
 
 
 ### Customized Operators
