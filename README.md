@@ -11,15 +11,19 @@ Those operators are differentiable and integrated in a computational graph so th
 
 FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful static graph based automatic differentiation library for scientific computing (with TensorFlow backend). FwiFlow implements the idea of **Intelligent Automatic Differentiation**. 
 
-<img src="docs/src/assets/op.png" width="50%">
+<p align="center">
+  <img src="docs/src/assets/op.png" width="50%">
+</p>
+
+
 
 ## Applications
 
 The following examples are for inversion 
 
-| <img src="docs/src/assets/marmousi_inv.png" width="150"> | <img src="docs/src/assets/flow.png" width="150"> | <img src="docs/src/assets/diagram.png" width="150"> |
-| -------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------- |
-| Full-waveform Inversion                                  | Two Phase Flow                                   | FWI-Two Phase Flow Coupled Inversion                |
+| <img src="docs/src/assets/marmousi_inv.png" width="200">     | <img src="docs/src/assets/flow.png" width="200">             | <img src="docs/src/assets/diagram.png" width="200"> |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------- |
+| [Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/) | [Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/) | FWI-Two Phase Flow Coupled Inversion                |
 
 
 
