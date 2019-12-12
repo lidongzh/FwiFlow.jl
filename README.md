@@ -9,7 +9,7 @@ We treat physical simulations as a chain of multiple differentiable operators, s
 
 Those operators are differentiable and integrated in a computational graph so that the gradients can be computed automatically and efficiently via analyzing the dependency in the graph. Independent operators are parallelized executed. With the gradients we can perform gradient-based PDE-constrained optimization for inverse problems. 
 
-FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful static graph based automatic differentiation library for scientific computing (with TensorFlow backend). 
+FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful static graph based automatic differentiation library for scientific computing (with TensorFlow backend). FwiFlow implements the idea of **Intelligent Automatic Differentiation**. 
 
 ![](docs/src/assets/op.png)
 
@@ -17,13 +17,10 @@ FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful sta
 
 The following examples are for inversion 
 
-| ![](docs/src/assets/marmousi_inv.png)<br />[Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/) | ![](docs/src/assets/flow.png) <br />[Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/) | ![](docs/src/assets/diagram.png)<br />FWI-Two Phase Flow Coupled Inversion |
+| ![](docs/src/assets/marmousi_inv.png=250x250)<br />[Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/ | ![](docs/src/assets/flow.png=250x250) <br />[Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/ | ![](docs/src/assets/diagram.png=250x250)<br />FWI-Two Phase Flow Coupled Inversion |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | Fractional PDE                                               | Advectional Diffusion                                        |                                                              |
 
-
-
-FwiFlow is a package for XXX that implements the idea of **intelligent automatic differentiation**.  FwiFlow modularizes different components of numerical PDE simulation by It includes a GPU-accelerated [high performance full-waveform inversion module](./src/Ops/FWI/Src).
 
 
 
