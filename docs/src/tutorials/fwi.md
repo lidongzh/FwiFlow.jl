@@ -168,4 +168,5 @@ sess = Session(); init(sess)
 BFGS!(sess, loss)
 ```
 
+Here is a snapshot of multi-GPU execution. Note we have only used approximately 2% of total memory, which means we can actually places about 50 times the current number of sources on each GPU! 
 ![](../assets/gpu_fwi.gif)
