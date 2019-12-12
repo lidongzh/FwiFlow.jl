@@ -17,7 +17,7 @@ FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful sta
 
 The following examples are for inversion 
 
-| <img src="docs/src/assets/marmousi_inv.png" width="100"> | <img src="docs/src/assets/flow.png" width="100"> | <img src="docs/src/assets/diagram.png" width="100"> |
+| <img src="docs/src/assets/marmousi_inv.png" width="33%"> | <img src="docs/src/assets/flow.png" width="33%"> | <img src="docs/src/assets/diagram.png" width="33%"> |
 | -------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------- |
 | Full-waveform Inversion                                  | Two Phase Flow                                   | FWI-Two Phase Flow Coupled Inversion                |
 
