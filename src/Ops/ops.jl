@@ -209,10 +209,10 @@ function upwps_op(perm::Union{PyObject, Array{Float64}},mobi::Union{PyObject, Ar
     src,funcref,h::Union{PyObject, Float64},rhograv::Union{PyObject, Float64},index::Union{PyObject, Integer})
     perm = convert_to_tensor(perm, dtype=Float64)
     mobi = convert_to_tensor(mobi, dtype=Float64)
-    funcref = convert_to_tensor(func, dtype=Float64)
+    funcref = convert_to_tensor(funcref, dtype=Float64)
     h = convert_to_tensor(h, dtype=Float64)
     rhograv = convert_to_tensor(rhograv, dtype=Float64)
-    index = convert_to_tensor(index, dtype=Int32)
+    index = convert_to_tensor(index, dtype=Int64)
     upwps_op = load_op_and_grad("$OPS_DIR/Upwps/build/libUpwpsOp", "upwps_op")
     upwps_op(perm,mobi,src,funcref,h,rhograv,index)
 end

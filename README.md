@@ -3,11 +3,23 @@
 ![](https://travis-ci.org/lidongzh/FwiFlow.jl.svg?branch=master)
 ![Coverage Status](https://coveralls.io/repos/github/lidongzh/FwiFlow.jl/badge.svg?branch=master)
 
+## Philosophy
 
+We treat physical simulations as a chain of multiple differentiable operators, such as discrete Laplacian evaluation, a Poisson solver and a single implicit time stepping for nonlinear PDEs. They are like building blocks that can be assembled to make simulation tools for new physical models. 
 
+Those operators are differentiable and integrated in a computational graph so that the gradients can be computed automatically and efficiently via analyzing the dependency in the graph. Independent operators are parallelized executed. With the gradients we can perform gradient-based PDE-constrained optimization for inverse problems. 
 
+FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful static graph based automatic differentiation library for scientific computing (with TensorFlow backend). 
 
-<img src="docs/assets/diagram.png" style="zoom:67%;" />
+![](docs/src/assets/op.png)
+
+## Applications
+
+The following examples are for inversion 
+
+| ![](docs/src/assets/marmousi_inv.png)<br />[Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/) | ![](docs/src/assets/flow.png) <br />[Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/) | ![](docs/src/assets/diagram.png)<br />FWI-Two Phase Flow Coupled Inversion |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Fractional PDE                                               | Advectional Diffusion                                        |                                                              |
 
 
 
@@ -20,54 +32,13 @@ FwiFlow is a package for XXX that implements the idea of **intelligent automatic
 | [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lidongzh.github.io/FwiFlow.jl/dev) |
 
 
-## Tutorial on Custom Operators
-
-The core library in FwiFlow provides several numerical solvers or operators for linear and nonlinear PDEs. They are equipped with automatic differentiation functionalities (the solution is differentiable with respect to certain parameters) and can be used as a submodule in a system model. 
-
-The list of operators provided are
-
-| API          | Description                | Note                              |
-| ------------ | -------------------------- | --------------------------------- |
-| `poisson_op` | Poisson Equation Solver    | Central Average Finite Difference |
-| `upwlap_op`  | Laplacian Operator         | Upwinding Finite Difference       |
-| `upwps_op`   | Poisson Equation Solver    | Upwinding Finite Difference       |
-| `sat_op`     | Saturation Equation Solver |                                   |
-
-For example, we can solve the Poisson equation with `poisson_op`
-
-$\begin{aligned}
-
--\nabla\cdot(c(x) \nabla u(x)) &=  & x\in \Omega\\
-
-\frac{\partial u(x)}{\partial n} &=  & x\in \Omega\\
-
-\end{aligned}$
-
-where $\Omega=[0,n_zh]\times [0, n_xh]$. The equation is solved using finite difference method, where the step size in each direction is $h$. Mathematically, the solution to the PDE is determined up to a constant. Numerically, we discretize the equation with the scheme
-
-\```math
-
-(A+E_{11})\mathbf{u} = \mathbf{f}
-
-\```
-
-where $A$ is the finite difference coefficient matrix,
-
-\```math
-
-(E_{11})_{ij} = \begin{cases}1 & i=j=1 \\ 0 & \mbox{ otherwise }\end{cases}
-
-\```
-
-![](docs/src/assets/doc_domain.png)
-
-##  Example
-
-
-
 ## Research Papers
 
+1. **Kailai Xu**  (co-first author), **Dongzhuo Li**  (co-first author), Eric Darve, and Jerry M. Harris. *Learning Hidden Dynamics using Intelligent Automatic Differentiation*.
+2. **Dongzhuo Li** (co-first author), **Kailai Xu** (co-first author), Jerry M. Harris, and Eric Darve. *Time-lapse Full-waveform Inversion for Subsurface Flow Problems with Intelligent Automatic Diﬀerentiation*.
+
 ## LICENSE
+
 MIT License
 Copyright (c) 2019 Dongzhuo Li and Kailai Xu
 
