@@ -20,7 +20,7 @@ module FwiFlow
         )
         sess = tf.Session(config=config)
     end
-    include("$(@__DIR__)/Ops/ops.jl")
+    include("$(@__DIR__)/CppOps/ops.jl")
     include("utils.jl")
     
 end

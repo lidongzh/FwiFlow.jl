@@ -62,26 +62,26 @@ end
 
 if NVCC
     try
-        DIR = joinpath(SRC_DIR, "Ops/FWI/Src")
+        DIR = joinpath(SRC_DIR, "CppOps/FWI/Src")
         compile_op(DIR)
     catch
-        @warn("Ops/FWI/Src Failed.")
+        @warn("CppOps/FWI/Src Failed.")
         global NVCC = false
     end
 end
 
 if NVCC
     try
-        DIR = joinpath(SRC_DIR, "Ops/FWI")
+        DIR = joinpath(SRC_DIR, "CppOps/FWI")
         compile_op(DIR)
     catch
-        @warn("Ops/FWI Failed.")
+        @warn("CppOps/FWI Failed.")
         global NVCC = false
     end
 end
 
 for name in ["Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation"]
-    DIR = joinpath(SRC_DIR, "Ops/$name")
+    DIR = joinpath(SRC_DIR, "CppOps/$name")
     compile_op(DIR)
 end
 
