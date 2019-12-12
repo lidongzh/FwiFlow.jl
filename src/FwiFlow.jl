@@ -22,5 +22,6 @@ module FwiFlow
     end
     include("$(@__DIR__)/CppOps/ops.jl")
     include("utils.jl")
+    include("Ops/timefrac.jl")
     
 end

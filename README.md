@@ -3,18 +3,15 @@
 ![](https://travis-ci.org/lidongzh/FwiFlow.jl.svg?branch=master)
 ![Coverage Status](https://coveralls.io/repos/github/lidongzh/FwiFlow.jl/badge.svg?branch=master)
 
-| Documentation                                                |
-| ------------------------------------------------------------ |
-| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lidongzh.github.io/FwiFlow.jl/dev) |
+| Quick Install                   | Documentation                                                |
+| ------------------------------- | ------------------------------------------------------------ |
+| `using Pkg; Pkg.add("FwiFlow")` | [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lidongzh.github.io/FwiFlow.jl/dev) |
 
+## Highlights
 
-
-## Installation 
-
-```julia
-using Pkg
-Pkg.add("FwiFlow")
-```
+- GPU-accelearated FWI module with checkpointing schemes;
+- AMG-accelerated implicit pressure-explicit saturation (IMPES) scheme;
+- Fractional Differential Operators
 
 ## Philosophy
 
