@@ -52,17 +52,37 @@ function compile_op(DIR)
 end
 
 
+try
+    run(`nvcc --version`)
+    global NVCC = true
+catch
+    @warn("`nvcc` is not found. The FWI module of `FwiFlow` only has a GPU kernel.")
+    global NVCC = false
+end
 
-for name in ["FWI/Src", "FWI", "Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation"]
+if NVCC
+    try
+        DIR = joinpath(SRC_DIR, "Ops/FWI/Src")
+        compile_op(DIR)
+    catch
+        @warn("Ops/FWI/Src Failed.")
+        global NVCC = false
+    end
+end
+
+if NVCC
+    try
+        DIR = joinpath(SRC_DIR, "Ops/FWI")
+        compile_op(DIR)
+    catch
+        @warn("Ops/FWI Failed.")
+        global NVCC = false
+    end
+end
+
+for name in ["Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation"]
     DIR = joinpath(SRC_DIR, "Ops/$name")
     compile_op(DIR)
 end
 
 
-try
-    run(`nvcc --version`)
-    DIR = joinpath(SRC_DIR, "Ops/FWI/Src")
-    compile_op(DIR)
-catch
-    @warn("`nvcc` is not found. The FWI module of `FwiFlow` only has a GPU kernel.")
-end

@@ -10,11 +10,15 @@ module FwiFlow
     using DataStructures
     using Dierckx
 
+
+    export DATADIR
+    DATADIR = "$(@__DIR__)/../docs/data"
+
     function ADCME.:Session(args...;kwargs...)
         config = tf.ConfigProto(
-            device_count = {'GPU': 0}
+            device_count = Dict("GPU"=> 0)
         )
-        sess = Session(config=config)
+        sess = tf.Session(config=config)
     end
     include("$(@__DIR__)/Ops/ops.jl")
     include("utils.jl")

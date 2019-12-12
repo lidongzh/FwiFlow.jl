@@ -6,6 +6,9 @@ SET(CMAKE_CXX_FLAGS "-std=gnu++11 -O3")
 project(CUFD)
 include_directories(rapidjson)
 
+execute_process(COMMAND julia -e "using Conda; print(joinpath(Conda.ROOTENV, \"pkgs/cudatoolkit-10.1.168-0/lib/\"))" OUTPUT_VARIABLE CUDA_LIB)
+link_directories(${CUDA_LIB})
+
 find_package(CUDA QUIET)
 set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "-O3 ${CMAKE_CXX_FLAGS}")

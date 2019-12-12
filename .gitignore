@@ -1,3 +1,8 @@
 .vscode
 !*CMakeLists.txt
 src/amgcl.zip
+Data/
+.*
+*.DS_Store
+mar/*
+SnapGPU.bin
