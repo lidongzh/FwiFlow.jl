@@ -31,10 +31,10 @@ FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful sta
 
 The following examples are for inversion 
 
-| <img src="docs/src/assets/marmousi_inv.png" width="220">     | <img src="docs/src/assets/flow.png" width="220">             | <img src="docs/src/assets/diagram.png" width="220"> |
+| <img src="docs/src/assets/marmousi_inv.png" width="270">     | <img src="docs/src/assets/flow.png" width="270">             | <img src="docs/src/assets/diagram.png" width="270"> |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------- |
 | [Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/) | [Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/) | FWI-Two Phase Flow Coupled Inversion                |
-| <img src="docs/src/assets/frac.png" width="220">             |                                                              |                                                     |
+| <img src="docs/src/assets/frac.png" width="270">             |                                                              |                                                     |
 | Time Fractional PDE                                          |                                                              |                                                     |
 
 
