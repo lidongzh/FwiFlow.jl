@@ -3,6 +3,19 @@
 ![](https://travis-ci.org/lidongzh/FwiFlow.jl.svg?branch=master)
 ![Coverage Status](https://coveralls.io/repos/github/lidongzh/FwiFlow.jl/badge.svg?branch=master)
 
+| Documentation                                                |
+| ------------------------------------------------------------ |
+| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lidongzh.github.io/FwiFlow.jl/dev) |
+
+
+
+## Installation 
+
+```julia
+using Pkg
+Pkg.add("FwiFlow")
+```
+
 ## Philosophy
 
 We treat physical simulations as a chain of multiple differentiable operators, such as discrete Laplacian evaluation, a Poisson solver and a single implicit time stepping for nonlinear PDEs. They are like building blocks that can be assembled to make simulation tools for new physical models. 
@@ -27,10 +40,6 @@ The following examples are for inversion
 
 
 
-
-| Documentation                                                |
-| ------------------------------------------------------------ |
-| [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lidongzh.github.io/FwiFlow.jl/dev) |
 
 
 ## Research Papers

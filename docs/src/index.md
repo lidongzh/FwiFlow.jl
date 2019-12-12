@@ -1,5 +1,12 @@
 # Getting Started
 
+## Installation 
+
+```julia
+using Pkg
+Pkg.add("FwiFlow")
+```
+
 ## Intelligent Automatic Differentiation (IAD): Philosophy
 
 We treat physical simulations as a chain of multiple differentiable operators, such as discrete Laplacian evaluation, a Poisson solver and a single implicit time stepping for nonlinear PDEs. They are like building blocks that can be assembled to make simulation tools for new physical models. 
