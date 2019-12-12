@@ -8,9 +8,7 @@ Those operators are differentiable and integrated in a computational graph so th
 
 FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful static graph based automatic differentiation library for scientific computing (with TensorFlow backend). FwiFlow implements the idea of **Intelligent Automatic Differentiation**. 
 
-<p align="center">
-  <img src="docs/src/assets/op.png" width="50%">
-</p>
+![](docs/src/assets/op.png)
 
 ## Tutorials
 
