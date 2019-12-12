@@ -3,7 +3,8 @@ makedocs(sitename="FwiFlow", modules=[FwiFlow],
 pages = Any[
     "index.md",
     "api.md",
-    "tutorials/fwi.md"
+    "Tutorial" => ["tutorials/fwi.md","tutorials/flow.md"]
+
 ],
 authors = "Dongzhuo Li and Kailai Xu")
 
