@@ -125,3 +125,48 @@ colorbar()
 set_cmap("gray")
 ```
 ![](../assets/fwi_shot10.png)
+
+
+
+Inversion 
+
+
+```julia
+cs_init_pad = zeros(nz_pad, nx_pad)
+den_init_pad = 2500.0 .* ones(nz_pad, nx_pad)
+cp_init_pad = reshape(reinterpret(Float32,read("$DATADIR/Model_Cp_init_1D.bin")), (nz_pad, nx_pad))
+tf_cp_inv = Variable(cp_init_pad[nPml+1:nPml+nz, nPml+1:nPml+nx], dtype=Float64) # original scale as 
+tf_cs_inv = constant(cs_init_pad[nPml+1:nPml+nz, nPml+1:nPml+nx], dtype=Float64)
+tf_den_inv = constant(den_init_pad[nPml+1:nPml+nz, nPml+1:nPml+nx], dtype=Float64)
+tf_cp_ref_pad = constant(cp_init_pad, dtype=Float64) # original scale as 
+tf_cs_ref_pad = constant(cs_init_pad, dtype=Float64)
+tf_den_ref_pad = constant(den_init_pad, dtype=Float64)
+tf_cp_inv_pad, tf_cs_inv_pad, tf_den_inv_pad = padding(tf_cp_inv, tf_cs_inv, 
+    tf_den_inv, nz_orig, nx_orig, nz, nx, nPml, nPad)
+```
+
+```julia
+tf_cp_msk_pad = tf_cp_inv_pad .* tf_mask + tf_cp_ref_pad .* tf_mask_neg
+tf_cs_msk_pad = tf_cs_inv_pad .* tf_mask + tf_cs_ref_pad .* tf_mask_neg
+tf_den_msk_pad = tf_den_inv_pad .* tf_mask + tf_den_ref_pad .* tf_mask_neg
+tf_lambda_inv_pad, tf_mu_inv_pad = vel2moduli(tf_cp_msk_pad, tf_cs_msk_pad,tf_den_msk_pad)
+```
+
+```julia
+loss = constant(0.0)
+nGpus = length(use_gpu())
+shot_id_points = Int32.(trunc.(collect(LinRange(0, length(ind_src_z)-1, nGpus+1))))
+
+loss = constant(0.0)
+for i = 1:nGpus
+    global loss
+    tf_shot_ids = collect(shot_id_points[i]:shot_id_points[i+1])
+    loss += fwi_op(tf_lambda_inv_pad, tf_mu_inv_pad, tf_den_inv_pad, 
+            tf_stf_array, i-1, tf_shot_ids, para_fname)
+end
+```
+
+```julia
+sess = Session(); init(sess)
+BFGS!(sess, loss)
+```

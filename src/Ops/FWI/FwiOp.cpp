@@ -75,7 +75,7 @@ class FwiOpOp : public OpKernel {
     // int nz = lambda_shape.dim_size(0), nx = lambda_shape.dim_size(1);
     int group_size = shot_ids_shape.dim_size(0);
 
-    TensorShape misfit_shape({1});
+    TensorShape misfit_shape({});
 
     // create output tensor
 

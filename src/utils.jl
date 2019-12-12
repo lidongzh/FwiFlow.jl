@@ -1,5 +1,5 @@
 # input: nz, nx, dz, dx, nSteps, nPoints_pml, nPad, dt, f0, survey_fname, data_dir_name, scratch_dir_name, isAc
-export paraGen, surveyGen
+export paraGen, surveyGen, padding
 """
 
 Generates a parameter file consumed by [`fwi_op`](@ref) and [`fwi_op_ops`](@ref)
@@ -194,3 +194,33 @@ end
 #   source[1] = 1.0
 #   return source
 # end
+
+@doc raw"""
+
+Adds PML boundaries to `cp`, `cs` and `den`. 
+The original `nz_orig x nx_orig` grid is resampled to `nz x nx`. 
+
+!!! note 
+    `nPad` is used to make the number of nodes in the $z$ direction a multiple of 32 (for coalesced memory access). 
+"""
+function padding(cp, cs, den, nz_orig, nx_orig, nz, nx, nPml, nPad)
+  tran_cp = tf.reshape(cp, (1, nz_orig, nx_orig, 1))
+  tran_cs = tf.reshape(cs, (1, nz_orig, nx_orig, 1))
+  tran_den = tf.reshape(den, (1, nz_orig, nx_orig, 1))
+
+  tran_cp = squeeze(tf.image.resize_bilinear(tran_cp, (nz, nx)))
+  tran_cs = squeeze(tf.image.resize_bilinear(tran_cs, (nz, nx)))
+  tran_den = squeeze(tf.image.resize_bilinear(tran_den, (nz, nx)))
+
+  # cp_pad = tf.pad(tran_cp, [nPml (nPml+nPad); nPml nPml], constant_values=5500.0)
+  # cs_pad = tf.pad(tran_cs, [nPml (nPml+nPad); nPml nPml], constant_values=0.0)
+  # den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], constant_values=2500.0)
+  cp_pad = tf.pad(tran_cp, [nPml (nPml+nPad); nPml nPml], "SYMMETRIC")
+  cs_pad = tf.pad(tran_cs, [nPml (nPml+nPad); nPml nPml], "SYMMETRIC")
+  den_pad = tf.pad(tran_den, [nPml (nPml+nPad); nPml nPml], "SYMMETRIC")
+
+  cp_pad = cast(cp_pad, Float64)
+  cs_pad = cast(cs_pad, Float64)
+  den_pad = cast(den_pad, Float64)
+  return cp_pad, cs_pad, den_pad
+end
