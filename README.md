@@ -11,7 +11,7 @@
 
 - GPU-accelearated FWI module with checkpointing schemes;
 - AMG-accelerated implicit pressure-explicit saturation (IMPES) scheme;
-- Fractional Differential Operators
+- Time Fractional Partial Differential Equations
 
 ## Philosophy
 
@@ -34,6 +34,8 @@ The following examples are for inversion
 | <img src="docs/src/assets/marmousi_inv.png" width="200">     | <img src="docs/src/assets/flow.png" width="200">             | <img src="docs/src/assets/diagram.png" width="200"> |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------- |
 | [Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/) | [Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/) | FWI-Two Phase Flow Coupled Inversion                |
+| <img src="docs/src/assets/frac.png" width="200">             |                                                              |                                                     |
+| Time Fractional PDE                                          |                                                              |                                                     |
 
 
 
