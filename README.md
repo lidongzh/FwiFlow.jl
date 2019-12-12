@@ -49,6 +49,6 @@ The following examples are for inversion
 ## LICENSE
 
 MIT License
-Copyright (c) 2019 Dongzhuo Li and Kailai Xu
+Copyright (c) 2019 Dongzhuo Li and Kailai Xu (Equal Contribution to FwiFlow.jl)
 
 
