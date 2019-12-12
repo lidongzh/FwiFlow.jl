@@ -170,3 +170,5 @@ end
 sess = Session(); init(sess)
 BFGS!(sess, loss)
 ```
+
+![](../assets/gpu_fwi.gif)
