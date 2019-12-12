@@ -17,7 +17,7 @@ FwiFlow is built on [ADCME](https://github.com/kailaix/ADCME.jl), a powerful sta
 
 The following examples are for inversion 
 
-| <img src="docs/src/assets/marmousi_inv.png" width="33%"><br />[Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/ | <img src="docs/src/assets/flow.png" width="33%"> <br />[Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/ | <img src="docs/src/assets/diagram.png" width="33%"><br />FWI-Two Phase Flow Coupled Inversion |
+| <img src="docs/src/assets/marmousi_inv.png" width="100"><br />[Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/ | <img src="docs/src/assets/flow.png" width="100"> <br />[Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/ | <img src="docs/src/assets/diagram.png" width="100"><br />FWI-Two Phase Flow Coupled Inversion |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | Fractional PDE                                               | Advectional Diffusion                                        |                                                              |
    
