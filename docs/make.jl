@@ -2,8 +2,8 @@ using Documenter, FwiFlow
 makedocs(sitename="FwiFlow", modules=[FwiFlow],
 pages = Any[
     "index.md",
-    "tutorial.md",
-    "api.md"
+    "api.md",
+    "tutorials/fwi.md"
 ],
 authors = "Dongzhuo Li and Kailai Xu")
 
