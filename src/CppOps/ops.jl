@@ -4,8 +4,8 @@ OPS_DIR = @__DIR__
 
 @doc raw"""
     fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
-    den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
-    gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
+        den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
+        gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
 
 Computes the FWI loss function. 
 
@@ -108,10 +108,10 @@ end
 
 @doc raw"""
     sat_op(s0::Union{PyObject, Array{Float64}},pt::Union{PyObject, Array{Float64}},
-    permi::Union{PyObject, Array{Float64}},poro::Union{PyObject, Array{Float64}},
-    qw::Union{PyObject, Array{Float64}},qo::Union{PyObject, Array{Float64}},
-    muw::Union{PyObject, Float64},muo::Union{PyObject, Float64},
-    sref::Union{PyObject, Array{Float64}},dt::Union{PyObject, Float64},h::Union{PyObject, Float64})
+        permi::Union{PyObject, Array{Float64}},poro::Union{PyObject, Array{Float64}},
+        qw::Union{PyObject, Array{Float64}},qo::Union{PyObject, Array{Float64}},
+        muw::Union{PyObject, Float64},muo::Union{PyObject, Float64},
+        sref::Union{PyObject, Array{Float64}},dt::Union{PyObject, Float64},h::Union{PyObject, Float64})
 
 Solves the following discretized equation 
 ```math
@@ -158,10 +158,10 @@ end
 
 @doc raw"""
     upwlap_op(perm::Union{PyObject, Array{Float64}},
-    mobi::Union{PyObject, Array{Float64}},
-    func::Union{PyObject, Array{Float64}},
-    h::Union{PyObject, Float64},
-    rhograv::Union{PyObject, Float64})
+        mobi::Union{PyObject, Array{Float64}},
+        func::Union{PyObject, Array{Float64}},
+        h::Union{PyObject, Float64},
+        rhograv::Union{PyObject, Float64})
 
 Computes the Laplacian of function $f(\mathbf{x})$; here $\mathbf{x}=[z\quad x]^T$.
 ```math 
