@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Flow Inversion · FwiFlow</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="FwiFlow logo"/></a><div class="docs-package-name"><span class="docs-autofit">FwiFlow</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Getting Started</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><span class="tocitem">Tutorial</span><ul><li><a class="tocitem" href="../fwi/">FWI</a></li><li class="is-active"><a class="tocitem" href>Flow Inversion</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorial</a></li><li class="is-active"><a href>Flow Inversion</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Flow Inversion</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/lidongzh/FwiFlow.jl/blob/master/docs/src/tutorials/flow.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Flow-Inversion-1"><a class="docs-heading-anchor" href="#Flow-Inversion-1">Flow Inversion</a><a class="docs-heading-anchor-permalink" href="#Flow-Inversion-1" title="Permalink"></a></h1><pre><code class="language-julia">const K_CONST =  9.869232667160130e-16 * 86400 * 1e3
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Flow Inversion · FwiFlow</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="FwiFlow logo"/></a><div class="docs-package-name"><span class="docs-autofit">FwiFlow</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Getting Started</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><span class="tocitem">Tutorial</span><ul><li><a class="tocitem" href="../fwi/">FWI</a></li><li class="is-active"><a class="tocitem" href>Flow Inversion</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorial</a></li><li class="is-active"><a href>Flow Inversion</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Flow Inversion</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/lidongzh/FwiFlow.jl/blob/master/docs/src/tutorials/flow.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Flow-Inversion-1"><a class="docs-heading-anchor" href="#Flow-Inversion-1">Flow Inversion</a><a class="docs-heading-anchor-permalink" href="#Flow-Inversion-1" title="Permalink"></a></h1><p>This section is an example of solving the flow equation with the Newton-Raphson method. The governing equations are derived from conservation of mass of each phase, and conservation of momentum or Darcy&#39;s law for each phase. First, we have</p><div>\[\frac{\partial }{{\partial t}}(\phi {S_i}{\rho _i}) + \nabla  \cdot ({\rho _i}{\mathbf{v}_i}) = {\rho _i}{q_i}, \quad i = 1,2\]</div><p>The saturation of the two phases satisfies</p><div>\[S_{1} + S_{2} = 1\]</div><p>and the Darcy&#39;s law yields</p><div>\[{\mathbf{v}_i} =  - \frac{{K{k_{ri}}}}{{{\tilde{\mu}_i}}}(\nabla {P_i} - g{\rho _i}\nabla Z), \quad i=1,2\]</div><p>Here <span>$k_{ri}$</span> is a function of <span>$S_i$</span> given by <code>Krw</code> and <code>Kro</code>. </p><pre><code class="language-julia">const K_CONST =  9.869232667160130e-16 * 86400 * 1e3
 const ALPHA = 1.0
 mutable struct Ctx
   m; n; h; NT; Δt; Z; X; ρw; ρo;
@@ -42,10 +42,7 @@ end
 function ave_normal(quantity, m, n)
     aa = sum(quantity)
     return aa/(m*n)
-end
-
-
-# variables : sw, u, v, p
+end</code></pre><p>The major simulation codes consist of using a nonlinear implicit timestep. In <a href="../../api/#FwiFlow.sat_op"><code>sat_op</code></a> we solve a nonlinear equation with Newton-Raphson scheme. </p><pre><code class="language-julia"># variables : sw, u, v, p
 # (time dependent) parameters: qw, qo, ϕ
 function onestep(sw, p, m, n, h, Δt, Z, ρw, ρo, μw, μo, K, g, ϕ, qw, qo)
     # step 1: update p
@@ -72,13 +69,6 @@ function onestep(sw, p, m, n, h, Δt, Z, ρw, ρo, μw, μo, K, g, ϕ, qw, qo)
 end
 
 
-
-&quot;&quot;&quot;
-impes(tf_ctx)
-Solve the two phase flow equation. 
-`qw` and `qo` -- `NT x m x n` numerical array, `qw[i,:,:]` the corresponding value of qw at i*Δt
-`sw0` and `p0` -- initial value for `sw` and `p`. `m x n` numerical array.
-&quot;&quot;&quot;
 function imseq(tf_ctx)
     ta_sw, ta_p = TensorArray(NT+1), TensorArray(NT+1)
     ta_sw = write(ta_sw, 1, tf_ctx.sw0)
@@ -97,8 +87,7 @@ function imseq(tf_ctx)
 
     _, ta_sw, ta_p = while_loop(condition, body, [i, ta_sw, ta_p])
     out_sw, out_p = stack(ta_sw), stack(ta_p)
-end
-</code></pre><pre><code class="language-julia">using FwiFlow
+end</code></pre><p>We now first generate the synthetic data. </p><pre><code class="language-julia">using FwiFlow
 using PyCall
 using LinearAlgebra
 using DelimitedFiles
@@ -139,16 +128,8 @@ n_survey = length(survey_indices)
 
 K = 20.0 .* ones(m,n) # millidarcy
 K[8:10,:] .= 120.0
-# K[17:21,:] .= 100.0
-# for i = 1:m
-#     for j = 1:n
-#         if i &lt;= (14 - 24)/(30 - 1)*(j-1) + 24 &amp;&amp; i &gt;= (12 - 18)/(30 - 1)*(j-1) + 18
-#             K[i,j] = 100.0
-#         end
-#     end
-# end
 tfCtxTrue = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K,g,ϕ,qw,qo, sw0, true)
-out_sw_true, out_p_true = imseq(tfCtxTrue)</code></pre><p><img src="../../assets/sw10.png" alt/></p><pre><code class="language-julia">tfCtxInit = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K_init,g,ϕ,qw,qo, sw0, false)
+out_sw_true, out_p_true = imseq(tfCtxTrue)</code></pre><p><img src="../../assets/sw10.png" alt/></p><p>We now conduct inversion. The unknown variable is stored in <code>tfCtxInit.K</code>. </p><pre><code class="language-julia">tfCtxInit = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K_init,g,ϕ,qw,qo, sw0, false)
 out_sw_init, out_p_init = imseq(tfCtxInit)
 
 sess = Session(); init(sess)
@@ -182,10 +163,9 @@ function step_callback(rk)
 end
 sess = Session(); init(sess)
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, 
-        step_callback=step_callback, fetches=[loss])
-</code></pre><p><img src="../../assets/coupled_loss.png" alt/></p><p>We can visualize <code>K</code> with </p><pre><code class="language-julia">imshow(run(sess, tfCtxInit.K), extent=[0,n*h,m*h,0]);
+        step_callback=step_callback, fetches=[loss])</code></pre><p><img src="../../assets/coupled_loss.png" alt/></p><p>We can visualize <code>K</code> with </p><pre><code class="language-julia">imshow(run(sess, tfCtxInit.K), extent=[0,n*h,m*h,0]);
 xlabel(&quot;Distance (m)&quot;)
 ylabel(&quot;Depth (m)&quot;)
 cb = colorbar()
 clim([20, 120])
-cb.set_label(&quot;Permeability (md)&quot;)</code></pre><p><img src="../../assets/Saturation_evo_patchy_init.png" alt/> <img src="../../assets/Saturation_evo_patchy_true.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../fwi/">« FWI</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 17 December 2019 10:09">Tuesday 17 December 2019</span>. Using Julia version 1.2.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+cb.set_label(&quot;Permeability (md)&quot;)</code></pre><p><img src="../../assets/Saturation_evo_patchy_init.png" alt/> <img src="../../assets/Saturation_evo_patchy_true.png" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../fwi/">« FWI</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 17 December 2019 12:14">Tuesday 17 December 2019</span>. Using Julia version 1.2.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
