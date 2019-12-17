@@ -1,5 +1,19 @@
 # Flow Inversion
 
+This section is an example of solving the flow equation with the Newton-Raphson method. The governing equations are derived from conservation of mass of each phase, and conservation of momentum or Darcy's law for each phase. First, we have
+```math
+\frac{\partial }{{\partial t}}(\phi {S_i}{\rho _i}) + \nabla  \cdot ({\rho _i}{\mathbf{v}_i}) = {\rho _i}{q_i}, \quad i = 1,2
+```
+The saturation of the two phases satisfies
+```math
+S_{1} + S_{2} = 1
+```
+and the Darcy's law yields
+```math
+{\mathbf{v}_i} =  - \frac{{K{k_{ri}}}}{{{\tilde{\mu}_i}}}(\nabla {P_i} - g{\rho _i}\nabla Z), \quad i=1,2
+```
+
+Here $k_{ri}$ is a function of $S_i$ given by `Krw` and `Kro`. 
 
 ```julia
 const K_CONST =  9.869232667160130e-16 * 86400 * 1e3
@@ -46,8 +60,10 @@ function ave_normal(quantity, m, n)
     aa = sum(quantity)
     return aa/(m*n)
 end
+```
 
-
+The major simulation codes consist of using a nonlinear implicit timestep. In [`sat_op`](@ref) we solve a nonlinear equation with Newton-Raphson scheme. 
+```julia
 # variables : sw, u, v, p
 # (time dependent) parameters: qw, qo, ϕ
 function onestep(sw, p, m, n, h, Δt, Z, ρw, ρo, μw, μo, K, g, ϕ, qw, qo)
@@ -75,13 +91,6 @@ function onestep(sw, p, m, n, h, Δt, Z, ρw, ρo, μw, μo, K, g, ϕ, qw, qo)
 end
 
 
-
-"""
-impes(tf_ctx)
-Solve the two phase flow equation. 
-`qw` and `qo` -- `NT x m x n` numerical array, `qw[i,:,:]` the corresponding value of qw at i*Δt
-`sw0` and `p0` -- initial value for `sw` and `p`. `m x n` numerical array.
-"""
 function imseq(tf_ctx)
     ta_sw, ta_p = TensorArray(NT+1), TensorArray(NT+1)
     ta_sw = write(ta_sw, 1, tf_ctx.sw0)
@@ -101,9 +110,10 @@ function imseq(tf_ctx)
     _, ta_sw, ta_p = while_loop(condition, body, [i, ta_sw, ta_p])
     out_sw, out_p = stack(ta_sw), stack(ta_p)
 end
-
 ```
 
+
+We now first generate the synthetic data. 
 ```julia
 using FwiFlow
 using PyCall
@@ -146,14 +156,6 @@ n_survey = length(survey_indices)
 
 K = 20.0 .* ones(m,n) # millidarcy
 K[8:10,:] .= 120.0
-# K[17:21,:] .= 100.0
-# for i = 1:m
-#     for j = 1:n
-#         if i <= (14 - 24)/(30 - 1)*(j-1) + 24 && i >= (12 - 18)/(30 - 1)*(j-1) + 18
-#             K[i,j] = 100.0
-#         end
-#     end
-# end
 tfCtxTrue = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K,g,ϕ,qw,qo, sw0, true)
 out_sw_true, out_p_true = imseq(tfCtxTrue)
 ```
@@ -161,6 +163,7 @@ out_sw_true, out_p_true = imseq(tfCtxTrue)
 ![](../assets/sw10.png)
 
 
+We now conduct inversion. The unknown variable is stored in `tfCtxInit.K`. 
 ```julia
 tfCtxInit = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K_init,g,ϕ,qw,qo, sw0, false)
 out_sw_init, out_p_init = imseq(tfCtxInit)
@@ -197,7 +200,6 @@ end
 sess = Session(); init(sess)
 ScipyOptimizerMinimize(sess, opt, loss_callback=print_loss, 
         step_callback=step_callback, fetches=[loss])
-
 ```
 
 

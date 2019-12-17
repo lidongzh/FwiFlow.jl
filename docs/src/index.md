@@ -56,9 +56,6 @@ The elastic wave equation maps from elastic properties to wavefields, such as pa
 
 
 ###	The Adjoint Method & Automatic Differentation
-
+The discrete adjoint method and reverse mode automatic differentiation originates from the same mathematical formula.  
 ![](./assets/flow_comp_graph.png)
-
-
-### Customized Operators
 
