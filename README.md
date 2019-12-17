@@ -43,8 +43,8 @@ The following examples are for inversion
 
 ## Research Papers
 
-1. **Kailai Xu**  (co-first author), **Dongzhuo Li**  (co-first author), Eric Darve, and Jerry M. Harris. *Learning Hidden Dynamics using Intelligent Automatic Differentiation*.
-2. **Dongzhuo Li** (co-first author), **Kailai Xu** (co-first author), Jerry M. Harris, and Eric Darve. *Time-lapse Full-waveform Inversion for Subsurface Flow Problems with Intelligent Automatic Diﬀerentiation*.
+1. **Kailai Xu**  (co-first author), **Dongzhuo Li**  (co-first author), Eric Darve, and Jerry M. Harris. [*Learning Hidden Dynamics using Intelligent Automatic Differentiation*](http://arxiv.org/abs/1912.07547).
+2. **Dongzhuo Li** (co-first author), **Kailai Xu** (co-first author), Jerry M. Harris, and Eric Darve. [*Time-lapse Full-waveform Inversion for Subsurface Flow Problems with Intelligent Automatic Diﬀerentiation*](https://arxiv.org/abs/1912.07552).
 
 ## LICENSE
 
