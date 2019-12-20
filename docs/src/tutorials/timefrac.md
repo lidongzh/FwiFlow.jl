@@ -40,7 +40,7 @@ uval = run(sess, uout)
 
 We can compare the exact solution and the numerical solution and they are nearly the same.
 
-![](./assets/frac2.png)
+![](../assets/frac2.png)
 
 We can also measure the convergence order in terms of mean square error (MSE)
 
