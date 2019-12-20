@@ -3,53 +3,53 @@ export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op
 OPS_DIR = @__DIR__
 
 @doc raw"""
-    fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+    fwi_op(lambda::Union{PyObject, Array{Float64}},mu::Union{PyObject, Array{Float64}},
         den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
         gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
 
 Computes the FWI loss function. 
 
-- `cp` : P-wave velocity
-- `cs` : S-wave velocity
+- `lambda` : Lame's first parameter (unit: MPa)
+- `mu` : Lame's second parameter (shear modulus, unit: MPa)
 - `den` : Density 
 - `stf` : Source time functions  
 - `gpu_id` : The ID of GPU to run this FWI operator
 - `shot_ids` : The source function IDs (determining the location of sources)
 - `para_fname` : Parameter file location
 """
-function fwi_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+function fwi_op(lambda::Union{PyObject, Array{Float64}},mu::Union{PyObject, Array{Float64}},
         den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
         gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
-    cp = convert_to_tensor(cp, dtype=Float64)
-    cs = convert_to_tensor(cs, dtype=Float64)
+    lambda = convert_to_tensor(lambda, dtype=Float64)
+    mu = convert_to_tensor(mu, dtype=Float64)
     den = convert_to_tensor(den, dtype=Float64)
     stf = convert_to_tensor(stf, dtype=Float64)
     gpu_id = convert_to_tensor(gpu_id, dtype=Int32)
     shot_ids = convert_to_tensor(shot_ids, dtype=Int32)
     fwi_op = load_op_and_grad("$OPS_DIR/FWI/build/libFwiOp", "fwi_op")
-    fwi_op(cp,cs,den,stf,gpu_id,shot_ids,para_fname)
+    fwi_op(lambda,mu,den,stf,gpu_id,shot_ids,para_fname)
 end
 
 
 @doc raw"""
-    fwi_obs_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+    fwi_obs_op(lambda::Union{PyObject, Array{Float64}},mu::Union{PyObject, Array{Float64}},
         den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
         gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
 
 Generates the observation data and store them as files which will be used by [`fwi_op`](@ref)
 For the meaning of parameters, see [`fwi_op`](@ref).
 """
-function fwi_obs_op(cp::Union{PyObject, Array{Float64}},cs::Union{PyObject, Array{Float64}},
+function fwi_obs_op(lambda::Union{PyObject, Array{Float64}},mu::Union{PyObject, Array{Float64}},
     den::Union{PyObject, Array{Float64}},stf::Union{PyObject, Array{Float64}},
     gpu_id::Union{PyObject, Integer},shot_ids::Union{PyObject, Array{T}},para_fname::String) where T<:Integer
-    cp = convert_to_tensor(cp, dtype=Float64)
-    cs = convert_to_tensor(cs, dtype=Float64)
+    lambda = convert_to_tensor(lambda, dtype=Float64)
+    mu = convert_to_tensor(mu, dtype=Float64)
     den = convert_to_tensor(den, dtype=Float64)
     stf = convert_to_tensor(stf, dtype=Float64)
     gpu_id = convert_to_tensor(gpu_id, dtype=Int32)
     shot_ids = convert_to_tensor(shot_ids, dtype=Int32)
     fwi_obs_op = load_op("$OPS_DIR/FWI/build/libFwiOp", "fwi_obs_op")
-    fwi_obs_op(cp, cs, den, stf, gpu_id, shot_ids, para_fname)
+    fwi_obs_op(lambda, mu, den, stf, gpu_id, shot_ids, para_fname)
 end
 
 
