@@ -8,13 +8,13 @@ time_fractional_t_op
 ```
 
 We consider the function 
-$$
+```math
 u(t) = t^\beta
-$$
+```
 Then the corresponding time derivative is 
-$$
+```math
 D^\alpha_{t_0}u(t) = \frac{\Gamma(\beta+1)}{\Gamma(\beta-\alpha+1)} t^{\beta-\alpha}
-$$
+```
 
 ```julia
 using FwiFlow
@@ -80,5 +80,7 @@ ScipyOptimizerMinimize(sess, opt)
 
 We have the estimation
 
-$$\alpha = 0.8036829691152347$$
+```math
+\alpha = 0.8036829691152347
+```
 
