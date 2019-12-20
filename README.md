@@ -35,7 +35,7 @@ The following examples are for inversion
 | ------------------------------------------------------------ | ------------------------------------------------------------ | --------------------------------------------------- |
 | [Full-waveform Inversion](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/fwi/) | [Two Phase Flow](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/flow/) | FWI-Two Phase Flow Coupled Inversion                |
 | <img src="docs/src/assets/frac.png" width="270">             |                                                              |                                                     |
-| Time Fractional PDE                                          |                                                              |                                                     |
+| [Time Fractional PDE](https://lidongzh.github.io/FwiFlow.jl/dev/tutorials/timefrac/)                                          |                                                              |                                                     |
 
 
 
