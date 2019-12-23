@@ -8,19 +8,19 @@ using MAT
 matplotlib.use("agg")
 np = pyimport("numpy")
 
-# mode 
-# 0 -- generate data 
-# 1 -- running inverse modeling
-mode = 1
-# mode 
-# 0 -- small data
-# 1 -- large data
-datamode = 0
-sparsity = 0.01
+# # mode 
+# # 0 -- generate data 
+# # 1 -- running inverse modeling
+# mode = 1
+# # mode 
+# # 0 -- small data
+# # 1 -- large data
+# datamode = 0
+# sparsity = 0.01
 
-# mode = parse(Int64, ARGS[1])
-# datamode = parse(Int64, ARGS[2])
-# sparsity = parse(Float64, ARGS[3])
+mode = parse(Int64, ARGS[1])
+datamode = parse(Int64, ARGS[2])
+sparsity = parse(Float64, ARGS[3])
 
 FLDR = "datamode$(datamode)sparsity$sparsity"
 if !isdir(FLDR)
@@ -282,7 +282,7 @@ if mode == 0
     x = X[:][obs_ids] .+h/2; y = Y[:][obs_ids].+h/2
     scatter(x, y, marker = "*", s=80, color="magenta")
     savefig("$FLDR/sat.png")
-    savefig("$FLDR/sat.pdf")
+    # savefig("$FLDR/sat.pdf")
 
     # plot_saturation_series(S)
     
