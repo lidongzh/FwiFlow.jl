@@ -8,15 +8,27 @@ using MAT
 matplotlib.use("agg")
 np = pyimport("numpy")
 
-# mode 
-# 0 -- generate data 
-# 1 -- running inverse modeling
-mode = 1
-# mode 
-# 0 -- small data
-# 1 -- large data
-datamode = 0
+# # mode 
+# # 0 -- generate data 
+# # 1 -- running inverse modeling
+# mode = 1
+# # mode 
+# # 0 -- small data
+# # 1 -- large data
+# datamode = 0
+# sparsity = 0.1
 
+mode = parse(Int64, ARGS[1])
+datamode = parse(Int64, ARGS[2])
+sparsity = parse(Float64, ARGS[3])
+
+FLDR = "datamode$(datamode)sparsity$sparsity"
+if !isdir(FLDR)
+    mkdir(FLDR)
+end
+
+
+# data structure for flow simulation
 const K_CONST =  9.869232667160130e-16 * 86400 * 1e3
 const ALPHA = 1.0
 mutable struct Ctx
@@ -85,6 +97,7 @@ function krw_and_kro()
     Krw(sw), Kro(1-sw)
 end
 
+# IMPES for flow simulation
 function ave_normal(quantity, m, n)
     aa = sum(quantity)
     return aa/(m*n)
@@ -135,7 +148,8 @@ function imseq(tf_ctx)
     out_sw, out_p = stack(ta_sw), stack(ta_p)
 end
 
-function visualize(S)
+# visualization functions
+function plot_saturation_series(S)
 
     z_inj = (9-1)*h + h/2.0
     x_inj = (3-1)*h + h/2.0
@@ -170,7 +184,7 @@ function visualize(S)
 
 end
 
-function visualize2(S)
+function plot_saturation(S)
 
     z_inj = (Int(round(0.6*m))-1)*h + h/2.0
     x_inj = (Int(round(0.1*n))-1)*h + h/2.0
@@ -198,9 +212,10 @@ function plot_kr(krw, kro, w=missing, o=missing)
     ylabel("\$K_r\$")
     legend()
 end
+
+# parameters for flow simulation
 const SRC_CONST = 86400.0 #
 const GRAV_CONST = 9.8    # gravity constant
-
 
 if datamode==0
     # Hyperparameter for flow simulation
@@ -249,15 +264,19 @@ tfCtxTrue = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K,g,ϕ,qw,qo, sw0, true)
 out_sw_true, out_p_true = imseq(tfCtxTrue)
 krw, kro = krw_and_kro()
 
+using Random; Random.seed!(233)
+obs_ids = rand(1:m*n, Int(round(m*n*sparsity)))
+obs = tf.reshape(out_sw_true[1:NT+1], (NT+1,-1))[:, obs_ids]
 
+# executing the simulation
 if mode == 0
     # generate data
     sess = Session(); init(sess)
-    S = run(sess, out_sw_true)
+    S,obs_ = run(sess, [out_sw_true, obs])
     krw_, kro_ = run(sess, [krw, kro])
-    matwrite("Data.mat", Dict("S"=>S, "krw"=>krw_, "kro"=>kro_))
-    close("all");plot_kr(krw_, kro_); savefig("krwo.png")
-    close("all");visualize2(S); savefig("sat.png")
+    matwrite("$FLDR/Data.mat", Dict("S"=>S, "krw"=>krw_, "kro"=>kro_, "obs"=>obs_))
+    close("all");plot_kr(krw_, kro_); savefig("$FLDR/krwo.png")
+    close("all");plot_saturation(S); savefig("$FLDR/sat.png")
 
 else
     dat = Dict{String, Any}("loss" => Float64[])
@@ -265,19 +284,20 @@ else
         global dat 
         krw_, kro_ = run(sess, [krw, kro])
         S = run(sess, out_sw_true)
-        close("all");plot_kr(krw_, kro_, wref, oref); savefig("krwo$i.png")
-        close("all");visualize2(S); savefig("sat$i.png")
+        close("all");plot_kr(krw_, kro_, wref, oref); savefig("$FLDR/krwo$i.png")
+        close("all");plot_saturation(S); savefig("$FLDR/sat$i.png")
         dat["S$i"] = S 
         dat["w$i"] = krw_
         dat["o$i"] = kro_
         dat["loss"] = [dat["loss"]; loss_]
         dat["theta1_$i"] = run(sess, θ1)
         dat["theta2_$i"] = run(sess, θ2)
-        matwrite("invData.mat", dat)
+        matwrite("$FLDR/invData.mat", dat)
     end
-    d = matread("Data.mat")
-    Sref, wref, oref = d["S"], d["krw"][:], d["kro"][:]
-    loss = sum((out_sw_true - Sref)^2)
+    d = matread("$FLDR/Data.mat")
+    Sref, wref, oref, obsref = d["S"], d["krw"][:], d["kro"][:], d["obs"]
+    # loss = sum((out_sw_true - Sref)^2)
+    loss = sum((obsref-obs)^2)
     sess = Session(); init(sess)
 
     loss_ = Float64[];
