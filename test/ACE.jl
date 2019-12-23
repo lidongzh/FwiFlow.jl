@@ -8,19 +8,19 @@ using MAT
 matplotlib.use("agg")
 np = pyimport("numpy")
 
-# # mode 
-# # 0 -- generate data 
-# # 1 -- running inverse modeling
-# mode = 1
-# # mode 
-# # 0 -- small data
-# # 1 -- large data
-# datamode = 0
-# sparsity = 0.1
+# mode 
+# 0 -- generate data 
+# 1 -- running inverse modeling
+mode = 1
+# mode 
+# 0 -- small data
+# 1 -- large data
+datamode = 0
+sparsity = 0.01
 
-mode = parse(Int64, ARGS[1])
-datamode = parse(Int64, ARGS[2])
-sparsity = parse(Float64, ARGS[3])
+# mode = parse(Int64, ARGS[1])
+# datamode = parse(Int64, ARGS[2])
+# sparsity = parse(Float64, ARGS[3])
 
 FLDR = "datamode$(datamode)sparsity$sparsity"
 if !isdir(FLDR)
@@ -151,10 +151,10 @@ end
 # visualization functions
 function plot_saturation_series(S)
 
-    z_inj = (9-1)*h + h/2.0
-    x_inj = (3-1)*h + h/2.0
-    z_prod = (9-1)*h + h/2.0
-    x_prod = (28-1)*h + h/2.0
+    z_inj = (Int(round(0.6*m))-1)*h + h/2.0
+    x_inj = (Int(round(0.1*n))-1)*h + h/2.0
+    z_prod = (Int(round(0.6*m))-1)*h + h/2.0
+    x_prod = (Int(round(0.9*n))-1)*h + h/2.0
     fig2,axs = subplots(3,3, figsize=[30,15], sharex=true, sharey=true)
     ims = Array{Any}(undef, 9)
     for iPrj = 1:3
@@ -268,6 +268,7 @@ using Random; Random.seed!(233)
 obs_ids = rand(1:m*n, Int(round(m*n*sparsity)))
 obs = tf.reshape(out_sw_true[1:NT+1], (NT+1,-1))[:, obs_ids]
 
+# error()
 # executing the simulation
 if mode == 0
     # generate data
@@ -276,13 +277,23 @@ if mode == 0
     krw_, kro_ = run(sess, [krw, kro])
     matwrite("$FLDR/Data.mat", Dict("S"=>S, "krw"=>krw_, "kro"=>kro_, "obs"=>obs_))
     close("all");plot_kr(krw_, kro_); savefig("$FLDR/krwo.png")
-    close("all");plot_saturation(S); savefig("$FLDR/sat.png")
+    close("all");plot_saturation(S); 
+    X, Y = np.meshgrid(collect((0:n-1)*h), collect((0:m-1)*h))
+    x = X[:][obs_ids] .+h/2; y = Y[:][obs_ids].+h/2
+    scatter(x, y, marker = "*", s=80, color="magenta")
+    savefig("$FLDR/sat.png")
+    savefig("$FLDR/sat.pdf")
+
+    plot_saturation_series(S)
+    
+    # savefig("$FLDR/satnn.pdf")
+    savefig("$FLDR/satall.pdf")
 
 else
     dat = Dict{String, Any}("loss" => Float64[], "errw"=>Float64[], "erro"=>Float64[])
     summary = (vs, i, loss_)->begin
         global dat 
-        S, krw_, kro_ = vs
+        S, krw_, kro_, θ1, θ2 = vs
         errw = norm(krw_-wref)
         erro = norm(kro_-oref)
         # dat["S$i"] = S 
@@ -291,8 +302,8 @@ else
         dat["loss"] = [dat["loss"]; loss_]
         dat["errw"] = [dat["errw"]; errw]
         dat["erro"] = [dat["erro"]; erro]
-        dat["theta1"] = run(sess, θ1)
-        dat["theta2"] = run(sess, θ2)
+        dat["theta1"] = θ1
+        dat["theta2"] = θ2
         if mod(i, 10)==1
             close("all");plot_kr(krw_, kro_, wref, oref); savefig("$FLDR/krwo$i.png")
             close("all");plot_saturation(S); savefig("$FLDR/sat$i.png")
@@ -310,9 +321,10 @@ else
     # loss = sum((out_sw_true - Sref)^2)
     loss = sum((obsref-obs)^2)
     sess = Session(); init(sess)
-    BFGS!(sess, loss, 500;vars = [out_sw_true, krw, kro], callback = summary)
+    BFGS!(sess, loss, 500;vars = [out_sw_true, krw, kro, θ1, θ2], callback = summary)
 end
 
-
+# dd = matread("$FLDR/invData.mat")
+# run(sess, [assign(θ1,dd["theta1"]),assign(θ2,dd["theta2"])] )
 
 
