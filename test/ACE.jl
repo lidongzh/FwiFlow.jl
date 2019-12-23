@@ -282,10 +282,9 @@ else
 
     loss_ = Float64[];
     summary(0)
-    for i = 1:10
+    for i = 1:100
         global loss_ = BFGS!(sess, loss, 100)
         summary(i)
-        error()
     end
 end
 
