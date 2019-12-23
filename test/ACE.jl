@@ -279,11 +279,10 @@ if mode == 0
     close("all");plot_saturation(S); savefig("$FLDR/sat.png")
 
 else
-    dat = Dict{String, Any}("loss" => Float64[])
-    summary = ([S, krw_, kro_], i, loss_)->begin
+    dat = Dict{String, Any}("loss" => Float64[], "err"=>Float64[])
+    summary = (vs, i, loss_)->begin
         global dat 
-        close("all");plot_kr(krw_, kro_, wref, oref); savefig("$FLDR/krwo$i.png")
-        close("all");plot_saturation(S); savefig("$FLDR/sat$i.png")
+        S, krw_, kro_ = vs
         err_ = norm([krw_;kro_]-[wref;oref])
         dat["S$i"] = S 
         dat["w$i"] = krw_
@@ -292,6 +291,12 @@ else
         dat["err"] = [dat["err"]; err_]
         dat["theta1_$i"] = run(sess, θ1)
         dat["theta2_$i"] = run(sess, θ2)
+        if mod(i, 10)==1
+            close("all");plot_kr(krw_, kro_, wref, oref); savefig("$FLDR/krwo$i.png")
+            close("all");plot_saturation(S); savefig("$FLDR/sat$i.png")
+            close("all");semilogy(dat["err"]); xlabel("Iteration"); ylabel("Error") savefig("$FLDR/err.png")
+            close("all");semilogy(dat["loss"]); xlabel("Iteration"); ylabel("Loss") savefig("$FLDR/loss.png")
+        end
         matwrite("$FLDR/invData.mat", dat)
     end
     d = matread("$FLDR/Data.mat")
