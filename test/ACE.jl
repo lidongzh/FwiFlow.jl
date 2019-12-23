@@ -284,10 +284,10 @@ if mode == 0
     savefig("$FLDR/sat.png")
     savefig("$FLDR/sat.pdf")
 
-    plot_saturation_series(S)
+    # plot_saturation_series(S)
     
     # savefig("$FLDR/satnn.pdf")
-    savefig("$FLDR/satall.pdf")
+    # savefig("$FLDR/satall.pdf")
 
 else
     dat = Dict{String, Any}("loss" => Float64[], "errw"=>Float64[], "erro"=>Float64[])
