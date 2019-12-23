@@ -294,8 +294,8 @@ else
         if mod(i, 10)==1
             close("all");plot_kr(krw_, kro_, wref, oref); savefig("$FLDR/krwo$i.png")
             close("all");plot_saturation(S); savefig("$FLDR/sat$i.png")
-            close("all");semilogy(dat["err"]); xlabel("Iteration"); ylabel("Error") savefig("$FLDR/err.png")
-            close("all");semilogy(dat["loss"]); xlabel("Iteration"); ylabel("Loss") savefig("$FLDR/loss.png")
+            close("all");semilogy(dat["err"]); xlabel("Iteration"); ylabel("Error"); savefig("$FLDR/err.png")
+            close("all");semilogy(dat["loss"]); xlabel("Iteration"); ylabel("Loss"); savefig("$FLDR/loss.png")
         end
         matwrite("$FLDR/invData.mat", dat)
     end
