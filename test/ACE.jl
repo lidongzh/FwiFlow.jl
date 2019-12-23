@@ -280,16 +280,16 @@ if mode == 0
 
 else
     dat = Dict{String, Any}("loss" => Float64[])
-    summary = i->begin
+    summary = ([S, krw_, kro_], i, loss_)->begin
         global dat 
-        krw_, kro_ = run(sess, [krw, kro])
-        S = run(sess, out_sw_true)
         close("all");plot_kr(krw_, kro_, wref, oref); savefig("$FLDR/krwo$i.png")
         close("all");plot_saturation(S); savefig("$FLDR/sat$i.png")
+        err_ = norm([krw_;kro_]-[wref;oref])
         dat["S$i"] = S 
         dat["w$i"] = krw_
         dat["o$i"] = kro_
         dat["loss"] = [dat["loss"]; loss_]
+        dat["err"] = [dat["err"]; err_]
         dat["theta1_$i"] = run(sess, θ1)
         dat["theta2_$i"] = run(sess, θ2)
         matwrite("$FLDR/invData.mat", dat)
@@ -299,13 +299,7 @@ else
     # loss = sum((out_sw_true - Sref)^2)
     loss = sum((obsref-obs)^2)
     sess = Session(); init(sess)
-
-    loss_ = Float64[];
-    summary(0)
-    for i = 1:100
-        global loss_ = BFGS!(sess, loss, 100)
-        summary(i)
-    end
+    BFGS!(sess, loss, 200;[out_sw_true, krw, kro], summary)
 end
 
 
