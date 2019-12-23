@@ -304,7 +304,7 @@ else
     # loss = sum((out_sw_true - Sref)^2)
     loss = sum((obsref-obs)^2)
     sess = Session(); init(sess)
-    BFGS!(sess, loss, 200;vars = callback = [out_sw_true, krw, kro], summary)
+    BFGS!(sess, loss, 200;vars = [out_sw_true, krw, kro], callback = summary)
 end
 
 
