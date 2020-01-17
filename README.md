@@ -9,7 +9,7 @@
 
 ## Highlights
 
-- GPU-accelearated FWI module with checkpointing schemes;
+- GPU-accelerated FWI module with checkpointing schemes;
 - AMG-accelerated implicit pressure-implicit saturation scheme;
 - Time Fractional Partial Differential Equations
 
