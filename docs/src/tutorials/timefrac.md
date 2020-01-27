@@ -1,11 +1,7 @@
 # Time Fractional Differential Equation
 
-The fractional calculus has motivated development and application of novel algorithms and models for describing anomoulous diffusion. In this section, we discuss how to carry out numerical simulation of time fractional differential equations and the corresponding inversion. The major operator in FwiFlow is 
+The fractional calculus has motivated development and application of novel algorithms and models for describing anomoulous diffusion. In this section, we discuss how to carry out numerical simulation of time fractional differential equations and the corresponding inversion. The major operator in FwiFlow is [`time_fractional_op`](@ref) and [`time_fractional_t_op`](@ref).
 
-```@docs
-time_fractional_op
-time_fractional_t_op
-```
 
 We consider the function 
 ```math

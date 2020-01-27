@@ -95,10 +95,14 @@ function sourceGene(f, nStep, delta_t)
   source = source * delta_t;
 end
 
-# get vs high and low bounds from log point cloud 
-# 1st row of Bounds: vp ref line
-# 2nd row of Bounds: vs high ref line
-# 3rd row of Bounds: vs low ref line
+"""
+  cs_bounds_cloud(cpImg, Bounds)
+
+Get `vs` high and low bounds from log point cloud 
+1st row of Bounds: vp ref line
+2nd row of Bounds: vs high ref line
+3rd row of Bounds: vs low ref line
+"""
 function cs_bounds_cloud(cpImg, Bounds)
   cs_high_itp = Spline1D(Bounds[1,:], Bounds[2,:]; k=1)
   cs_low_itp = Spline1D(Bounds[1,:], Bounds[3,:]; k=1)
@@ -113,10 +117,12 @@ function cs_bounds_cloud(cpImg, Bounds)
   return csHigh, csLow
 end
 
+"""
+  klauderWave(fmin, fmax, t_sweep, nStepTotal, nStepDelay, delta_t)
+
+Generates Klauder wavelet.
+"""
 function klauderWave(fmin, fmax, t_sweep, nStepTotal, nStepDelay, delta_t)
-#  Klauder wavelet
-#  Dongzhuo Li @ Stanford
-#  August, 2019
   nStep = nStepTotal - nStepDelay
   source = Matrix{Float64}(undef, 1, nStep+nStep-1)
   source_half = Matrix{Float64}(undef, 1, nStep-1)

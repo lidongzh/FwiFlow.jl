@@ -15,9 +15,7 @@ sio = pyimport("scipy.io")
 
 We specify the parameters for the computational domain and numerical methods. The computational domain is shown below
 
-<p align="center">
-<img src="assets/doc_domain.png" width="50%">
-</p>
+![](./assets/doc_domain.png)
 
 ```julia
 oz = 0.0 

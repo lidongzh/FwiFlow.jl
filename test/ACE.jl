@@ -8,19 +8,19 @@ using MAT
 matplotlib.use("agg")
 np = pyimport("numpy")
 
-# # mode 
-# # 0 -- generate data 
-# # 1 -- running inverse modeling
-# mode = 1
-# # mode 
-# # 0 -- small data
-# # 1 -- large data
-# datamode = 0
-# sparsity = 0.01
+# mode 
+# 0 -- generate data 
+# 1 -- running inverse modeling
+mode = 1
+# mode 
+# 0 -- small data
+# 1 -- large data
+datamode = 0
+sparsity = 0.01
 
-mode = parse(Int64, ARGS[1])
-datamode = parse(Int64, ARGS[2])
-sparsity = parse(Float64, ARGS[3])
+# mode = parse(Int64, ARGS[1])
+# datamode = parse(Int64, ARGS[2])
+# sparsity = parse(Float64, ARGS[3])
 
 FLDR = "datamode$(datamode)sparsity$sparsity"
 if !isdir(FLDR)
@@ -268,7 +268,7 @@ using Random; Random.seed!(233)
 obs_ids = rand(1:m*n, Int(round(m*n*sparsity)))
 obs = tf.reshape(out_sw_true[1:NT+1], (NT+1,-1))[:, obs_ids]
 
-# error()
+error()
 # executing the simulation
 if mode == 0
     # generate data
