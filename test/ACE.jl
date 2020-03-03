@@ -17,10 +17,18 @@ mode = 1
 # 1 -- large data
 datamode = 0
 sparsity = 0.01
+noise = 0.0
 
-# mode = parse(Int64, ARGS[1])
-# datamode = parse(Int64, ARGS[2])
-# sparsity = parse(Float64, ARGS[3])
+if length(ARGS)==3
+    global mode = parse(Int64, ARGS[1])
+    global datamode = parse(Int64, ARGS[2])
+    global sparsity = parse(Float64, ARGS[3])
+elseif length(ARGS)==4
+    global mode = parse(Int64, ARGS[1])
+    global datamode = parse(Int64, ARGS[2])
+    global sparsity = parse(Float64, ARGS[3])
+    global noise = parse(Float64, ARGS[4])
+end
 
 FLDR = "datamode$(datamode)sparsity$sparsity"
 if !isdir(FLDR)
@@ -319,6 +327,9 @@ else
     d = matread("$FLDR/Data.mat")
     Sref, wref, oref, obsref = d["S"], d["krw"][:], d["kro"][:], d["obs"]
     # loss = sum((out_sw_true - Sref)^2)
+
+    using Random; Random.seed!(233)
+    obs = obs .* (1. .+ noise * randn(length(obs)))
     loss = sum((obsref-obs)^2)
     sess = Session(); init(sess)
     BFGS!(sess, loss, 500;vars = [out_sw_true, krw, kro, θ1, θ2], callback = summary)
