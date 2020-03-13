@@ -1,19 +1,32 @@
 # Flow Inversion
 
 This section is an example of solving the flow equation with the Newton-Raphson method. The governing equations are derived from conservation of mass of each phase, and conservation of momentum or Darcy's law for each phase. First, we have
-```math
-\frac{\partial }{{\partial t}}(\phi {S_i}{\rho _i}) + \nabla  \cdot ({\rho _i}{\mathbf{v}_i}) = {\rho _i}{q_i}, \quad i = 1,2
-```
-The saturation of the two phases satisfies
-```math
-S_{1} + S_{2} = 1
-```
-and the Darcy's law yields
-```math
-{\mathbf{v}_i} =  - \frac{{K{k_{ri}}}}{{{\tilde{\mu}_i}}}(\nabla {P_i} - g{\rho _i}\nabla Z), \quad i=1,2
-```
 
-Here $k_{ri}$ is a function of $S_i$ given by `Krw` and `Kro`. 
+$$\frac{\partial }{{\partial t}}(\phi {S_i}{\rho _i}) + \nabla  \cdot ({\rho _i}{\mathbf{v}_i}) = {\rho _i}{q_i}, \quad i = 1,2 \tag{1}$$
+
+The saturation of the two phases satisfies
+
+$$S_{1} + S_{2} = 1\tag{2}$$
+
+and the Darcy's law yields
+
+$${\mathbf{v}_i} =  - \frac{{K{k_{ri}(S_i)}}}{{{\tilde{\mu}_i}}}(\nabla {P_i} - g{\rho _i}\nabla Z), \quad i=1,2 \tag{3}$$
+
+Here, $K$ is the permeability tensor, but in our case we assume it is a space varying scalar value. $k_{ri}(S_i)$ is a function of $S_i$, and typically the higher the saturation, the easier the corresponding phase is to flow. $\tilde \mu_i$ is the viscosity [^pcl]. $Z$ is the depth cordinate, $\rho_i$ is the density, $\phi$ is the porosity, $q_i$ is the source, $P_i$ is the fluid pressure and $g$ is the velocity constant. 
+
+[^pcl]: [This paper](https://arxiv.org/abs/2002.10521) gives a description of common relative permeability models and proposes a method to calibrate an empirical model from indirect data. 
+
+The fluid pressure $P_i$ is related to $S_i$ via the capillary pressure 
+
+$$P_2 = P_1 - P_c(S_2)\tag{4}$$
+
+where $P_c$ is a function of the saturation of the wetting phase 2. 
+
+In Equations 1-4, the state variables are $S_1$, $S_2$, $\mathbf{v}_i$, $P_1$, and $P_2$. There are 6 equations and 6 variables (taking dimension into consideration) in total, and thus the system is complete. 
+
+
+
+**Step 1: Parameters Setup**
 
 ```julia
 const K_CONST =  9.869232667160130e-16 * 86400 * 1e3
@@ -62,7 +75,18 @@ function ave_normal(quantity, m, n)
 end
 ```
 
-The major simulation codes consist of using a nonlinear implicit timestep. In [`sat_op`](@ref) we solve a nonlinear equation with Newton-Raphson scheme. 
+**Step 2: Implementing the Numerical Scheme**
+
+The major simulation codes consist of using a nonlinear implicit timestep for (1), 
+
+$$\phi (S_2^{n + 1} - S_2^n) - \nabla \cdot \left( {{m_{2}}(S_2^{n + 1})K\nabla \Psi _2^n} \right) \Delta t = 
+\left(q_2^n + q_1^n \frac{m_2(S^{n+1}_2)}{m_1(S^{n+1}_2)}\right) 
+\Delta t \tag{5}$$
+
+Here $m_i(s) = \frac{k_{ri}(s)}{\tilde \mu_i}$ and $\Psi_i = P_i - \rho_i g Z$. 
+
+In [`sat_op`](@ref) we solve the nonlinear equation (5) with a Newton-Raphson scheme. 
+
 ```julia
 # variables : sw, u, v, p
 # (time dependent) parameters: qw, qo, ϕ
@@ -112,8 +136,10 @@ function imseq(tf_ctx)
 end
 ```
 
+**Step 3: Forward Computation**
 
 We now first generate the synthetic data. 
+
 ```julia
 using FwiFlow
 using PyCall
@@ -162,8 +188,10 @@ out_sw_true, out_p_true = imseq(tfCtxTrue)
 
 ![](../assets/sw10.png)
 
+**Step 4: Inversion**
 
 We now conduct inversion. The unknown variable is stored in `tfCtxInit.K`. 
+
 ```julia
 tfCtxInit = tfCtxGen(m,n,h,NT,Δt,Z,X,ρw,ρo,μw,μo,K_init,g,ϕ,qw,qo, sw0, false)
 out_sw_init, out_p_init = imseq(tfCtxInit)
