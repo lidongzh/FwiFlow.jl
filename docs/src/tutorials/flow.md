@@ -25,9 +25,7 @@ where $P_c$ is a function of the saturation of the wetting phase 2.
 In Equations 1-4, the state variables are $S_1$, $S_2$, $\mathbf{v}_i$, $P_1$, and $P_2$. There are 6 equations and 6 variables (taking dimension into consideration) in total, and thus the system is complete. 
 
 !!! info 
-
 ​	In all the numerical scheme below, we adopt the finite volumn method. Each cell in the following discretized domain is a cell and the state variables $\Psi_2, S_1, S_2$ and the capillary potential $\Psi_c$ are defined per cell.
-
 ​	![](./../assets/doc_domain.png)
 
 **Step 1: Parameters Setup**
