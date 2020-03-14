@@ -6,3 +6,4 @@ Data/
 *.DS_Store
 mar/*
 SnapGPU.bin
+*build.log

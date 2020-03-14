@@ -1,4 +1,4 @@
-export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op
+export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op, sat_op2
 
 OPS_DIR = @__DIR__
 
@@ -155,6 +155,73 @@ function sat_op(s0::Union{PyObject, Array{Float64}},pt::Union{PyObject, Array{Fl
     sat_op = load_op_and_grad("$OPS_DIR/Saturation/build/libSatOp", "sat_op")
     sat_op(s0,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
 end
+
+@doc raw"""
+    sat_op2(s0::Union{PyObject, Array{Float64}},
+    dporodt::Union{PyObject, Array{Float64}},
+    pt::Union{PyObject, Array{Float64}},
+    permi::Union{PyObject, Array{Float64}},
+    poro::Union{PyObject, Array{Float64}},
+    qw::Union{PyObject, Array{Float64}},
+    qo::Union{PyObject, Array{Float64}},
+    muw::Union{PyObject, Float64},
+    muo::Union{PyObject, Float64},
+    sref::Union{PyObject, Array{Float64}},
+    dt::Union{PyObject, Float64},
+    h::Union{PyObject, Float64})
+
+Solves the following discretized equation 
+```math
+\phi (S_2^{n + 1} - S_2^n) + \Delta t \dot \phi S_2^{n+1} - \nabla  \cdot \left( {{m_2}(S_2^{n + 1})K\nabla \Psi _2^n} \right) \Delta t= \left(q_2^n + q_1^n \frac{m_2(S^{n+1}_2)}{m_1(S^{n+1}_2)}\right) \Delta t
+```
+where
+```math
+m_2(s) = \frac{s^2}{\mu_w}\qquad m_1(s) = \frac{(1-s)^2}{\mu_o}
+```
+This is a nonlinear equation and is solved with the Newton-Raphson method. 
+
+
+- `s0` : $n_z\times n_x$, saturation of fluid, i.e., $S_2^n$
+- `dporodt` : $n_z\times n_x$, rate of porosity, $\dot \phi$
+- `pt` : $n_z\times n_x$, potential of fluid, i.e., $\Psi_2^n$
+- `permi` : $n_z\times n_x$, permeability, i.e., $K$ 
+- `poro` : $n_z\times n_x$, porosity, i.e., $\phi$
+- `qw` : $n_z\times n_x$, injection or production rate of ﬂuid 1, $q_2^n$
+- `qo` : $n_z\times n_x$, injection or production rate of ﬂuid 2, $q_1^n$
+- `muw` : viscosity of fluid 1, i.e., $\mu_w$
+- `muo` : viscosity of fluid 2, i.e., $\mu_o$
+- `sref` : $n_z\times n_x$, initial guess for $S_2^{n+1}$
+- `dt` : Time step size  
+- `h` : Spatial step size
+"""
+function sat_op2(s0::Union{PyObject, Array{Float64}},
+    dporodt::Union{PyObject, Array{Float64}},
+    pt::Union{PyObject, Array{Float64}},
+    permi::Union{PyObject, Array{Float64}},
+    poro::Union{PyObject, Array{Float64}},
+    qw::Union{PyObject, Array{Float64}},
+    qo::Union{PyObject, Array{Float64}},
+    muw::Union{PyObject, Float64},
+    muo::Union{PyObject, Float64},
+    sref::Union{PyObject, Array{Float64}},
+    dt::Union{PyObject, Float64},
+    h::Union{PyObject, Float64})
+    s0 = convert_to_tensor(s0, dtype=Float64)
+    dporodt = convert_to_tensor(dporodt, dtype=Float64)
+    pt = convert_to_tensor(pt, dtype=Float64)
+    permi = convert_to_tensor(permi, dtype=Float64)
+    poro = convert_to_tensor(poro, dtype=Float64)
+    qw = convert_to_tensor(qw, dtype=Float64)
+    qo = convert_to_tensor(qo, dtype=Float64)
+    muw = convert_to_tensor(muw, dtype=Float64)
+    muo = convert_to_tensor(muo, dtype=Float64)
+    sref = convert_to_tensor(sref, dtype=Float64)
+    dt = convert_to_tensor(dt, dtype=Float64)
+    h = convert_to_tensor(h, dtype=Float64)
+    saturation_ = load_op_and_grad("$OPS_DIR/Saturation2/build/libSaturation","saturation")
+    saturation_(s0,dporodt,pt,permi,poro,qw,qo,muw,muo,sref,dt,h)
+end
+
 
 @doc raw"""
     upwlap_op(perm::Union{PyObject, Array{Float64}},
