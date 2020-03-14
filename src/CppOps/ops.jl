@@ -257,6 +257,8 @@ function upwlap_op(perm::Union{PyObject, Array{Float64}},
 end
 
 @doc raw"""
+    upwps_op(perm::Union{PyObject, Array{Float64}},mobi::Union{PyObject, Array{Float64}},
+    src,funcref,h::Union{PyObject, Float64},rhograv::Union{PyObject, Float64},index::Union{PyObject, Integer})
 
 Solves the Poisson equation 
 ```math

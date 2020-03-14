@@ -185,8 +185,8 @@ end
 Adds PML boundaries to `cp`, `cs` and `den`. 
 The original `nz_orig x nx_orig` grid is resampled to `nz x nx`. 
 
-!!! note 
-	`nPad` is used to make the number of nodes in the $z$ direction a multiple of 32 (for coalesced memory access). 
+# Note
+`nPad` is used to make the number of nodes in the $z$ direction a multiple of 32 (for coalesced memory access). 
 """
 function padding(cp, cs, den, nz_orig, nx_orig, nz, nx, nPml, nPad)
 	tran_cp = tf.reshape(cp, (1, nz_orig, nx_orig, 1))

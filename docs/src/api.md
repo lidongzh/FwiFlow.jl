@@ -10,6 +10,7 @@ fwi_op
 sat_op
 sat_op2
 upwlap_op
+upwps_op
 time_fractional_op
 time_fractional_t_op
 ```
