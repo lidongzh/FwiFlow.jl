@@ -276,19 +276,19 @@ public:
     Tensor* grad_poro = NULL;
     OP_REQUIRES_OK(context, context->allocate_output(4, grad_poro_shape, &grad_poro));
     Tensor* grad_qw = NULL;
-    // OP_REQUIRES_OK(context, context->allocate_output(5, grad_qw_shape, &grad_qw));
+    OP_REQUIRES_OK(context, context->allocate_output(5, grad_qw_shape, &grad_qw));
     Tensor* grad_qo = NULL;
-    // OP_REQUIRES_OK(context, context->allocate_output(6, grad_qo_shape, &grad_qo));
+    OP_REQUIRES_OK(context, context->allocate_output(6, grad_qo_shape, &grad_qo));
     Tensor* grad_muw = NULL;
-    // OP_REQUIRES_OK(context, context->allocate_output(7, grad_muw_shape, &grad_muw));
+    OP_REQUIRES_OK(context, context->allocate_output(7, grad_muw_shape, &grad_muw));
     Tensor* grad_muo = NULL;
-    // OP_REQUIRES_OK(context, context->allocate_output(8, grad_muo_shape, &grad_muo));
+    OP_REQUIRES_OK(context, context->allocate_output(8, grad_muo_shape, &grad_muo));
     Tensor* grad_sref = NULL;
-    // OP_REQUIRES_OK(context, context->allocate_output(9, grad_sref_shape, &grad_sref));
+    OP_REQUIRES_OK(context, context->allocate_output(9, grad_sref_shape, &grad_sref));
     Tensor* grad_dt = NULL;
-    // OP_REQUIRES_OK(context, context->allocate_output(10, grad_dt_shape, &grad_dt));
+    OP_REQUIRES_OK(context, context->allocate_output(10, grad_dt_shape, &grad_dt));
     Tensor* grad_h = NULL;
-    // OP_REQUIRES_OK(context, context->allocate_output(11, grad_h_shape, &grad_h));
+    OP_REQUIRES_OK(context, context->allocate_output(11, grad_h_shape, &grad_h));
     
     // get the corresponding Eigen tensors for data access
     
