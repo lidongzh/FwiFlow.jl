@@ -349,6 +349,8 @@ void forward(double *sat, const double* dporodt, const double *s0, const double 
 #ifdef DEBUG
     std::cout << "SatOp--" << __LINE__ << std::endl;
 #endif
+    Solver::params prm;
+    prm.solver.tol = 1e-20;
     Solver solve(Jac);
 #ifdef OUTPUT_AMG
     std::cout << solve << std::endl;
@@ -362,6 +364,7 @@ void forward(double *sat, const double* dporodt, const double *s0, const double 
     // std::cout << "error"
     //           << " " << (Jac * delta_sEg - resEg).norm() / resEg.norm()
     //           << std::endl;
+    // std::cout << "***" << iters << " " << error << std::endl;
 #ifdef OUTPUT_AMG
     std::cout << iters << " " << error << std::endl;
 #endif

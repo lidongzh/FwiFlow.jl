@@ -315,7 +315,7 @@ public:
     // auto grad_qo_tensor = grad_qo->flat<double>().data();
     // auto grad_muw_tensor = grad_muw->flat<double>().data();
     // auto grad_muo_tensor = grad_muo->flat<double>().data();
-    // auto grad_sref_tensor = grad_sref->flat<double>().data();
+    auto grad_sref_tensor = grad_sref->flat<double>().data();
     // auto grad_dt_tensor = grad_dt->flat<double>().data();
     // auto grad_h_tensor = grad_h->flat<double>().data();   
 
@@ -330,11 +330,11 @@ public:
              grad_s0_tensor, grad_dporodt_tensor, grad_pt_tensor, grad_perm_tensor,
              grad_poro_tensor);
     // set other not-used gradident to zeros
-    // for (int i = 0; i < nz * nx; i++) {
+    for (int i = 0; i < nz * nx; i++) {
     //   grad_qw_tensor[i] = 0.0;
     //   grad_qo_tensor[i] = 0.0;
-    //   grad_sref_tensor[i] = 0.0;
-    // }
+      grad_sref_tensor[i] = 0.0;
+    }
     // *grad_muw_tensor = 0.0;
     // *grad_muo_tensor = 0.0;
     // *grad_dt_tensor = 0.0;

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/shape_inference.h"
 #include "tensorflow/core/framework/tensor_shape.h"
@@ -219,10 +220,10 @@ class UpwpsOpGradOp : public OpKernel {
              src_tensor, funcref_tensor, *h_tensor, *rhograv_tensor,
              *index_tensor, nz, nx, grad_permi_tensor, grad_mobi_tensor,
              grad_src_tensor);
-    for (int i = 0; i < nz * nx; i++) grad_funcref_tensor[i] = 0.0;
-    *grad_h_tensor = 0.0;
-    *grad_rhograv_tensor = 0.0;
-    *grad_index_tensor = 0;
+    for (int i = 0; i < nz * nx; i++) grad_funcref_tensor[i] = std::numeric_limits<double>::quiet_NaN();
+    *grad_h_tensor = std::numeric_limits<double>::quiet_NaN();
+    *grad_rhograv_tensor = std::numeric_limits<double>::quiet_NaN();
+    *grad_index_tensor = std::numeric_limits<double>::quiet_NaN();
   }
 };
 REGISTER_KERNEL_BUILDER(Name("UpwpsOpGrad").Device(DEVICE_CPU), UpwpsOpGradOp);

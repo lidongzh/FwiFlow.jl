@@ -3,8 +3,9 @@ using PyCall
 using LinearAlgebra
 using PyPlot
 using Random
+using FwiFlow
 # include("../ops.jl")
-Random.seed!(233)
+# Random.seed!(233)
 
 function saturation(s0,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)
     saturation_ = load_op_and_grad("./build/libSaturation","saturation")
@@ -15,7 +16,7 @@ end
 # TODO: specify your input parameters
 m = 100
 n = 10
-h = 0.1
+h = 0.01
 x = zeros(n, m)
 y = zeros(n, m)
 for i = 1:m 
@@ -24,30 +25,30 @@ for i = 1:m
         y[j, i] = h*j
     end
 end
-t = 1.0 
+t = 3.0 
 s0 = @. (x^2 + y^2)/(1+x^2+y^2) * exp(-t)
-dporodt = exp(t) * ones(n, m)
+dporodt = exp(t) * zeros(n, m)
 pt = @. (x^2+y^2)
-perm = ones(n, m)
+perm = rand(n, m)
 poro = exp(t) * ones(n, m)
 qw = ones(n, m)
 qo = ones(n, m)
-muw = 1.0 
-muo = 1.0 
+muw = 2.0 
+muo = 3.0 
 sref = s0 
 dt = 0.01
 h = 0.1 
-u = saturation(s0,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)
-# u2 = sat_op(s0,pt,perm,poro,qw,qo,1.0, 1.0,sref,dt,h)
+u = sat_op2(s0,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)
+u3 = sat_op(s0,pt,perm,poro,qw,qo,muw, muo,sref,dt,h)
 
-u3 = sat_op2(s0,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)
+# u3 = sat_op(s0,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)
 sess = Session(); init(sess)
-@show run(sess, u)
+# @show run(sess, u)
 
 @show run(sess, u3-u)
 
 # uncomment it for testing gradients
-error() 
+# error() 
 
 
 # TODO: change your test parameter to `m`
@@ -56,11 +57,12 @@ error()
 # s0 qw qo
 function scalar_function(m)
     # return sum(saturation(s0,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)^2)
-    return sum(saturation(s0,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)^2)
+    return sum(sat_op2(m,dporodt,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)^2)
+    # return sum(sat_op(m,pt,perm,poro,qw,qo,muw,muo,sref,dt,h)^2)
 end
 
 # TODO: change `m_` and `v_` to appropriate values
-m_ = constant(rand(n, m))
+m_ = constant(0.7*rand(n, m))
 v_ = rand(n, m)
 
 # m_ = constant(s0)
