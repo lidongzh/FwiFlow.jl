@@ -80,7 +80,7 @@ if NVCC
     end
 end
 
-for name in ["Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation"]
+for name in ["Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation", "Saturation2"]
     DIR = joinpath(SRC_DIR, "CppOps/$name")
     compile_op(DIR)
 end

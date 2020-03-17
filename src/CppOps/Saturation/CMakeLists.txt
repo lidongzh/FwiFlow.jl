@@ -32,6 +32,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 include_directories(${TF_INC} ${HEADERS} ${EIGEN_INC})
 link_directories(${TF_LIB})
+include_directories(${LIBDIR}/../include) # for boost
 
 # --- Find AMGCL ------------------------------------------------------------
 include_directories("../../amgcl")
