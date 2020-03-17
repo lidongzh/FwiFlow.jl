@@ -35,4 +35,4 @@ link_directories(${TF_LIB})
 
 add_library(Laplacian SHARED Laplacian.cpp)
 set_property(TARGET Laplacian PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(Laplacian tensorflow_framework)
+target_link_libraries(Laplacian ${TF_LIB_FILE})

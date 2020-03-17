@@ -47,5 +47,5 @@ endif()
 
 add_library(FwiOp SHARED FwiOp.cpp)
 set_property(TARGET FwiOp PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(FwiOp tensorflow_framework)
+target_link_libraries(FwiOp ${TF_LIB_FILE})
 target_link_libraries(FwiOp CUFD)

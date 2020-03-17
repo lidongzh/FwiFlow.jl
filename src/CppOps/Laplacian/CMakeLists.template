@@ -14,4 +14,4 @@ link_directories(${link})
 
 add_library(${OperatorName} SHARED ${OperatorName}.cpp)
 set_property(TARGET ${OperatorName} PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(${OperatorName} tensorflow_framework)
+target_link_libraries(${OperatorName} ${TF_LIB_FILE})

@@ -51,4 +51,4 @@ endif()
 
 add_library(SatOp SHARED SatOp.cpp)
 set_property(TARGET SatOp PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(SatOp tensorflow_framework)
+target_link_libraries(SatOp ${TF_LIB_FILE})

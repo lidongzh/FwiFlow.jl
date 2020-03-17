@@ -52,4 +52,4 @@ endif()
 
 add_library(UpwpsOp SHARED UpwpsOp.cpp)
 set_property(TARGET UpwpsOp PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(UpwpsOp tensorflow_framework)
+target_link_libraries(UpwpsOp ${TF_LIB_FILE})

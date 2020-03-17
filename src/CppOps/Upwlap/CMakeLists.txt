@@ -35,4 +35,4 @@ link_directories(${TF_LIB})
 
 add_library(UpwlapOp SHARED UpwlapOp.cpp)
 set_property(TARGET UpwlapOp PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(UpwlapOp tensorflow_framework)
+target_link_libraries(UpwlapOp ${TF_LIB_FILE})

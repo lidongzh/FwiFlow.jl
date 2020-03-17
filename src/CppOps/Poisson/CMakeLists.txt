@@ -41,4 +41,4 @@ include_directories(/usr/local/include ${CONDA_INC})
 
 add_library(PoissonOp SHARED PoissonOp.cpp)
 set_property(TARGET PoissonOp PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(PoissonOp tensorflow_framework)
+target_link_libraries(PoissonOp ${TF_LIB_FILE})
