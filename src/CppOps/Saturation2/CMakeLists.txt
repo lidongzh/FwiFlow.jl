@@ -29,27 +29,10 @@ endif()
 
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-include_directories(${LIBDIR}/../include) # for boost
 
 include_directories(${TF_INC} ${HEADERS} ${EIGEN_INC})
 link_directories(${TF_LIB})
-
-#find_package(CUDA QUIET)
-#set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-#set(CMAKE_CXX_FLAGS "-O3 ${CMAKE_CXX_FLAGS}")
-#set(CMAKE_CXX_FLAGS "-shared ${CMAKE_CXX_FLAGS}")
-#set(CMAKE_CXX_FLAGS "-fPIC ${CMAKE_CXX_FLAGS}")
-#set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--expt-relaxed-constexpr)
-#SET(CUDA_PROPAGATE_HOST_FLAGS ON)
-
-#find_program(_nvidia_smi "nvidia-smi")
-#if (_nvidia_smi)
-#  add_definitions(-DUSE_GPU)
-#  message("Compiling GPU-compatible custom operator!")
-#  cuda_add_library(Saturation SHARED Saturation.cpp Saturation.cu)
-#else()
-  add_library(Saturation SHARED Saturation.cpp)
-#endif()
+include_directories(${LIBDIR}/../include) # for boost
 
 # --- Find AMGCL ------------------------------------------------------------
 include_directories("../../amgcl")
@@ -67,6 +50,6 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-
+add_library(Saturation SHARED Saturation.cpp)
 set_property(TARGET Saturation PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(Saturation ${TF_LIB_FILE})
