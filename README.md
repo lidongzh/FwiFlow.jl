@@ -47,7 +47,7 @@ The following examples are for inversion
 2. **Dongzhuo Li** (co-first author), **Kailai Xu** (co-first author), Jerry M. Harris, and Eric Darve. [*Time-lapse Full-waveform Inversion for Subsurface Flow Problems with Intelligent Automatic Diﬀerentiation*](https://arxiv.org/abs/1912.07552).
 
 ## Misc
-The **TorchFWI** package, which shares the elastic FWI part, can be found [*here*](https://github.com/lidongzh/TorchFWI). It may be helpful if one wants to experiment with PyTorch.
+The **TorchFWI** package, which shares the elastic FWI part, can be found [*here*](https://github.com/lidongzh/TorchFWI). It may be helpful if one wants to experiment with PyTorch. <br>
 An older version of the repository can be found [*here*](https://github.com/lidongzh/TwoPhaseFlowFWI). This repository contains all scripts that generate results in paper 1.
 
 ## LICENSE
