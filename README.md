@@ -48,6 +48,7 @@ The following examples are for inversion
 
 ## Misc
 The **TorchFWI** package, which shares the elastic FWI part, can be found [*here*](https://github.com/lidongzh/TorchFWI). It may be helpful if one wants to experiment with PyTorch.
+An older version of the repository can be found [*here*](https://github.com/lidongzh/TwoPhaseFlowFWI). This repository contains all scripts that generate results in paper 1.
 
 ## LICENSE
 
