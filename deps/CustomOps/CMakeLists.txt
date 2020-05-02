@@ -35,13 +35,17 @@ endif()
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-include_directories(${TF_INC} ${EIGEN_INC}/eigen3 ${EIGEN_INC} ${CUDA_INC} ${LIBDIR}/../include ../amgcl/)
+include_directories(${TF_INC} ${EIGEN_INC}/eigen3 ${EIGEN_INC} ${CUDA_INC} ${LIBDIR}/../include ${LIBDIR}/../include/boost ../amgcl/)
 link_directories(${LIBDIR} ${LIBCUDA})
+include_directories(FWI/Src/rapidjson)
 
-find_program(_nvidia_smi "nvidia-smi")
+
+find_program(_nvidia_smi "nvcc")
 if (_nvidia_smi)
  message("################# Compiling GPU-compatible custom operator ################# ")
  add_subdirectory(FWI)
+ #-------------------------------------------------------------------------------------
+  add_subdirectory(FWI/Src)
 endif()
 
 

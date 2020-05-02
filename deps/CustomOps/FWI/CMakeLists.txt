@@ -1,8 +1,4 @@
 #-------------------------------------------------------------------------------------
-include_directories(${Src}/rapidjson)
-add_subdirectory(${Src})
-
-#-------------------------------------------------------------------------------------
 find_program (HOSTNAME_CMD NAMES hostname)
 execute_process (COMMAND ${HOSTNAME_CMD}
                  OUTPUT_VARIABLE HOSTNAME

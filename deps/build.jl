@@ -1,7 +1,13 @@
 push!(LOAD_PATH, "@stdlib")
 import Pkg; Pkg.add("Conda"); 
 using Conda
-using ADCME
+try 
+    run(`which nvcc`)
+    ENV["GPU"] = 1
+    Pkg.build("ADCME")
+catch
+end
+using ADCME 
 
 @info "Install Boost"
 pkgs = Conda._installed_packages()
