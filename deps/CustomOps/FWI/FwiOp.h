@@ -2,6 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include "Src/Parameter.h"
+#include <fstream>
+#include <vector>
 using namespace std;
 // void cufd(double *misfit, double *d_Lambda, const double *Lambda, const double *Mu,
 //           const double *Den, string dir, int calc_id);
@@ -26,9 +29,33 @@ void backward(double *grad_Lambda, double *grad_Mu, double *grad_Den,
        group_size, shot_ids, para_fname);
 }
 
-void obscalc(double *misfit, const double *Lambda, const double *Mu,
+void obscalc(const double *Lambda, const double *Mu,
              const double *Den, const double *stf, const int gpu_id,
-             int group_size, const int *shot_ids, const string para_fname) {
-  cufd(misfit, NULL, NULL, NULL, NULL, Lambda, Mu, Den, stf, 2, gpu_id, group_size,
+             int group_size, const int *shot_ids, const string para_fname,
+             OpKernelContext* context) {
+  double dummy;
+  cufd(&dummy, NULL, NULL, NULL, NULL, Lambda, Mu, Den, stf, 2, gpu_id, group_size,
        shot_ids, para_fname);
+  Parameter para(para_fname, 2);
+
+  std::vector<float> dvec; 
+  for (int j = 0; j< group_size; j++){
+       
+     std::string filename = para.data_dir_name() + "/Shot" +
+                         std::to_string(shot_ids[0]) + ".bin";
+     printf("Processing file %s\n", filename.c_str());
+     float d;
+     std::ifstream ifile(filename);
+     while (ifile >> d){
+          dvec.push_back(d);
+     }
+     ifile.close();
+  }
+  
+  TensorShape misfit_shape({dvec.size()});
+  Tensor* misfit = NULL;
+  OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
+  auto misfit_tensor = misfit->flat<double>().data();
+  for(int i=0;i<dvec.size();i++) misfit_tensor[i] = (double) dvec[i];
+
 }

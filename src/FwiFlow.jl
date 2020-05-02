@@ -9,6 +9,8 @@ module FwiFlow
     using JSON
     using DataStructures
     using Dierckx
+    using Parameters
+    using MAT
 
 
     export DATADIR
@@ -28,5 +30,6 @@ module FwiFlow
     end
     include("Core.jl")
     include("Utils.jl")
+    include("FWI.jl")
     
 end

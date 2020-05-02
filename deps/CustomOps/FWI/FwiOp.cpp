@@ -249,7 +249,7 @@ REGISTER_OP("FwiObsOp")
       shape_inference::ShapeHandle shot_ids_shape;
       TF_RETURN_IF_ERROR(c->WithRank(c->input(5), 1, &shot_ids_shape));
 
-      c->set_output(0, c->Scalar());
+      c->set_output(0, c->Vector(-1));
       return Status::OK();
     });
 class FwiObsOpOp : public OpKernel {
@@ -288,12 +288,12 @@ class FwiObsOpOp : public OpKernel {
     // int nz = lambda_shape.dim_size(0), nx = lambda_shape.dim_size(1);
     int group_size = shot_ids_shape.dim_size(0);
 
-    TensorShape misfit_shape({1});
+    // TensorShape misfit_shape({1});
 
-    // create output tensor
+    // // create output tensor
 
-    Tensor* misfit = NULL;
-    OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
+    // Tensor* misfit = NULL;
+    // OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
 
     // get the corresponding Eigen tensors for data access
 
@@ -304,16 +304,15 @@ class FwiObsOpOp : public OpKernel {
     auto gpu_id_tensor = gpu_id.flat<int32>().data();
     auto shot_ids_tensor = shot_ids.flat<int32>().data();
     auto para_fname_tensor = para_fname.flat<string>().data();
-    auto misfit_tensor = misfit->flat<double>().data();
+    
 
     // implement your forward function here
 
     // TODO:
     // std::cout << *para_fname_tensor << " !!!!!!!!" << std::endl;
-    obscalc(misfit_tensor, lambda_tensor, mu_tensor, den_tensor, stf_tensor,
+    obscalc(lambda_tensor, mu_tensor, den_tensor, stf_tensor,
             *gpu_id_tensor, group_size, shot_ids_tensor,
-            string(*para_fname_tensor));
-    *misfit_tensor = 0.0;
+            string(*para_fname_tensor), context);
   }
 };
 REGISTER_KERNEL_BUILDER(Name("FwiObsOp").Device(DEVICE_CPU), FwiObsOpOp);
