@@ -7,3 +7,6 @@ Data/
 mar/*
 SnapGPU.bin
 *build.log
+*build/*
+*amgcl*
+*build*

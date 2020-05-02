@@ -15,13 +15,18 @@ module FwiFlow
     DATADIR = "$(@__DIR__)/../docs/data"
 
     function ADCME.:Session(args...;kwargs...)
-        config = tf.ConfigProto(
-            device_count = Dict("GPU"=> 0)
-        )
-        sess = tf.Session(config=config)
+        if has_gpu()
+            @info "GPU found. Use GPU."
+            config = tf.ConfigProto(
+                device_count = Dict("GPU"=> 0)
+            )
+            sess = tf.Session(config=config)
+        else 
+            @info "No GPU found. Use only CPU."
+            return ADCME.Session(args...; kwargs...)
+        end
     end
-    include("$(@__DIR__)/CppOps/ops.jl")
-    include("utils.jl")
-    include("Ops/timefrac.jl")
+    include("Core.jl")
+    include("Utils.jl")
     
 end

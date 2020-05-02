@@ -1,88 +1,29 @@
 push!(LOAD_PATH, "@stdlib")
-import Pkg; Pkg.add("Conda"); using Conda
+import Pkg; Pkg.add("Conda"); 
+using Conda
+using ADCME
 
-CC = joinpath(Conda.BINDIR, "gcc")
-CXX = joinpath(Conda.BINDIR, "g++")
-CMAKE = joinpath(Conda.BINDIR, "cmake")
-MAKE = joinpath(Conda.BINDIR, "make")
-
-@info "Install CONDA dependencies..."
+@info "Install Boost"
 pkgs = Conda._installed_packages()
 if !("boost" in pkgs)
     Conda.add("boost", channel="anaconda")
 end
 
-
-
-SRC_DIR = "$(@__DIR__)/../src"
-CUR_DIR = @__DIR__
-# install dependencies
-if !isdir("$SRC_DIR/amgcl")
-    download("https://github.com/ddemidov/amgcl/archive/master.zip", "$SRC_DIR/amgcl.zip")
-    run(`unzip -o $SRC_DIR/amgcl.zip -d $SRC_DIR`)
-    run(`mv $SRC_DIR/amgcl-master $SRC_DIR/amgcl`)
-    run(`rm $SRC_DIR/amgcl.zip`)
+@info "Install AMGCL"
+UNZIP = joinpath(ADCME.BINDIR, "unzip")
+if !isdir("$(@__DIR__)/amgcl")
+    download("https://github.com/ddemidov/amgcl/archive/master.zip", "$(@__DIR__)/amgcl.zip")
+    run(`$UNZIP -o $(@__DIR__)/amgcl.zip -d $(@__DIR__)`)
+    mv("$(@__DIR__)/amgcl-master","$(@__DIR__)/amgcl", force=true)
+    rm("$(@__DIR__)/amgcl.zip")
 end
 
-function compile_op(DIR)
-    DIR = abspath(DIR)
-    cd(DIR)
-    if !isdir("build")
-        mkdir("build")
-    end
-    flag = false
-    for file in readdir("build")
-        if Sys.islinux() && endswith(file, ".so")
-            flag = true
-            break
-        end
-        if Sys.isapple() && endswith(file, ".dylib")
-            flag = true
-            break
-        end
-    end
-    if flag
-        @info "Library exists"
-        return 
-    end
-    cd("build")
-    run(`$CMAKE ..`)
-    run(`$MAKE -j`)
-    cd(CUR_DIR)
-end
+@info "Build Custom Operators"
+rm("CustomOps/build", force=true, recursive=true)
+mkdir("CustomOps/build")
+cd("CustomOps/build")
+ADCME.cmake()
+ADCME.make()
 
-
-try
-    run(`nvcc --version`)
-    global NVCC = true
-catch
-    @warn("`nvcc` is not found. The FWI module of `FwiFlow` only has a GPU kernel.")
-    global NVCC = false
-end
-
-if NVCC
-    try
-        DIR = joinpath(SRC_DIR, "CppOps/FWI/Src")
-        compile_op(DIR)
-    catch
-        @warn("CppOps/FWI/Src Failed.")
-        global NVCC = false
-    end
-end
-
-if NVCC
-    try
-        DIR = joinpath(SRC_DIR, "CppOps/FWI")
-        compile_op(DIR)
-    catch
-        @warn("CppOps/FWI Failed.")
-        global NVCC = false
-    end
-end
-
-for name in ["Poisson", "Laplacian", "Upwlap", "Upwps", "Saturation", "Saturation2"]
-    DIR = joinpath(SRC_DIR, "CppOps/$name")
-    compile_op(DIR)
-end
 
 

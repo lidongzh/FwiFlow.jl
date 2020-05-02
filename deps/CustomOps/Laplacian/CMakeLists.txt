@@ -1,0 +1,5 @@
+add_library(Laplacian SHARED Laplacian.cpp)
+set_property(TARGET Laplacian PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(Laplacian ${TF_LIB_FILE})
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
+set_target_properties(Laplacian PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)

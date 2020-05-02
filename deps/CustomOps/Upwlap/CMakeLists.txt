@@ -1,0 +1,5 @@
+add_library(UpwlapOp SHARED UpwlapOp.cpp)
+set_property(TARGET UpwlapOp PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(UpwlapOp ${TF_LIB_FILE})
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
+set_target_properties(UpwlapOp PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)

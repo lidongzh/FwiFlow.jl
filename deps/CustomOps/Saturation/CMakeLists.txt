@@ -1,0 +1,5 @@
+add_library(SatOp SHARED SatOp.cpp)
+set_property(TARGET SatOp PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(SatOp ${TF_LIB_FILE})
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
+set_target_properties(SatOp PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
