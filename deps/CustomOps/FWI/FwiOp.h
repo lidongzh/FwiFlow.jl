@@ -45,7 +45,7 @@ void obscalc(const double *Lambda, const double *Mu,
                          std::to_string(shot_ids[0]) + ".bin";
      printf("Processing file %s ... ", filename.c_str());
      float f; int cnt;
-     std::ifstream fin("male_16_down.bin", std::ios::binary);
+     std::ifstream fin(filename, std::ios::binary);
      while (fin.read(reinterpret_cast<char*>(&f), sizeof(float))){
           cnt += 1;
           dvec.push_back(f);
@@ -54,8 +54,9 @@ void obscalc(const double *Lambda, const double *Mu,
      fin.close();
           
   }
-  
-  TensorShape misfit_shape({dvec.size()});
+  int num = dvec.size();
+  printf("Total number of floats: %d\n", num);
+  TensorShape misfit_shape({num});
   Tensor* misfit = NULL;
   OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
   auto misfit_tensor = misfit->flat<double>().data();
