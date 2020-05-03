@@ -137,7 +137,7 @@ function compute_misfit(fwi::FWI,
 
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
-        stf_array = repeat(stf_array', length(tf_shot_ids), 1)
+        stf_array = repeat(stf_array', length(tf_shot_ids), 1)'
     end
     misfit = fwi_op(λ_masked, μ_masked, ρ_masked, stf_array, gpu_id, shot_ids, para_fname)
 end
