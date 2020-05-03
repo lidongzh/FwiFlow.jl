@@ -104,7 +104,7 @@ function compute_observation(sess::PyObject, fwi::FWI,
     data = zeros(length(shot_ids), fwi.nSteps, length(fwi.ind_rec_z))
     for i = 1:length(shot_ids)
         A = read("$(fwi.WORKSPACE)/Data/Shot$(shot_ids[i]).bin")
-        data[i,:,:] = reshape(reinterpret(Float32,A),(nSteps ,length(fwi.ind_rec_z)))
+        data[i,:,:] = reshape(reinterpret(Float32,A),(fwi.nSteps ,length(fwi.ind_rec_z)))
     end
     data
 end
