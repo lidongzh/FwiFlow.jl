@@ -88,7 +88,7 @@ function compute_observation(sess::PyObject, fwi::FWI,
     cs::Union{Array{Float64}, PyObject}, 
     ρ::Union{Array{Float64}, PyObject}, 
     stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Union{PyObject};
+    shot_ids::Array{<:Integer};
     gpu_id::Int64 = 0, is_padded::Bool = false)
     cp_pad, cs_pad, ρ_pad = cp, cs, ρ
     if !is_padded
@@ -112,6 +112,20 @@ function compute_observation(sess::PyObject, fwi::FWI,
 end
 
 
+"""
+    compute_misfit(fwi::FWI, 
+        cp::Union{Array{Float64}, PyObject}, 
+        cs::Union{Array{Float64}, PyObject}, 
+        ρ::Union{Array{Float64}, PyObject},
+        stf_array::Union{Array{Float64}, PyObject},
+        shot_ids::Union{Array{Int64}, PyObject};
+        gpu_id::Int64 = 0, is_padded::Bool = false, is_masked::Bool = false, 
+        cp_ref::Union{Array{Float64}, PyObject}, 
+        cs_ref::Union{Array{Float64}, PyObject}, 
+        ρ_ref::Union{Array{Float64}, PyObject})
+
+
+"""
 function compute_misfit(fwi::FWI, 
     cp::Union{Array{Float64}, PyObject}, 
     cs::Union{Array{Float64}, PyObject}, 
