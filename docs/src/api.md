@@ -2,6 +2,7 @@
 
 ![](assets/doc_domain.png)
 
+## Low Level Custom Operators 
 ```@docs
 poisson_op
 laplacian_op
@@ -15,7 +16,13 @@ time_fractional_op
 time_fractional_t_op
 ```
 
+## FWI 
+```@docs
+FWI 
 
+```
+
+# Utility Functions 
 ```@autodocs
 Modules = [FwiFlow]
 Pages   = ["utils.jl"]
