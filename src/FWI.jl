@@ -98,7 +98,7 @@ function compute_observation(sess::PyObject, fwi::FWI,
     if length(size(stf_array))==1
         stf_array = repeat(stf_array', length(shot_ids), 1)
     end
-    λ_pad, μ_pad = velocity_to_moduli(cp, cs, ρ)
+    λ_pad, μ_pad = velocity_to_moduli(cp_pad, cs_pad, ρ_pad)
     data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, joinpath(fwi.WORKSPACE, fwi.para_fname) )
     run(sess, data)
     data = zeros(length(shot_ids), fwi.nSteps, length(fwi.ind_rec_z))
