@@ -17,14 +17,13 @@ module FwiFlow
     DATADIR = "$(@__DIR__)/../docs/data"
 
     function ADCME.:Session(args...;kwargs...)
+        # ADCME should not use GPUs 
         if has_gpu()
-            @info "GPU found. Use GPU."
             config = tf.ConfigProto(
-                device_count = Dict("GPU"=> 0)
+                device_count = Dict("GPU"=> 0) 
             )
             sess = tf.Session(config=config)
         else 
-            @info "No GPU found. Use only CPU."
             return ADCME.Session(args...; kwargs...)
         end
     end

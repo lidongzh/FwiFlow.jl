@@ -1,9 +1,9 @@
-export FWI, FWIExample, compute_observation
+export FWI, FWIExample, compute_observation, plot, compute_misfit
 @with_kw mutable struct FWI
-    nx::Int64 = 384
     nz::Int64 = 134 
-    dx::Float64 = 24.
+    nx::Int64 = 384
     dz::Float64 = 24.
+    dx::Float64 = 24.
     dt::Float64 = 0.0025
     nSteps::Int64 = 2000
     f0::Float64 = 4.5
@@ -23,22 +23,51 @@ export FWI, FWIExample, compute_observation
     ind_rec_z::Union{Missing, Array{Int64, 1}} = missing
 end
 
-function FWI(nx::Int64, nz::Int64, dx::Float64, dz::Float64, nSteps::Int64, dt::Float64,
-        stf_load::Union{Array{Float64}, PyObject}; kwargs...)
-    fwi = FWI(nx = nx, nz = nz, dx = dx, dz = dx, nSteps = nSteps, dt = dt; kwargs...)
+function FWI(nz::Int64, nx::Int64, dz::Float64, dx::Float64, nSteps::Int64, dt::Float64;
+        ind_src_z::Array{Int64, 1}, ind_src_x::Array{Int64, 1}, ind_rec_z::Array{Int64, 1}, ind_rec_x::Array{Int64, 1},
+        kwargs...)
+    fwi = FWI(nx = nx, nz = nz, dx = dx, dz = dx, nSteps = nSteps, dt = dt; 
+            ind_src_x = ind_src_x,
+            ind_src_z = ind_src_z,
+            ind_rec_x = ind_rec_x,
+            ind_rec_z = ind_rec_z,
+            kwargs...)
     Mask = zeros(fwi.nz_pad, fwi.nx_pad)
     Mask[fwi.nPml+1:fwi.nPml+nz, fwi.nPml+1:fwi.nPml+nx] .= 1.0
     Mask[fwi.nPml+1:fwi.nPml+10,:] .= 0.0
     fwi.mask = constant(Mask)
     fwi.neg_mask = 1 - constant(Mask)
-    @assert size(stf_load) == (nSteps,)
-    tf_stf_array = repeat(constant(stf_load)', length(fwi.ind_src_z), 1)
+    @assert length(ind_rec_x)==length(ind_rec_z)
+    @assert length(ind_src_x)==length(ind_src_z)
     paraGen(fwi.nz_pad, fwi.nx_pad, dz, dx, nSteps, dt, fwi.f0, fwi.nPml, fwi.nPad, 
             joinpath(fwi.WORKSPACE,fwi.para_fname), 
             joinpath(fwi.WORKSPACE,fwi.survey_fname), 
             joinpath(fwi.WORKSPACE,fwi.data_dir_name))
-    surveyGen(fwi.ind_src_z, fwi.ind_src_x, fwi.ind_rec_z, fwi.ind_rec_x, joinpath(fwi.WORKSPACE,fwi.survey_fname))
+    surveyGen(ind_src_z, ind_src_x, ind_rec_z, ind_rec_x, joinpath(fwi.WORKSPACE,fwi.survey_fname))
     return fwi
+end
+
+function PyPlot.:plot(fwi::FWI)
+    close("all")
+    x1, y1, x2, y2 = 0.0, 0.0, fwi.nx_pad*fwi.dx, fwi.nz_pad*fwi.dz
+    plot(LinRange(x1, x2, 100), y1*ones(100), "k")
+    plot(LinRange(x1, x2, 100), y2*ones(100), "k")
+    plot(x1*ones(100), LinRange(y1, y2, 100), "k")
+    plot(x2*ones(100), LinRange(y1, y2, 100), "k")
+    
+    x1, y1, x2, y2 = fwi.nPml * fwi.dx, fwi.nPml * fwi.dz, (fwi.nx_pad - fwi.nPml) * fwi.dx, (fwi.nz_pad - fwi.nPml) * fwi.dz
+    plot(LinRange(x1, x2, 100), y1*ones(100), "g", label="PML Boundary")
+    plot(LinRange(x1, x2, 100), y2*ones(100), "g")
+    plot(x1*ones(100), LinRange(y1, y2, 100), "g")
+    plot(x2*ones(100), LinRange(y1, y2, 100), "g")
+
+    plot( (fwi.nPml .+ fwi.ind_rec_x .- 1) * fwi.dx, (fwi.nPml + fwi.nPad .+ fwi.ind_rec_z .- 1) * fwi.dz, "r^", label="Receiver", markersize=1)
+    plot( (fwi.nPml .+ fwi.ind_src_x .- 1) * fwi.dx, (fwi.nPml + fwi.nPad .+ fwi.ind_src_z .- 1) * fwi.dz, "bv", label="Source", markersize=1)
+    gca().invert_yaxis()
+    xlabel("Distance")
+    ylabel("Depth")
+    legend()
+    axis("equal")
 end
 
 function FWIExample()
@@ -46,8 +75,7 @@ function FWIExample()
     ind_src_z = 2ones(Int64, size(ind_src_x))
     ind_rec_x = collect(3:381)
     ind_rec_z = 2ones(Int64, size(ind_rec_x))
-    data = matread("$(DATADIR)/sourceF_4p5_2_high.mat")["sourceF"][:]
-    FWI(384, 134, 24., 24., 2000, 0.0025, data; 
+    FWI(134,384, 24., 24., 2000, 0.0025; 
         ind_src_x = ind_src_x,
         ind_src_z = ind_src_z,
         ind_rec_x = ind_rec_x,
@@ -56,12 +84,16 @@ end
 
 
 function compute_observation(fwi::FWI, 
-    λ_pad::Union{Array{Float64}, PyObject}, 
-    μ_pad::Union{Array{Float64}, PyObject}, 
-    ρ_pad::Union{Array{Float64}, PyObject}, 
+    λ::Union{Array{Float64}, PyObject}, 
+    μ::Union{Array{Float64}, PyObject}, 
+    ρ::Union{Array{Float64}, PyObject}, 
     stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Union{Array{Int64}, PyObject},
-    gpu_id::Int64 = 0)
+    shot_ids::Union{Array{Int64}, PyObject};
+    gpu_id::Int64 = 0, is_padded::Bool = false)
+    λ_pad, μ_pad, ρ_pad = λ, μ, ρ
+    if !is_padded
+        λ_pad, μ_pad, ρ_pad = padding(fwi, λ, μ, ρ)
+    end
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
         stf_array = repeat(stf_array', length(shot_ids), 1)
@@ -71,12 +103,16 @@ function compute_observation(fwi::FWI,
 end
 
 function compute_misfit(fwi::FWI, 
-    λ_pad::Union{Array{Float64}, PyObject}, 
-    μ_pad::Union{Array{Float64}, PyObject}, 
-    ρ_pad::Union{Array{Float64}, PyObject}, 
+    λ::Union{Array{Float64}, PyObject}, 
+    μ::Union{Array{Float64}, PyObject}, 
+    ρ::Union{Array{Float64}, PyObject}, 
     stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Union{Array{Int64}, PyObject},
-    gpu_id::Int64 = 0)
+    shot_ids::Union{Array{Int64}, PyObject};
+    gpu_id::Int64 = 0, is_padded::Bool = false)
+    λ_pad, μ_pad, ρ_pad = λ, μ, ρ
+    if !is_padded
+        λ_pad, μ_pad, ρ_pad = padding(fwi, λ, μ, ρ)
+    end
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
         stf_array = repeat(stf_array', length(tf_shot_ids), 1)
@@ -84,5 +120,20 @@ function compute_misfit(fwi::FWI,
     misfit = fwi_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, para_fname)
 end
 
-function padding(fwi::FWI)
+function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
+    cp = constant(cp)
+    nz, nx, nPml, nPad = fwi.nz, fwi.nx, fwi.nPml, fwi.nPad
+    nz_orig, nx_orig = size(cp)
+    tran_cp = tf.reshape(cp, (1, nz_orig, nx_orig, 1))
+    if nz_orig!=nz || nx_orig!=nx 
+        @info "resizee image to required size"
+        tran_cp = squeeze(tf.image.resize_bilinear(tran_cp, (nz, nx)))
+    end
+	cp_pad = tf.pad(cp_pad, [nPml (nPml+nPad); nPml nPml], "SYMMETRIC")
+	cp_pad = cast(cp_pad, Float64)
+	return cp_pad
+end
+
+function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}}, cq...)
+    [padding(fwi, cp);vcat([padding(c) for c in cq]...)]
 end
