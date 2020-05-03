@@ -43,13 +43,16 @@ void obscalc(const double *Lambda, const double *Mu,
        
      std::string filename = para.data_dir_name() + "/Shot" +
                          std::to_string(shot_ids[0]) + ".bin";
-     printf("Processing file %s\n", filename.c_str());
-     float d;
-     std::ifstream ifile(filename);
-     while (ifile >> d){
-          dvec.push_back(d);
+     printf("Processing file %s ... ", filename.c_str());
+     float f; int cnt;
+     std::ifstream fin("male_16_down.bin", std::ios::binary);
+     while (fin.read(reinterpret_cast<char*>(&f), sizeof(float))){
+          cnt += 1;
+          dvec.push_back(f);
      }
-     ifile.close();
+     printf(" read %d floats\n", cnt);
+     fin.close();
+          
   }
   
   TensorShape misfit_shape({dvec.size()});
