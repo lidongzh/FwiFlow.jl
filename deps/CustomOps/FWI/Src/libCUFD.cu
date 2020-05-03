@@ -530,8 +530,10 @@ void cufd(double *misfit, double *grad_Lambda, double *grad_Mu,
   if (para.if_res() && !para.withAdj()) {
     h_l2Obj = 0.5 * h_l2Obj;  // DL 02/21/2019 (need to make misfit accurate
                               // here rather than in the script)
+    #ifdef VERBOSE
     std::cout << "Total l2 residual = " << std::to_string(h_l2Obj) << std::endl;
     std::cout << "calc_id = " << calc_id << std::endl;
+    #endif
     *misfit = h_l2Obj;
   }
 

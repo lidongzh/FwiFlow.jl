@@ -34,10 +34,11 @@ auto startSrc = std::chrono::high_resolution_clock::now();
 	Src_Rec src_rec(para, survey_fname);
 auto finishSrc = std::chrono::high_resolution_clock::now(); 
 std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
+#ifdef VERBOSE 
 	std::cout << "Src_Rec time: "<< elapsedSrc.count() <<" second(s)"<< std::endl;
 	std::cout << "number of shots " << src_rec.d_vec_z_rec.size() << std::endl;
 	std::cout << "number of d_data " << src_rec.d_vec_data.size() << std::endl;
-
+#endif 
 	// displayArray("b_z", cpml.b_x_half, 33, 1);
 
 	int nz = model.nz();
@@ -469,7 +470,9 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 
 	//output residual
 	if (para.if_res()) {
+		#ifdef VERBOSE
 		std::cout << "Total l2 residual = " << std::to_string(h_l2Obj) << std::endl;
+		#endif 
 		// std::cout << "Total l2 residual cpu = " << h_l2Obj_cpu << std::endl;
 		h_l2Obj = 0.5 * h_l2Obj; // DL 02/21/2019 (need to make misfit accurate here rather than in the script)
 		// fileBinWrite(&h_l2Obj, 1, "l2Obj.bin");
