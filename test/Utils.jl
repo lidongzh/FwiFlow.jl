@@ -37,15 +37,6 @@ cs = zeros(fwi.nz_pad, fwi.nx_pad)
 shot_ids = collect(1:length(ind_src_z))
 sess = Session()
 
-
-# sio = 
-# stf_load = Matrix{Float64}(undef, 1, nSteps)
-# stf_load[1,:] = matread("$(DATADIR)/sourceF_4p5_2_high.mat")["sourceF"][:]
-# stf = tf.broadcast_to(constant(stf_load), [length(ind_src_z), nSteps])
-# stf = constant(stf)
-#     if length(size(stf))==1
-#         stf = repeat(stf', length(shot_ids), 1)'
-#     end
 obs = compute_observation(sess, fwi, cp, cs, ρ, stf, shot_ids, gpu_id=0)
 obs_ = obs[10,:,:]
 @assert norm(matread("test_data.mat")["obs"]-obs_)≈0.0
@@ -60,10 +51,9 @@ axis("normal")
 set_cmap("gray")
 savefig("Utils.png")
 
-cs_init = zeros(fwi.nz, fwi.nx)
-ρ_init = 2500.0 .* ones(fwi.nz, fwi.nx)
-cp_init_ = Float64.(reshape(reinterpret(Float32,read("$DATADIR/Model_Cp_init_1D.bin")), (fwi.nz_pad, fwi.nx_pad)))|>Array
-cp_init = cp_init_[fwi.nPml+1:fwi.nPml+fwi.nz, fwi.nPml+1:fwi.nPml+fwi.nx]
+cs_init = zeros(fwi.nz_pad, fwi.nx_pad)
+ρ_init = 2500.0 .* ones(fwi.nz_pad, fwi.nx_pad)
+cp_init = Float64.(reshape(reinterpret(Float32,read("$DATADIR/Model_Cp_init_1D.bin")), (fwi.nz_pad, fwi.nx_pad)))|>Array
 
 # make variables
 cs_inv = Variable(cs_init)
@@ -75,6 +65,7 @@ loss = constant(0.0)
 nGpus = length(use_gpu())
 shot_id_points = Int64.(trunc.(collect(LinRange(1, length(ind_src_z), nGpus+1))))
 
+@info "$nGpus GPU(s) is(are) available."
 loss = constant(0.0)
 for i = 1:nGpus
     global loss
@@ -85,4 +76,6 @@ for i = 1:nGpus
 end
 
 sess = Session(); init(sess)
+err = run(sess, loss)
+@info "initial error = ", err
 BFGS!(sess, loss)
