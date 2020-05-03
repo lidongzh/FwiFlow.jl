@@ -127,7 +127,9 @@ end
 Computes the misfit function for the simulation parameters $c_p$, $c_s$, $\rho$, and source time functions `stf_array`
 
 - If `is_padded` is false, `compute_misfit` will pad the inputs automatically. 
-- If 
+- If `is_masked` is false, `compute_misfit` will add the mask `fwi.mask` to all variables. 
+- `gpu_id` is an integer in {0,1,2,...,#gpus-1}
+- `shot_ids` is 1-based.
 """
 function compute_misfit(fwi::FWI, 
     cp::Union{Array{Float64}, PyObject}, 
@@ -177,5 +179,5 @@ function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
 end
 
 function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}}, cq...)
-    [padding(fwi, cp);vcat([padding(c) for c in cq]...)]
+    [padding(fwi, cp);vcat([padding(fwi, c) for c in cq]...)]
 end
