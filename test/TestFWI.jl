@@ -38,8 +38,7 @@ shot_ids = collect(1:length(ind_src_z))
 sess = Session()
 
 obs = compute_observation(sess, fwi, cp, cs, ρ, stf, shot_ids, gpu_id=0)
-obs_ = obs[10,:,:]
-@assert norm(matread("test_data.mat")["obs"]-obs_)≈0.0
+@assert norm(matread("test_data.mat")["obs"]-obs)≈0.0
 @info "Forward test passed!"
 
 close("all")
@@ -75,7 +74,24 @@ for i = 1:nGpus
             is_masked = false, cp_ref = cp_init, cs_ref =  cs_init, ρ_ref = ρ_init)
 end
 
+
+g_cs = gradients(loss, cs_inv)
+g_ρ = gradients(loss, ρ_inv)
+g_cp = gradients(loss, cp_inv)
+
+matfile = matread("test_data.mat")
+gcs, gρ, gcp = matfile["cs"], matfile["rho"], matfile["cp"]
 sess = Session(); init(sess)
 err = run(sess, loss)
 @info "initial error = ", err
+a, b, c = run(sess, [g_cs, g_ρ, g_cp])
+if maximum(abs.(a-gcs))<1e-3 && 
+    maximum(abs.(b-gρ))<1e-3 && 
+    maximum(abs.(c-gcp))<1e-3 
+    
+    @info "gradient is correct"
+else 
+    @info "gradient is incorrect"
+end
 BFGS!(sess, loss)
+
