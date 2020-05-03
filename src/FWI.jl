@@ -16,7 +16,7 @@ export FWI, FWIExample, compute_observation, plot, compute_misfit
     data_dir_name::String = "Data"
     WORKSPACE::String = mktempdir()
     mask::Union{Missing, Array{Float64, 2}, PyObject} = missing
-    neg_mask::Union{Missing, Array{Float64, 2}, PyObject} = missing
+    mask_neg::Union{Missing, Array{Float64, 2}, PyObject} = missing
     ind_src_x::Union{Missing, Array{Int64, 1}} = missing
     ind_src_z::Union{Missing, Array{Int64, 1}} = missing
     ind_rec_x::Union{Missing, Array{Int64, 1}} = missing
@@ -36,7 +36,7 @@ function FWI(nz::Int64, nx::Int64, dz::Float64, dx::Float64, nSteps::Int64, dt::
     Mask[fwi.nPml+1:fwi.nPml+nz, fwi.nPml+1:fwi.nPml+nx] .= 1.0
     Mask[fwi.nPml+1:fwi.nPml+10,:] .= 0.0
     fwi.mask = constant(Mask)
-    fwi.neg_mask = 1 - constant(Mask)
+    fwi.mask_neg = 1 - constant(Mask)
     @assert length(ind_rec_x)==length(ind_rec_z)
     @assert length(ind_src_x)==length(ind_src_z)
     paraGen(fwi.nz_pad, fwi.nx_pad, dz, dx, nSteps, dt, fwi.f0, fwi.nPml, fwi.nPad, 
@@ -83,7 +83,7 @@ function FWIExample()
 end
 
 
-function compute_observation(fwi::FWI, 
+function compute_observation(sess::PyObject, fwi::FWI, 
     λ::Union{Array{Float64}, PyObject}, 
     μ::Union{Array{Float64}, PyObject}, 
     ρ::Union{Array{Float64}, PyObject}, 
@@ -99,25 +99,47 @@ function compute_observation(fwi::FWI,
         stf_array = repeat(stf_array', length(shot_ids), 1)
     end
     data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, fwi.para_fname) 
-    data = reshape(data, (fwi.nSteps, length(fwi.ind_rec_z)))
+    run(sess, data)
+    data = zeros(length(shot_ids, nSteps, length(ind_rec_z)))
+    for i = 1:shot_ids
+        A = read("$(fwi.WORKSPACE)/Data/Shot$(shot_ids[i]).bin")
+        data[i,:,:] = reshape(reinterpret(Float32,A),(nSteps ,length(ind_rec_z)))
+    end
+    
 end
 
+
 function compute_misfit(fwi::FWI, 
-    λ::Union{Array{Float64}, PyObject}, 
-    μ::Union{Array{Float64}, PyObject}, 
-    ρ::Union{Array{Float64}, PyObject}, 
+    cp::Union{Array{Float64}, PyObject}, 
+    cs::Union{Array{Float64}, PyObject}, 
+    ρ::Union{Array{Float64}, PyObject},
     stf_array::Union{Array{Float64}, PyObject},
     shot_ids::Union{Array{Int64}, PyObject};
-    gpu_id::Int64 = 0, is_padded::Bool = false)
-    λ_pad, μ_pad, ρ_pad = λ, μ, ρ
+    gpu_id::Int64 = 0, is_padded::Bool = false, is_masked::Bool = false, 
+    cp_ref::Union{Array{Float64}, PyObject}, 
+    cs_ref::Union{Array{Float64}, PyObject}, 
+    ρ_ref::Union{Array{Float64}, PyObject})
+
+    cp_pad, cs_pad, ρ_pad = cp, cs, ρ
     if !is_padded
-        λ_pad, μ_pad, ρ_pad = padding(fwi, λ, μ, ρ)
+        cp_pad, cs_pad, ρ_pad = padding(fwi, cp, cs, ρ)
     end
+
+    cp_masked, cs_masked,ρ_masked = cp_pad, cs_pad, ρ_pad
+    if !is_masked
+        cp_masked = cp_pad .* fwi.mask + cp_ref .* fwi.mask_neg
+        cs_masked = cs_pad .* fwi.mask + cs_ref .* fwi.mask_neg
+        ρ_masked = ρ_pad .* fwi.mask + ρ_ref .* fwi.mask_neg
+    end
+    λ_masked, μ_masked = vel2moduli(cp_masked, cs_masked,ρ_masked)
+
+
+
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
         stf_array = repeat(stf_array', length(tf_shot_ids), 1)
     end
-    misfit = fwi_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, para_fname)
+    misfit = fwi_op(λ_masked, μ_masked, ρ_masked, stf_array, gpu_id, shot_ids, para_fname)
 end
 
 function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
