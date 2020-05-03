@@ -84,28 +84,29 @@ end
 
 
 function compute_observation(sess::PyObject, fwi::FWI, 
-    λ::Union{Array{Float64}, PyObject}, 
-    μ::Union{Array{Float64}, PyObject}, 
+    cp::Union{Array{Float64}, PyObject}, 
+    cs::Union{Array{Float64}, PyObject}, 
     ρ::Union{Array{Float64}, PyObject}, 
     stf_array::Union{Array{Float64}, PyObject},
     shot_ids::Union{Array{Int64}, PyObject};
     gpu_id::Int64 = 0, is_padded::Bool = false)
-    λ_pad, μ_pad, ρ_pad = λ, μ, ρ
+    cp_pad, cs_pad, ρ_pad = cp, cs, ρ
     if !is_padded
-        λ_pad, μ_pad, ρ_pad = padding(fwi, λ, μ, ρ)
+        cp_pad, cs_pad, ρ_pad = padding(fwi, cp, cs, ρ)
     end
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
         stf_array = repeat(stf_array', length(shot_ids), 1)
     end
-    data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, fwi.para_fname) 
+    λ_pad, μ_pad = velocity_to_moduli(cp, cs, ρ)
+    data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, joinpath(fwi.WORKSPACE, fwi.para_fname) )
     run(sess, data)
-    data = zeros(length(shot_ids, nSteps, length(ind_rec_z)))
-    for i = 1:shot_ids
+    data = zeros(length(shot_ids), fwi.nSteps, length(fwi.ind_rec_z))
+    for i = 1:length(shot_ids)
         A = read("$(fwi.WORKSPACE)/Data/Shot$(shot_ids[i]).bin")
-        data[i,:,:] = reshape(reinterpret(Float32,A),(nSteps ,length(ind_rec_z)))
+        data[i,:,:] = reshape(reinterpret(Float32,A),(nSteps ,length(fwi.ind_rec_z)))
     end
-    
+    data
 end
 
 
@@ -131,8 +132,7 @@ function compute_misfit(fwi::FWI,
         cs_masked = cs_pad .* fwi.mask + cs_ref .* fwi.mask_neg
         ρ_masked = ρ_pad .* fwi.mask + ρ_ref .* fwi.mask_neg
     end
-    λ_masked, μ_masked = vel2moduli(cp_masked, cs_masked,ρ_masked)
-
+    λ_masked, μ_masked = velocity_to_moduli(cp_masked, cs_masked,ρ_masked)
 
 
     stf_array = constant(stf_array)
