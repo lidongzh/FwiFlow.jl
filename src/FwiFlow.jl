@@ -17,15 +17,10 @@ module FwiFlow
     DATADIR = "$(@__DIR__)/../docs/data"
 
     function ADCME.:Session(args...;kwargs...)
-        # ADCME should not use GPUs 
-        if has_gpu()
-            config = tf.ConfigProto(
-                device_count = Dict("GPU"=> 0) 
-            )
-            sess = tf.Session(config=config)
-        else 
-            return ADCME.Session(args...; kwargs...)
-        end
+        config = tf.ConfigProto(
+            device_count = Dict("GPU"=> 0) 
+        )
+        sess = tf.Session(config=config)
     end
     include("Core.jl")
     include("Utils.jl")

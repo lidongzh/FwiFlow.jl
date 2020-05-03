@@ -93,7 +93,7 @@ function compute_observation(sess::PyObject, fwi::FWI,
     cp_pad, cs_pad, ρ_pad = try_pad(fwi, cp, cs, ρ)
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
-        stf_array = repeat(stf_array', length(shot_ids), 1)
+        stf_array = repeat(stf_array', length(fwi.ind_src_z), 1)
     end
     λ_pad, μ_pad = velocity_to_moduli(cp_pad, cs_pad, ρ_pad)
     shot_ids = shot_ids .- 1
@@ -137,12 +137,11 @@ function compute_misfit(fwi::FWI,
     cp_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
     cs_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
     ρ_ref::Union{Array{Float64}, PyObject, Missing} = missing)
-
-    cp_pad, cs_pad, ρ_pad = convert_to_tensor([cp, cs, ρ], [Float64, Float64, Float64])
+    
+    cp_pad, cs_pad, ρ_pad = try_pad(fwi, cp, cs, ρ)
     if !ismissing(cp_ref)
-        cp_ref, cs_ref, ρ_ref = convert_to_tensor([cp_ref, cs_ref, ρ_ref], [Float64, Float64, Float64])
+        cp_ref, cs_ref, ρ_ref = try_pad(fwi, cp_ref, cs_ref, ρ_ref)
     end
-    cp_pad, cs_pad, ρ_pad, cp_ref, cs_ref, ρ_ref = try_pad(fwi, cp_pad, cs_pad, ρ_pad, cp_ref, cs_ref, ρ_ref)
 
     cp_masked, cs_masked,ρ_masked = cp_pad, cs_pad, ρ_pad
     if !is_masked
@@ -152,13 +151,12 @@ function compute_misfit(fwi::FWI,
     end
     λ_masked, μ_masked = velocity_to_moduli(cp_masked, cs_masked,ρ_masked)
 
-
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
-        stf_array = repeat(stf_array', length(shot_ids), 1)'
+        stf_array = repeat(stf_array', length(fwi.ind_src_z), 1)
     end
     shot_ids = constant(shot_ids, dtype=Int32) - 1
-    misfit = fwi_op(λ_masked, μ_masked, ρ_masked, stf_array, gpu_id, shot_ids, para_fname)
+    misfit = fwi_op(λ_masked, μ_masked, ρ_masked, stf_array, gpu_id, shot_ids, joinpath(fwi.WORKSPACE, fwi.para_fname))
 end
 
 
@@ -187,12 +185,11 @@ function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}}, cq...)
 end
 
 function try_pad(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
-    if size(cp)==(fwi.nz, fwi.nx)
-        padding(fwi, cp)
-    elseif size(cp)==(fwi.nz_pad, fwi.nx_pad)
-        cp 
+    cp = convert_to_tensor(cp, dtype=Float64)
+    if size(cp)!=(fwi.nz_pad, fwi.nx_pad)
+        return padding(fwi, cp)
     else
-        error("Invalid size: $(size(cp)). Expect $((fwi.nz, fwi.nx)) or $((fwi.nz_pad, fwi.nx_pad))")
+        return cp 
     end
 end
 
