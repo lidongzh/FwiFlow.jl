@@ -220,7 +220,9 @@ void compCourantNumber(float *h_Cp, int size, float dt, float dz, float dx){
         }
     }
     Courant_number = max * dt * sqrtf(powf(1.0/dz, 2) + powf(1.0/dx, 2));
+#ifdef  VERBOSE
     std::cout << "Courant_number = " << Courant_number << std::endl;
+#endif 
     if(Courant_number > 1.0) exit(1);
 }
 

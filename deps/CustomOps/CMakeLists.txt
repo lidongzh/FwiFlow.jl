@@ -39,6 +39,7 @@ include_directories(${TF_INC} ${EIGEN_INC}/eigen3 ${EIGEN_INC} ${CUDA_INC} ${LIB
 link_directories(${LIBDIR} ${LIBCUDA})
 include_directories(FWI/Src/rapidjson)
 
+# add_definitions(-DVERBOSE)
 
 find_program(_nvidia_smi "nvcc")
 if (_nvidia_smi)

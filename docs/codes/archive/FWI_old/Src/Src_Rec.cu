@@ -281,8 +281,9 @@ Src_Rec::Src_Rec(Parameter &para, string survey_fname) {
 	// 	cout << "ERROR: same_num_rec_flag should only be 0 or 1!" << endl;
 	// 	exit(1);
 	// }
-
+#ifdef VERBOSE 
 	cout << "	vec_source number = " << vec_source.size() << endl;
+#endif 
 
 
 }
@@ -531,8 +532,9 @@ Src_Rec::Src_Rec(Parameter &para, string survey_fname, const double *stf, int gr
 	// 	cout << "ERROR: same_num_rec_flag should only be 0 or 1!" << endl;
 	// 	exit(1);
 	// }
-
+#ifdef VERBOSE 
 	cout << "	vec_source number = " << vec_source.size() << endl;
+	#endif 
 
 
 }

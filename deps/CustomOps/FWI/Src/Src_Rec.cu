@@ -235,7 +235,9 @@ Src_Rec::Src_Rec(Parameter &para, string survey_fname, const double *stf, int gr
 
 	}
 
+	#ifdef VERBOSE
 	cout << "	vec_source number = " << vec_source.size() << endl;
+	#endif 
 
 
 }

@@ -121,13 +121,17 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 
 	auto finish0 = std::chrono::high_resolution_clock::now(); 
 	std::chrono::duration<double> elapsed0 = finish0 - start0;
+	#ifdef VERBOSE
 	std::cout << "Initialization time: "<< elapsed0.count() <<" second(s)"<< std::endl;
+	#endif
 
 
 	auto start = std::chrono::high_resolution_clock::now();
 
 	for(int iShot=0; iShot<nShots; iShot++) {
+		#ifdef VERBOSE
 		printf("	Processing shot %d\n", iShot);
+		#endif 
 		CHECK(cudaStreamCreate(&streams[iShot]));
 
 // load precomputed presure DL

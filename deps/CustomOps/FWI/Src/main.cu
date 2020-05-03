@@ -34,10 +34,11 @@ auto startSrc = std::chrono::high_resolution_clock::now();
 	Src_Rec src_rec(para, survey_fname);
 auto finishSrc = std::chrono::high_resolution_clock::now(); 
 std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
+#ifdef VERBOSE
 	std::cout << "Src_Rec time: "<< elapsedSrc.count() <<" second(s)"<< std::endl;
 	std::cout << "number of shots " << src_rec.d_vec_z_rec.size() << std::endl;
 	std::cout << "number of d_data " << src_rec.d_vec_data.size() << std::endl;
-
+#endif
 	// displayArray("b_z", cpml.b_x_half, 33, 1);
 
 	int nz = model.nz();
@@ -121,13 +122,17 @@ std::chrono::duration<double> elapsedSrc = finishSrc - startSrc;
 
 	auto finish0 = std::chrono::high_resolution_clock::now(); 
 	std::chrono::duration<double> elapsed0 = finish0 - start0;
+	#ifdef VERBOSE
 	std::cout << "Initialization time: "<< elapsed0.count() <<" second(s)"<< std::endl;
+	#endif 
 
 
 	auto start = std::chrono::high_resolution_clock::now();
 
 	for(int iShot=0; iShot<nShots; iShot++) {
+		#ifdef VERBOSE
 		printf("	Processing shot %d\n", iShot);
+		#endif
 		CHECK(cudaStreamCreate(&streams[iShot]));
 
 // load precomputed presure DL
