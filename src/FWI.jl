@@ -26,7 +26,7 @@ end
 function FWI(nz::Int64, nx::Int64, dz::Float64, dx::Float64, nSteps::Int64, dt::Float64;
         ind_src_z::Array{Int64, 1}, ind_src_x::Array{Int64, 1}, ind_rec_z::Array{Int64, 1}, ind_rec_x::Array{Int64, 1},
         kwargs...)
-    fwi = FWI(nx = nx, nz = nz, dx = dx, dz = dx, nSteps = nSteps, dt = dt; 
+    fwi = FWI(nx = nx, nz = nz, dx = dx, dz = dz, nSteps = nSteps, dt = dt; 
             ind_src_x = ind_src_x,
             ind_src_z = ind_src_z,
             ind_rec_x = ind_rec_x,
