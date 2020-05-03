@@ -49,7 +49,7 @@ sess = Session()
 obs = compute_observation(sess, fwi, cp, cs, ρ, stf, shot_ids, gpu_id=0)
 obs_ = obs[10,:,:]
 @assert norm(matread("test_data.mat")["obs"]-obs_)≈0.0
-
+@info "Forward test passed!"
 
 close("all")
 imshow(obs[10,:,:], vmax=2000, vmin=-2000, extent=[0, fwi.nx*fwi.dx, fwi.dt*(fwi.nSteps-1), 0])
