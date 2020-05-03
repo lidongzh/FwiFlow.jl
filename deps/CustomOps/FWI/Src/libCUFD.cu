@@ -9,8 +9,6 @@
 #include "utilities.h"
 using std::string;
 
-#define VERBOSE
-#define DEBUG
 /*
         double misfit
         double *grad_Lambda : gradients of Lambda (lame parameter)

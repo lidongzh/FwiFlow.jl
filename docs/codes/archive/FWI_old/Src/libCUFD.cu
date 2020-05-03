@@ -9,8 +9,6 @@
 #include "utilities.h"
 using std::string;
 
-#define VERBOSE
-#define DEBUG
 
 // extern "C" void cufd(double *res, double *grad_Cp, double *grad_Cs,
 //                      double *grad_Den, double *grad_stf, const double *Cp,
