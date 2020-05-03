@@ -99,7 +99,7 @@ function compute_observation(fwi::FWI,
         stf_array = repeat(stf_array', length(shot_ids), 1)
     end
     data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, fwi.para_fname) 
-    data = reshape(data, (fwi.nSteps, length(ind_rec_z)))
+    data = reshape(data, (fwi.nSteps, length(fwi.ind_rec_z)))
 end
 
 function compute_misfit(fwi::FWI, 
