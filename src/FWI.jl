@@ -88,7 +88,7 @@ function compute_observation(sess::PyObject, fwi::FWI,
     cs::Union{Array{Float64}, PyObject}, 
     ρ::Union{Array{Float64}, PyObject}, 
     stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Union{Array{Int64}, PyObject};
+    shot_ids::Union{PyObject};
     gpu_id::Int64 = 0, is_padded::Bool = false)
     cp_pad, cs_pad, ρ_pad = cp, cs, ρ
     if !is_padded
@@ -99,7 +99,9 @@ function compute_observation(sess::PyObject, fwi::FWI,
         stf_array = repeat(stf_array', length(shot_ids), 1)
     end
     λ_pad, μ_pad = velocity_to_moduli(cp_pad, cs_pad, ρ_pad)
-    data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids, joinpath(fwi.WORKSPACE, fwi.para_fname) )
+    shot_ids = shot_ids .- 1
+    shot_ids_ = constant(shot_ids, dtype=Int32)
+    data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids_, joinpath(fwi.WORKSPACE, fwi.para_fname) )
     run(sess, data)
     data = zeros(length(shot_ids), fwi.nSteps, length(fwi.ind_rec_z))
     for i = 1:length(shot_ids)
@@ -137,8 +139,9 @@ function compute_misfit(fwi::FWI,
 
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
-        stf_array = repeat(stf_array', length(tf_shot_ids), 1)'
+        stf_array = repeat(stf_array', length(shot_ids), 1)'
     end
+    shot_ids = constant(shot_ids, dtype=Int32) - 1
     misfit = fwi_op(λ_masked, μ_masked, ρ_masked, stf_array, gpu_id, shot_ids, para_fname)
 end
 
