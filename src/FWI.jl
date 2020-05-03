@@ -83,6 +83,17 @@ function FWIExample()
 end
 
 
+@doc raw"""
+    compute_observation(sess::PyObject, fwi::FWI, 
+        cp::Union{Array{Float64}, PyObject}, 
+        cs::Union{Array{Float64}, PyObject}, 
+        ρ::Union{Array{Float64}, PyObject}, 
+        stf_array::Union{Array{Float64}, PyObject},
+        shot_ids::Array{<:Integer};
+        gpu_id::Int64 = 0, is_padded::Bool = false)
+
+Computes the observations using given parameters. Note that `shot_ids` are 1-based.
+"""
 function compute_observation(sess::PyObject, fwi::FWI, 
     cp::Union{Array{Float64}, PyObject}, 
     cs::Union{Array{Float64}, PyObject}, 
