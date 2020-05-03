@@ -89,11 +89,8 @@ function compute_observation(sess::PyObject, fwi::FWI,
     ρ::Union{Array{Float64}, PyObject}, 
     stf_array::Union{Array{Float64}, PyObject},
     shot_ids::Array{<:Integer};
-    gpu_id::Int64 = 0, is_padded::Bool = false)
-    cp_pad, cs_pad, ρ_pad = cp, cs, ρ
-    if !is_padded
-        cp_pad, cs_pad, ρ_pad = padding(fwi, cp, cs, ρ)
-    end
+    gpu_id::Int64 = 0)
+    cp_pad, cs_pad, ρ_pad = try_pad(fwi, cp, cs, ρ)
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
         stf_array = repeat(stf_array', length(shot_ids), 1)
@@ -119,14 +116,13 @@ end
         ρ::Union{Array{Float64}, PyObject},
         stf_array::Union{Array{Float64}, PyObject},
         shot_ids::Union{Array{Int64}, PyObject};
-        gpu_id::Int64 = 0, is_padded::Bool = false, is_masked::Bool = false, 
+        gpu_id::Int64 = 0, is_masked::Bool = false, 
         cp_ref::Union{Array{Float64}, PyObject}, 
         cs_ref::Union{Array{Float64}, PyObject}, 
         ρ_ref::Union{Array{Float64}, PyObject})
 
 Computes the misfit function for the simulation parameters $c_p$, $c_s$, $\rho$, and source time functions `stf_array`
 
-- If `is_padded` is false, `compute_misfit` will pad the inputs automatically. 
 - If `is_masked` is false, `compute_misfit` will add the mask `fwi.mask` to all variables. 
 - `gpu_id` is an integer in {0,1,2,...,#gpus-1}
 - `shot_ids` is 1-based.
@@ -137,15 +133,16 @@ function compute_misfit(fwi::FWI,
     ρ::Union{Array{Float64}, PyObject},
     stf_array::Union{Array{Float64}, PyObject},
     shot_ids::Union{Array{Int64}, PyObject};
-    gpu_id::Int64 = 0, is_padded::Bool = false, is_masked::Bool = false, 
-    cp_ref::Union{Array{Float64}, PyObject}, 
-    cs_ref::Union{Array{Float64}, PyObject}, 
-    ρ_ref::Union{Array{Float64}, PyObject})
+    gpu_id::Int64 = 0, is_masked::Bool = false, 
+    cp_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
+    cs_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
+    ρ_ref::Union{Array{Float64}, PyObject, Missing} = missing)
 
-    cp_pad, cs_pad, ρ_pad = cp, cs, ρ
-    if !is_padded
-        cp_pad, cs_pad, ρ_pad = padding(fwi, cp, cs, ρ)
+    cp_pad, cs_pad, ρ_pad = convert_to_tensor([cp, cs, ρ], [Float64, Float64, Float64])
+    if !ismissing(cp_ref)
+        cp_ref, cs_ref, ρ_ref = convert_to_tensor([cp_ref, cs_ref, ρ_ref], [Float64, Float64, Float64])
     end
+    cp_pad, cs_pad, ρ_pad, cp_ref, cs_ref, ρ_ref = try_pad(fwi, cp_pad, cs_pad, ρ_pad, cp_ref, cs_ref, ρ_ref)
 
     cp_masked, cs_masked,ρ_masked = cp_pad, cs_pad, ρ_pad
     if !is_masked
@@ -164,6 +161,8 @@ function compute_misfit(fwi::FWI,
     misfit = fwi_op(λ_masked, μ_masked, ρ_masked, stf_array, gpu_id, shot_ids, para_fname)
 end
 
+
+#------------------------------------------------------------------------------------
 function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
     cp = constant(cp)
     nz, nx, nPml, nPad = fwi.nz, fwi.nx, fwi.nPml, fwi.nPad
@@ -179,5 +178,29 @@ function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
 end
 
 function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}}, cq...)
-    [padding(fwi, cp);vcat([padding(fwi, c) for c in cq]...)]
+    o = Array{PyObject}(undef, 1 + length(cq))
+    o[1] = padding(fwi, cp)
+    for i = 1:length(cq)
+        o[i+1] = padding(fwi, cq[i])
+    end
+    o 
+end
+
+function try_pad(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
+    if size(cp)==(fwi.nz, fwi.nx)
+        padding(fwi, cp)
+    elseif size(cp)==(fwi.nz_pad, fwi.nx_pad)
+        cp 
+    else
+        error("Invalid size: $(size(cp)). Expect $((fwi.nz, fwi.nx)) or $((fwi.nz_pad, fwi.nx_pad))")
+    end
+end
+
+function try_pad(fwi::FWI, cp::Union{PyObject, Array{Float64,2}},cq...)
+    o = Array{PyObject}(undef, 1 + length(cq))
+    o[1] = try_pad(fwi, cp)
+    for i = 1:length(cq)
+        o[i+1] = try_pad(fwi, cq[i])
+    end
+    o 
 end
