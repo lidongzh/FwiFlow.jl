@@ -71,8 +71,10 @@ Src_Rec::Src_Rec(Parameter &para, string survey_fname, const double *stf, int gr
 	assert(json_src_rec.HasMember("nShots"));
 	assert(json_src_rec["nShots"].IsInt());
 	nShots = json_src_rec["nShots"].GetInt();
+	#ifdef VERBOSE
 	cout << "	nShots = " << nShots << endl;
-
+	#endif 
+	
 	CHECK(cudaMalloc((void **)&d_coef, (nSteps+1) * sizeof(cuFloatComplex)));
 
 	for (int i = 0; i < group_size; i++) {
