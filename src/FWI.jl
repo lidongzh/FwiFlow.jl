@@ -112,7 +112,7 @@ function compute_observation(sess::PyObject, fwi::FWI,
 end
 
 
-"""
+@doc raw"""
     compute_misfit(fwi::FWI, 
         cp::Union{Array{Float64}, PyObject}, 
         cs::Union{Array{Float64}, PyObject}, 
@@ -124,7 +124,10 @@ end
         cs_ref::Union{Array{Float64}, PyObject}, 
         ρ_ref::Union{Array{Float64}, PyObject})
 
+Computes the misfit function for the simulation parameters $c_p$, $c_s$, $\rho$, and source time functions `stf_array`
 
+- If `is_padded` is false, `compute_misfit` will pad the inputs automatically. 
+- If 
 """
 function compute_misfit(fwi::FWI, 
     cp::Union{Array{Float64}, PyObject}, 
@@ -168,7 +171,7 @@ function padding(fwi::FWI, cp::Union{PyObject, Array{Float64,2}})
         @info "resizee image to required size"
         tran_cp = squeeze(tf.image.resize_bilinear(tran_cp, (nz, nx)))
     end
-	cp_pad = tf.pad(cp_pad, [nPml (nPml+nPad); nPml nPml], "SYMMETRIC")
+	cp_pad = tf.pad(cp, [nPml (nPml+nPad); nPml nPml], "SYMMETRIC")
 	cp_pad = cast(cp_pad, Float64)
 	return cp_pad
 end
