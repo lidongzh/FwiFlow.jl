@@ -1,5 +1,4 @@
-# input: nz, nx, dz, dx, nSteps, nPoints_pml, nPad, dt, f0, survey_fname, data_dir_name, scratch_dir_name, isAc
-export paraGen, surveyGen, padding
+export paraGen, surveyGen, padding, velocity_to_moduli
 """
 	paraGen(nz::Int64, nx::Int64, dz::Real, dx::Real, nSteps::Int64, dt::Real, 
 	f0::Real, nPml::Int64, nPad::Int64, para_fname::String, survey_fname::String, data_dir_name::String; 
@@ -210,4 +209,19 @@ function padding(cp, cs, den, nz_orig, nx_orig, nz, nx, nPml, nPad)
 	cs_pad = cast(cs_pad, Float64)
 	den_pad = cast(den_pad, Float64)
 	return cp_pad, cs_pad, den_pad
+end
+
+"""
+	velocity_to_moduli(cp::Union{Array{Float64, 2}, PyObject},
+	cs::Union{Array{Float64, 2}, PyObject},
+	den::Union{Array{Float64, 2}, PyObject})
+
+Computes the Lamé parameters using velocities. 
+"""
+function velocity_to_moduli(cp::Union{Array{Float64, 2}, PyObject},
+	cs::Union{Array{Float64, 2}, PyObject},
+	den::Union{Array{Float64, 2}, PyObject})
+    lambda = (cp.*cp - 2.0 * cs.*cs) .* den / 1e6
+    mu = cs.*cs .* den / 1e6
+    return lambda, mu
 end
