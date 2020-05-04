@@ -57,7 +57,7 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-set(LIBDIR_NAME Laplacian Poisson Saturation Saturation2 Upwlap Upwps)
+set(LIBDIR_NAME Laplacian Poisson Saturation Saturation2 Upwlap Upwps Eikonal)
 
 # Copy and paste the following lines (no modification is required)
 list(LENGTH "LIBDIR_NAME" LIBLENGTH)

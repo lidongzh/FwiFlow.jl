@@ -1,7 +1,7 @@
 name = "FwiFlow"
 uuid = "a6a960b4-e246-4968-83bc-819d1955448a"
 authors = ["Dongzhuo Li <lidongzh512@gmail.com>", "Kailai Xu <kailaix@hotmail.com>"]
-version = "0.1.1"
+version = "0.2.1"
 
 [deps]
 ADCME = "07b341a0-ce75-57c6-b2de-414ffdc00be5"
@@ -24,4 +24,4 @@ JSON = "0.21"
 PyCall = "1.91"
 PyPlot = "2"
 Reexport = "0.2"
-julia = "1"
+julia = "1.3"

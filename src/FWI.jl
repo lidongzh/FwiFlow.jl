@@ -85,21 +85,21 @@ end
 
 @doc raw"""
     compute_observation(sess::PyObject, fwi::FWI, 
-        cp::Union{Array{Float64}, PyObject}, 
-        cs::Union{Array{Float64}, PyObject}, 
-        ρ::Union{Array{Float64}, PyObject}, 
-        stf_array::Union{Array{Float64}, PyObject},
-        shot_ids::Array{<:Integer};
-        gpu_id::Int64 = 0, is_padded::Bool = false)
+    cp::Union{Array{Float64}, PyObject}, 
+    cs::Union{Array{Float64}, PyObject}, 
+    ρ::Union{Array{Float64}, PyObject}, 
+    stf_array::Union{Array{Float64}, PyObject},
+    shot_ids::Union{Missing, Array{<:Integer}} = missing;
+    gpu_id::Int64 = 0)
 
-Computes the observations using given parameters. Note that `shot_ids` are 1-based.
+Computes the observations using given parameters. Note that `shot_ids` are 1-based. If it is missing, all shots are used. 
 """
 function compute_observation(sess::PyObject, fwi::FWI, 
     cp::Union{Array{Float64}, PyObject}, 
     cs::Union{Array{Float64}, PyObject}, 
     ρ::Union{Array{Float64}, PyObject}, 
     stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Array{<:Integer};
+    shot_ids::Union{Missing, Array{<:Integer}} = missing;
     gpu_id::Int64 = 0)
     cp_pad, cs_pad, ρ_pad = try_pad(fwi, cp, cs, ρ)
     stf_array = constant(stf_array)
@@ -107,6 +107,9 @@ function compute_observation(sess::PyObject, fwi::FWI,
         stf_array = repeat(stf_array', length(fwi.ind_src_z), 1)
     end
     λ_pad, μ_pad = velocity_to_moduli(cp_pad, cs_pad, ρ_pad)
+    if ismissing(shot_ids)
+        shot_ids = collect(1:length(fwi.ind_src_x))
+    end
     shot_ids = shot_ids .- 1
     shot_ids_ = constant(shot_ids, dtype=Int32)
     data = fwi_obs_op(λ_pad, μ_pad, ρ_pad, stf_array, gpu_id, shot_ids_, joinpath(fwi.WORKSPACE, fwi.para_fname) )
@@ -122,28 +125,28 @@ end
 
 @doc raw"""
     compute_misfit(fwi::FWI, 
-        cp::Union{Array{Float64}, PyObject}, 
-        cs::Union{Array{Float64}, PyObject}, 
-        ρ::Union{Array{Float64}, PyObject},
-        stf_array::Union{Array{Float64}, PyObject},
-        shot_ids::Union{Array{Int64}, PyObject};
-        gpu_id::Int64 = 0, is_masked::Bool = false, 
-        cp_ref::Union{Array{Float64}, PyObject}, 
-        cs_ref::Union{Array{Float64}, PyObject}, 
-        ρ_ref::Union{Array{Float64}, PyObject})
+    cp::Union{Array{Float64}, PyObject}, 
+    cs::Union{Array{Float64}, PyObject}, 
+    ρ::Union{Array{Float64}, PyObject},
+    stf_array::Union{Array{Float64}, PyObject},
+    shot_ids::Union{Array{Int64}, PyObject} = missing;
+    gpu_id::Int64 = 0, is_masked::Bool = false, 
+    cp_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
+    cs_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
+    ρ_ref::Union{Array{Float64}, PyObject, Missing} = missing)
 
 Computes the misfit function for the simulation parameters $c_p$, $c_s$, $\rho$, and source time functions `stf_array`
 
 - If `is_masked` is false, `compute_misfit` will add the mask `fwi.mask` to all variables. 
 - `gpu_id` is an integer in {0,1,2,...,#gpus-1}
-- `shot_ids` is 1-based.
+- `shot_ids` is 1-based. If it is missing, all shots are used. 
 """
 function compute_misfit(fwi::FWI, 
     cp::Union{Array{Float64}, PyObject}, 
     cs::Union{Array{Float64}, PyObject}, 
     ρ::Union{Array{Float64}, PyObject},
     stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Union{Array{Int64}, PyObject};
+    shot_ids::Union{Array{Int64}, PyObject} = missing;
     gpu_id::Int64 = 0, is_masked::Bool = false, 
     cp_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
     cs_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
@@ -165,6 +168,9 @@ function compute_misfit(fwi::FWI,
     stf_array = constant(stf_array)
     if length(size(stf_array))==1
         stf_array = repeat(stf_array', length(fwi.ind_src_z), 1)
+    end
+    if ismissing(shot_ids)
+        shot_ids = collect(1:length(fwi.ind_src_x))
     end
     shot_ids = constant(shot_ids, dtype=Int32) - 1
     misfit = fwi_op(λ_masked, μ_masked, ρ_masked, stf_array, gpu_id, shot_ids, joinpath(fwi.WORKSPACE, fwi.para_fname))

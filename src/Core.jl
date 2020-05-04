@@ -1,4 +1,4 @@
-export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op, sat_op2
+export laplacian_op, poisson_op, sat_op, upwlap_op, upwps_op, fwi_op, fwi_obs_op, sat_op2, eikonal
 
 OPS_DIR = joinpath(@__DIR__, "../deps/CustomOps")
 
@@ -373,4 +373,27 @@ function time_fractional_op(α::Union{Float64, PyObject}, f_fun::Function,
         i = constant(2, dtype=Int32)
         _, out = while_loop(condition, body, [i, ta])
         return stack(out)
+end
+
+@doc raw"""
+    eikonal(f::Union{Array{Float64}, PyObject},
+    srcx::Int64,srcy::Int64,h::Float64)
+
+Solves the Eikonal equation 
+
+$$|\nabla u(x)| = f(x)$$
+
+where $f(x)$ is the reciprocal of speeds. 
+"""
+function eikonal(f::Union{Array{Float64}, PyObject},
+    srcx::Int64,srcy::Int64,h::Float64)
+    n_, m_ = size(f) # m width, n depth 
+    n = n_-1
+    m = m_-1
+    eikonal_ = load_op_and_grad("$OPS_DIR/Eikonal/build/libEikonal","eikonal")
+    f,srcx,srcy,m,n,h = convert_to_tensor([f,srcx,srcy,m,n,h], [Float64,Int64,Int64,Int64,Int64,Float64])
+    f = reshape(f, (-1,))
+    u = eikonal_(f,srcx,srcy,m,n,h)
+    u = set_shape(u, (length(f),))
+    reshape(u, (n_, m_))
 end
