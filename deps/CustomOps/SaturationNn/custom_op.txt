@@ -1,0 +1,18 @@
+SaturationNn 
+double s0(?,?)
+double dporodt(?,?)
+double pt(?,?)
+double perm(?,?)
+double poro(?,?)
+double qw(?,?)
+double qo(?,?)
+double muw()
+double muo()
+double sref(?,?)
+double thetaw()
+int64 configw(?)
+double thetao()
+int64 configo(?)
+double dt()
+double h()
+double sat(?,?) -> output 
