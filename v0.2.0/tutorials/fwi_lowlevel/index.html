@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Full Waveform Inversion using Low Level APIs · FwiFlow</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="FwiFlow logo"/></a><div class="docs-package-name"><span class="docs-autofit">FwiFlow</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Getting Started</a></li><li><a class="tocitem" href="../../api/">API Reference</a></li><li><span class="tocitem">Tutorial</span><ul><li><a class="tocitem" href="../fwi/">Full Waveform Inversion</a></li><li><a class="tocitem" href="../flow/">Flow Inversion</a></li><li><a class="tocitem" href="../timefrac/">Time Fractional Differential Equation</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Full Waveform Inversion using Low Level APIs</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Full Waveform Inversion using Low Level APIs</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/lidongzh/FwiFlow.jl/blob/master/docs/src/tutorials/fwi_lowlevel.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Full-Waveform-Inversion-using-Low-Level-APIs-1"><a class="docs-heading-anchor" href="#Full-Waveform-Inversion-using-Low-Level-APIs-1">Full Waveform Inversion using Low Level APIs</a><a class="docs-heading-anchor-permalink" href="#Full-Waveform-Inversion-using-Low-Level-APIs-1" title="Permalink"></a></h1><p>In this example, we perform full-waveform inversion (FWI) with <code>FwiFlow</code>. For explanation of FWI, see the <a href="https://wayneweiqiang.github.io/ADSeismic.jl/dev/forward_simulation/">documentation</a> here. </p><p>First we load all necessary packages</p><pre><code class="language-julia">using FwiFlow
+using PyCall
+using LinearAlgebra
+using DelimitedFiles
+using MAT
+np = pyimport(&quot;numpy&quot;)</code></pre><p>We specify the parameters for the computational domain and numerical methods. The computational domain is shown below</p><p><img src="./assets/doc_domain.png" alt/></p><pre><code class="language-julia">oz = 0.0 
+ox = 0.0
+dz_orig = 24.0 
+dx_orig = 24.0 
+nz_orig = 134 
+nx_orig = 384 
+dz = dz_orig/1.0
+dx = dx_orig/1.0
+nz = Int64(round((dz_orig * nz_orig) / dz));
+nx = Int64(round((dx_orig * nx_orig) / dx))
+dt = 0.0025
+nSteps = 2000
+para_fname = &quot;para_file.json&quot;
+survey_fname = &quot;survey_file.json&quot;
+data_dir_name = &quot;Data&quot;</code></pre><p>We set the PML width, padding width (optional; the padding is for performance, see <a href="tutorials/@ref"><code>padding</code></a>) and the mask, which removes the effect of sources and makes inversion more stable. </p><pre><code class="language-julia">nPml = 32
+nPad = 32 - mod((nz+2*nPml), 32)
+nz_pad = nz + 2*nPml + nPad
+nx_pad = nx + 2*nPml
+Mask = zeros(nz_pad, nx_pad)
+Mask[nPml+1:nPml+nz, nPml+1:nPml+nx] .= 1.0
+Mask[nPml+1:nPml+10,:] .= 0.0
+mask = constant(Mask)
+mask_neg = constant(1.0 .- Mask)</code></pre><p>The source and receiver indices are given by</p><pre><code class="language-julia">ind_src_x = collect(4:8:384)
+ind_src_z = 2ones(Int64, size(ind_src_x))
+ind_rec_x = collect(3:381)
+ind_rec_z = 2ones(Int64, size(ind_rec_x))</code></pre><p>Next, we load source time functions (<code>stf_load</code>) from the file. </p><pre><code class="language-julia">stf_load = matread(&quot;$(DATADIR)/sourceF_4p5_2_high.mat&quot;)[&quot;sourceF&quot;]
+stf_array = repeat(stf_load, length(ind_src_z), 1)</code></pre><p>Each source time function has the following profile</p><p><img src="../../assets/stf.png" alt/></p><p>We load the true P-wave, S-wave and densities to generate synthetic observation data</p><pre><code class="language-julia">cp_true_pad = reshape(reinterpret(Float32,read(&quot;$DATADIR/Model_Cp_true.bin&quot;))          , (nz_pad, nx_pad))
+cs_true_pad = zeros(nz_pad, nx_pad)
+den_true_pad = 2500.0 .* ones(nz_pad, nx_pad)
+
+tf_cp_pad = Variable(cp_true_pad, dtype=Float64) # original scale as 
+tf_cs_pad = constant(cs_true_pad, dtype=Float64)
+tf_den_pad = constant(den_true_pad, dtype=Float64)
+
+function vel2moduli(cp,cs,den)
+    lambda = (cp^2 - 2.0 * cs^2) .* den / 1e6
+    mu = cs^2 .* den / 1e6
+    return lambda, mu
+end
+tf_lambda_inv_pad, tf_mu_inv_pad = vel2moduli(tf_cp_pad, tf_cs_pad, tf_den_pad)</code></pre><p>We use <a href="tutorials/@ref"><code>paraGen</code></a> and <a href="tutorials/@ref"><code>surveyGen</code></a> to generate parameter files</p><pre><code class="language-julia">f0 = 4.5
+paraGen(nz_pad, nx_pad, dz, dx, nSteps, dt, f0, nPml, nPad, para_fname, survey_fname, data_dir_name)
+surveyGen(ind_src_z, ind_src_x, ind_rec_z, ind_rec_x, survey_fname)</code></pre><p>At this point, we should be able to see two files in the current directory <img src="../../assets/files.png" alt/></p><p>Finally we execute the forward wave equation and save the observation data to files. In the following script, we explicitly specify the ID of GPU where the operator is executed. </p><pre><code class="language-julia">tf_shot_ids = collect(0:length(ind_src_z)-1)
+dummy = fwi_obs_op(tf_lambda_inv_pad, tf_mu_inv_pad, tf_den_pad, stf_array, 0, tf_shot_ids, para_fname) # use GPU:0
+sess = Session(); init(sess);
+run(sess, dummy)</code></pre><p>In the <code>Data</code> folder, there will be 47 <code>Shot*.bin</code> files. We can visualize the result with the following script</p><pre><code class="language-julia">A=read(&quot;Data/Shot10.bin&quot;);imshow(reshape(reinterpret(Float32,A),(nSteps ,length(ind_rec_z))), aspect=&quot;auto&quot;, vmax=2000, vmin=-2000, extent=[0, nx*dx, dt*(nSteps-1), 0])
+xlabel(&quot;Receiver Location (m)&quot;)
+ylabel(&quot;Time (s)&quot;)
+colorbar()
+set_cmap(&quot;gray&quot;)</code></pre><p><img src="../../assets/fwi_shot10.png" alt/></p><p>We now consider the inversion problem: assume that we do not known the P-wave velocity. We mark it as independent variable to be update using <code>Variable</code>. Additionally, for better coalesced memory access on GPU, we pad the variables to multiples of 32 in the <span>$z$</span> direction.</p><pre><code class="language-julia">cs_init_pad = zeros(nz_pad, nx_pad)
+den_init_pad = 2500.0 .* ones(nz_pad, nx_pad)
+cp_init_pad = reshape(reinterpret(Float32,read(&quot;$DATADIR/Model_Cp_init_1D.bin&quot;)), (nz_pad, nx_pad))
+tf_cp_inv = Variable(cp_init_pad[nPml+1:nPml+nz, nPml+1:nPml+nx], dtype=Float64) # original scale as 
+tf_cs_inv = constant(cs_init_pad[nPml+1:nPml+nz, nPml+1:nPml+nx], dtype=Float64)
+tf_den_inv = constant(den_init_pad[nPml+1:nPml+nz, nPml+1:nPml+nx], dtype=Float64)
+tf_cp_ref_pad = constant(cp_init_pad, dtype=Float64) # original scale as 
+tf_cs_ref_pad = constant(cs_init_pad, dtype=Float64)
+tf_den_ref_pad = constant(den_init_pad, dtype=Float64)
+tf_cp_inv_pad, tf_cs_inv_pad, tf_den_inv_pad = padding(tf_cp_inv, tf_cs_inv, 
+    tf_den_inv, nz_orig, nx_orig, nz, nx, nPml, nPad)</code></pre><p>Likewise, to remove the effect of extreme values close to the sources, we use masks</p><pre><code class="language-julia">tf_cp_msk_pad = tf_cp_inv_pad .* mask + tf_cp_ref_pad .* mask_neg
+tf_cs_msk_pad = tf_cs_inv_pad .* mask + tf_cs_ref_pad .* mask_neg
+tf_den_msk_pad = tf_den_inv_pad .* mask + tf_den_ref_pad .* mask_neg
+tf_lambda_inv_pad, tf_mu_inv_pad = vel2moduli(tf_cp_msk_pad, tf_cs_msk_pad,tf_den_msk_pad)</code></pre><p>The inversion can be done in parallel in multi-GPU machines. This is done by specifying the GPU IDs for different <code>fwi_op</code>. </p><pre><code class="language-julia">loss = constant(0.0)
+nGpus = length(use_gpu())
+shot_id_points = Int32.(trunc.(collect(LinRange(0, length(ind_src_z)-1, nGpus+1))))
+
+loss = constant(0.0)
+for i = 1:nGpus
+    global loss
+    tf_shot_ids = collect(shot_id_points[i]:shot_id_points[i+1])
+    loss += fwi_op(tf_lambda_inv_pad, tf_mu_inv_pad, tf_den_inv_pad, 
+            stf_array, i-1, tf_shot_ids, para_fname)
+end</code></pre><p>Finally, we trigger BFGS optimizer with two lines of codes. </p><pre><code class="language-julia">sess = Session(); init(sess)
+BFGS!(sess, loss)</code></pre><p>Here is a snapshot of multi-GPU execution. Note we have only used approximately 2% of total memory, which means we can actually places about 50 times the current number of sources on each GPU!  <img src="../../assets/gpu_fwi.gif" alt/></p></article></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 8 May 2020 02:08">Friday 8 May 2020</span>. Using Julia version 1.4.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
