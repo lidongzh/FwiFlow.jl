@@ -1,4 +1,5 @@
 export FWI, FWIExample, compute_observation, plot, compute_misfit
+
 @with_kw mutable struct FWI
     nz::Int64 = 134 
     nx::Int64 = 384
@@ -23,6 +24,17 @@ export FWI, FWIExample, compute_observation, plot, compute_misfit
     ind_rec_z::Union{Missing, Array{Int64, 1}} = missing
 end
 
+"""
+    FWI(nz::Int64, nx::Int64, dz::Float64, dx::Float64, nSteps::Int64, dt::Float64;
+            ind_src_z::Array{Int64, 1}, ind_src_x::Array{Int64, 1}, ind_rec_z::Array{Int64, 1}, ind_rec_x::Array{Int64, 1},
+            kwargs...)
+
+Creates a `FWI` structure that holds geometry data and settings. 
+Here `nz = n + 1`, `nx = m + 1`, `dz` and `dx` are mesh sizes.
+`nSteps` is the number of total iterations. `dt` is the time step. 
+`ind_src_z` and `ind_src_x` are arrays of source locations.
+`ind_rec_z` and `ind_rec_x` are arrays of receiver locations. 
+"""
 function FWI(nz::Int64, nx::Int64, dz::Float64, dx::Float64, nSteps::Int64, dt::Float64;
         ind_src_z::Array{Int64, 1}, ind_src_x::Array{Int64, 1}, ind_rec_z::Array{Int64, 1}, ind_rec_x::Array{Int64, 1},
         kwargs...)
@@ -85,12 +97,12 @@ end
 
 @doc raw"""
     compute_observation(sess::PyObject, fwi::FWI, 
-    cp::Union{Array{Float64}, PyObject}, 
-    cs::Union{Array{Float64}, PyObject}, 
-    ρ::Union{Array{Float64}, PyObject}, 
-    stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Union{Missing, Array{<:Integer}} = missing;
-    gpu_id::Int64 = 0)
+        cp::Union{Array{Float64}, PyObject}, 
+        cs::Union{Array{Float64}, PyObject}, 
+        ρ::Union{Array{Float64}, PyObject}, 
+        stf_array::Union{Array{Float64}, PyObject},
+        shot_ids::Union{Missing, Array{<:Integer}} = missing;
+        gpu_id::Int64 = 0)
 
 Computes the observations using given parameters. Note that `shot_ids` are 1-based. If it is missing, all shots are used. 
 """
@@ -125,15 +137,15 @@ end
 
 @doc raw"""
     compute_misfit(fwi::FWI, 
-    cp::Union{Array{Float64}, PyObject}, 
-    cs::Union{Array{Float64}, PyObject}, 
-    ρ::Union{Array{Float64}, PyObject},
-    stf_array::Union{Array{Float64}, PyObject},
-    shot_ids::Union{Array{Int64}, PyObject} = missing;
-    gpu_id::Int64 = 0, is_masked::Bool = false, 
-    cp_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
-    cs_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
-    ρ_ref::Union{Array{Float64}, PyObject, Missing} = missing)
+        cp::Union{Array{Float64}, PyObject}, 
+        cs::Union{Array{Float64}, PyObject}, 
+        ρ::Union{Array{Float64}, PyObject},
+        stf_array::Union{Array{Float64}, PyObject},
+        shot_ids::Union{Array{Int64}, PyObject} = missing;
+        gpu_id::Int64 = 0, is_masked::Bool = false, 
+        cp_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
+        cs_ref::Union{Array{Float64}, PyObject, Missing} = missing, 
+        ρ_ref::Union{Array{Float64}, PyObject, Missing} = missing)
 
 Computes the misfit function for the simulation parameters $c_p$, $c_s$, $\rho$, and source time functions `stf_array`
 

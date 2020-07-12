@@ -88,8 +88,9 @@ Here $\Omega=[0,n_zh]\times [0, n_xh]$. The equation is solved using finite diff
 (A+E_{11})\mathbf{u} = \mathbf{f}
 ```
 where $A$ is the finite difference coefficient matrix,
+
 ```math
-(E_{11})_{ij} = \left\{ \begin{matrix}1 & i=j=1 \\ 0 & \mbox{ otherwise }\end{matrix}\right.
+(E_{11})_{ij} = \left\{ \begin{matrix}1 & i=j=1 \\ 0 & \text{ otherwise }\end{matrix}\right.
 ```
 
 - `index` : `Int32`, when `index=1`, `SparseLU` is used to solve the linear system; otherwise the function invokes algebraic multigrid method from `amgcl`. 
