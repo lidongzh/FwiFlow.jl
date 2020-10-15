@@ -10,10 +10,8 @@ end
 using ADCME 
 
 @info "Install Boost"
-pkgs = Conda._installed_packages()
-if !("boost" in pkgs)
-    Conda.add("boost", channel="anaconda")
-end
+CONDA = get_conda()
+run(`$CONDA install boost`)
 
 @info "Install AMGCL"
 UNZIP = joinpath(ADCME.BINDIR, "unzip")
@@ -25,11 +23,10 @@ if !isdir("$(@__DIR__)/amgcl")
 end
 
 @info "Build Custom Operators"
-rm("CustomOps/build", force=true, recursive=true)
-mkdir("CustomOps/build")
-cd("CustomOps/build")
-ADCME.cmake()
+change_directory("CustomOps/build")
+require_file("build.ninja") do
+    ADCME.cmake()
+end
 ADCME.make()
-
 
 

@@ -18,7 +18,7 @@ module FwiFlow
 
     function ADCME.:Session(args...;kwargs...)
         config = tf.ConfigProto(
-            device_count = Dict("GPU"=> 0) 
+            device_count = Dict("GPU"=> 0) # do not use any GPU devices for all ops except FWI 
         )
         sess = tf.Session(config=config)
     end
