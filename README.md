@@ -42,9 +42,9 @@ The following examples are for inversion
 
 
 ## Research Papers
+1. **Dongzhuo Li** (co-first author), **Kailai Xu** (co-first author), Jerry M. Harris, and Eric Darve. [*Coupled Time‐Lapse Full‐Waveform Inversion for Subsurface Flow Problems Using Intrusive Automatic Differentiation*](https://arxiv.org/abs/1912.07552), *Water Resources Research*, *56*(8), p.e2019WR027032 (https://doi.org/10.1029/2019WR027032).
+2. **Kailai Xu**  (co-first author), **Dongzhuo Li**  (co-first author), Eric Darve, and Jerry M. Harris. [*Learning Hidden Dynamics using Intrusive Automatic Differentiation*](http://arxiv.org/abs/1912.07547).
 
-1. **Kailai Xu**  (co-first author), **Dongzhuo Li**  (co-first author), Eric Darve, and Jerry M. Harris. [*Learning Hidden Dynamics using Intrusive Automatic Differentiation*](http://arxiv.org/abs/1912.07547).
-2. **Dongzhuo Li** (co-first author), **Kailai Xu** (co-first author), Jerry M. Harris, and Eric Darve. [*Time-lapse Full-waveform Inversion for Subsurface Flow Problems with Intrusive Automatic Diﬀerentiation*](https://arxiv.org/abs/1912.07552).
 
 ## Misc
 The **TorchFWI** package, which shares the elastic FWI part, can be found [*here*](https://github.com/lidongzh/TorchFWI). It may be helpful if one wants to experiment with PyTorch. <br>
