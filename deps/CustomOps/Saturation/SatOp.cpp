@@ -103,7 +103,7 @@ class SatOpOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* sat = NULL;
+    Tensor* sat = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, sat_shape, &sat));
 
     // get the corresponding Eigen tensors for data access
@@ -226,37 +226,37 @@ class SatOpGradOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* grad_s0 = NULL;
+    Tensor* grad_s0 = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(0, grad_s0_shape, &grad_s0));
-    Tensor* grad_pt = NULL;
+    Tensor* grad_pt = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(1, grad_pt_shape, &grad_pt));
-    Tensor* grad_permi = NULL;
+    Tensor* grad_permi = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(2, grad_permi_shape, &grad_permi));
-    Tensor* grad_poro = NULL;
+    Tensor* grad_poro = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(3, grad_poro_shape, &grad_poro));
-    Tensor* grad_qw = NULL;
+    Tensor* grad_qw = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(4, grad_qw_shape, &grad_qw));
-    Tensor* grad_qo = NULL;
+    Tensor* grad_qo = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(5, grad_qo_shape, &grad_qo));
-    Tensor* grad_muw = NULL;
+    Tensor* grad_muw = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(6, grad_muw_shape, &grad_muw));
-    Tensor* grad_muo = NULL;
+    Tensor* grad_muo = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(7, grad_muo_shape, &grad_muo));
-    Tensor* grad_sref = NULL;
+    Tensor* grad_sref = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(8, grad_sref_shape, &grad_sref));
-    Tensor* grad_dt = NULL;
+    Tensor* grad_dt = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(9, grad_dt_shape, &grad_dt));
-    Tensor* grad_h = NULL;
+    Tensor* grad_h = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(10, grad_h_shape, &grad_h));
 

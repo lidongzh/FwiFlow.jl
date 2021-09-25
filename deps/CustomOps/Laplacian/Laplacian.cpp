@@ -65,7 +65,7 @@ class LaplacianOp : public OpKernel {
 
     // create output tensor
 
-    Tensor *out = NULL;
+    Tensor *out = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &out));
 
     // get the corresponding Eigen tensors for data access
@@ -140,13 +140,13 @@ class LaplacianGradOp : public OpKernel {
     // create output tensor
     int nz = coef_shape.dim_size(0), nx = coef_shape.dim_size(1);
 
-    Tensor *grad_coef = NULL;
+    Tensor *grad_coef = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, grad_coef_shape, &grad_coef));
-    Tensor *grad_func = NULL;
+    Tensor *grad_func = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(1, grad_func_shape, &grad_func));
-    Tensor *grad_h = NULL;
+    Tensor *grad_h = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(2, grad_h_shape, &grad_h));
-    Tensor *grad_rhograv = NULL;
+    Tensor *grad_rhograv = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(3, grad_rhograv_shape, &grad_rhograv));
 
     // get the corresponding Eigen tensors for data access

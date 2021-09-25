@@ -80,7 +80,7 @@ class UpwpsOpOp : public OpKernel {
 
     // create output tensor
 
-    Tensor *pres = NULL;
+    Tensor *pres = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, pres_shape, &pres));
 
     // get the corresponding Eigen tensors for data access
@@ -173,24 +173,24 @@ class UpwpsOpGradOp : public OpKernel {
 
     // create output tensor
 
-    Tensor *grad_permi = NULL;
+    Tensor *grad_permi = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(0, grad_permi_shape, &grad_permi));
-    Tensor *grad_mobi = NULL;
+    Tensor *grad_mobi = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(1, grad_mobi_shape, &grad_mobi));
-    Tensor *grad_src = NULL;
+    Tensor *grad_src = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(2, grad_src_shape, &grad_src));
-    Tensor *grad_funcref = NULL;
+    Tensor *grad_funcref = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(3, grad_funcref_shape,
                                                      &grad_funcref));
-    Tensor *grad_h = NULL;
+    Tensor *grad_h = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(4, grad_h_shape, &grad_h));
-    Tensor *grad_rhograv = NULL;
+    Tensor *grad_rhograv = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(5, grad_rhograv_shape,
                                                      &grad_rhograv));
-    Tensor *grad_index = NULL;
+    Tensor *grad_index = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(6, grad_index_shape, &grad_index));
 

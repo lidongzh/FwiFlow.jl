@@ -79,7 +79,7 @@ class FwiOpOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* misfit = NULL;
+    Tensor* misfit = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
 
     // get the corresponding Eigen tensors for data access
@@ -173,25 +173,25 @@ class FwiOpGradOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* grad_lambda = NULL;
+    Tensor* grad_lambda = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(0, grad_lambda_shape, &grad_lambda));
-    Tensor* grad_mu = NULL;
+    Tensor* grad_mu = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(1, grad_mu_shape, &grad_mu));
-    Tensor* grad_den = NULL;
+    Tensor* grad_den = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(2, grad_den_shape, &grad_den));
-    Tensor* grad_stf = NULL;
+    Tensor* grad_stf = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(3, grad_stf_shape, &grad_stf));
-    Tensor* grad_gpu_id = NULL;
+    Tensor* grad_gpu_id = nullptr;
     OP_REQUIRES_OK(
         context, context->allocate_output(4, grad_gpu_id_shape, &grad_gpu_id));
-    Tensor* grad_shot_ids = NULL;
+    Tensor* grad_shot_ids = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(5, grad_shot_ids_shape,
                                                      &grad_shot_ids));
-    Tensor* grad_para_fname = NULL;
+    Tensor* grad_para_fname = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(6, grad_para_fname_shape,
                                                      &grad_para_fname));
 
@@ -292,7 +292,7 @@ class FwiObsOpOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* misfit = NULL;
+    Tensor* misfit = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, misfit_shape, &misfit));
 
     // get the corresponding Eigen tensors for data access

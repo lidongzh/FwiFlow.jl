@@ -106,7 +106,7 @@ public:
             
     // create output tensor
     
-    Tensor* u = NULL;
+    Tensor* u = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, u_shape, &u));
     
     // get the corresponding Eigen tensors for data access
@@ -184,17 +184,17 @@ public:
             
     // create output tensor
     
-    Tensor* grad_f = NULL;
+    Tensor* grad_f = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, grad_f_shape, &grad_f));
-    Tensor* grad_srcx = NULL;
+    Tensor* grad_srcx = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(1, grad_srcx_shape, &grad_srcx));
-    Tensor* grad_srcy = NULL;
+    Tensor* grad_srcy = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(2, grad_srcy_shape, &grad_srcy));
-    Tensor* grad_m = NULL;
+    Tensor* grad_m = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(3, grad_m_shape, &grad_m));
-    Tensor* grad_n = NULL;
+    Tensor* grad_n = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(4, grad_n_shape, &grad_n));
-    Tensor* grad_h = NULL;
+    Tensor* grad_h = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(5, grad_h_shape, &grad_h));
     
     // get the corresponding Eigen tensors for data access
@@ -272,7 +272,7 @@ public:
             
     // create output tensor
     
-    Tensor* u = NULL;
+    Tensor* u = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, u_shape, &u));
     
     // get the corresponding Eigen tensors for data access
@@ -347,17 +347,17 @@ public:
             
     // create output tensor
     
-    Tensor* grad_f = NULL;
+    Tensor* grad_f = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, grad_f_shape, &grad_f));
-    Tensor* grad_srcx = NULL;
+    Tensor* grad_srcx = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(1, grad_srcx_shape, &grad_srcx));
-    Tensor* grad_srcy = NULL;
+    Tensor* grad_srcy = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(2, grad_srcy_shape, &grad_srcy));
-    Tensor* grad_m = NULL;
+    Tensor* grad_m = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(3, grad_m_shape, &grad_m));
-    Tensor* grad_n = NULL;
+    Tensor* grad_n = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(4, grad_n_shape, &grad_n));
-    Tensor* grad_h = NULL;
+    Tensor* grad_h = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(5, grad_h_shape, &grad_h));
     
     // get the corresponding Eigen tensors for data access

@@ -76,7 +76,7 @@ class PoissonOpOp : public OpKernel {
         TensorShape p_shape({nz, nx});
 
 
-        Tensor *p = NULL;
+        Tensor *p = nullptr;
         OP_REQUIRES_OK(context, context->allocate_output(0, p_shape, &p));
 
         // get the corresponding Eigen tensors for data access
@@ -164,15 +164,15 @@ class PoissonOpGradOp : public OpKernel {
 
         // create output tensor
 
-        Tensor *grad_coef = NULL;
+        Tensor *grad_coef = nullptr;
         OP_REQUIRES_OK(context, context->allocate_output(0, grad_coef_shape, &grad_coef));
-        Tensor *grad_g = NULL;
+        Tensor *grad_g = nullptr;
         OP_REQUIRES_OK(context, context->allocate_output(1, grad_g_shape, &grad_g));
-        Tensor *grad_h = NULL;
+        Tensor *grad_h = nullptr;
         OP_REQUIRES_OK(context, context->allocate_output(2, grad_h_shape, &grad_h));
-        Tensor *grad_rhograv = NULL;
+        Tensor *grad_rhograv = nullptr;
         OP_REQUIRES_OK(context, context->allocate_output(3, grad_rhograv_shape, &grad_rhograv));
-        Tensor *grad_index = NULL;
+        Tensor *grad_index = nullptr;
         OP_REQUIRES_OK(context, context->allocate_output(4, grad_index_shape, &grad_index));
 
         // get the corresponding Eigen tensors for data access

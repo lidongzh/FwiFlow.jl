@@ -65,7 +65,7 @@ class UpwlapOpOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* out = NULL;
+    Tensor* out = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, out_shape, &out));
 
     // get the corresponding Eigen tensors for data access
@@ -144,18 +144,18 @@ class UpwlapOpGradOp : public OpKernel {
 
     // create output tensor
 
-    Tensor* grad_perm = NULL;
+    Tensor* grad_perm = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(0, grad_perm_shape, &grad_perm));
-    Tensor* grad_mobi = NULL;
+    Tensor* grad_mobi = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(1, grad_mobi_shape, &grad_mobi));
-    Tensor* grad_func = NULL;
+    Tensor* grad_func = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(2, grad_func_shape, &grad_func));
-    Tensor* grad_h = NULL;
+    Tensor* grad_h = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(3, grad_h_shape, &grad_h));
-    Tensor* grad_rhograv = NULL;
+    Tensor* grad_rhograv = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(4, grad_rhograv_shape,
                                                      &grad_rhograv));
 
