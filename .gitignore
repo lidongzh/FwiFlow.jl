@@ -6,6 +6,7 @@ Data/
 *.DS_Store
 mar/*
 SnapGPU.bin
+*.png
 *build.log
 *build/*
 *amgcl*

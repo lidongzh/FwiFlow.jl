@@ -11,7 +11,7 @@ using ADCME
 
 @info "Install Boost"
 CONDA = get_conda()
-run(`$CONDA install boost`)
+run(`$CONDA install boost==1.73.0==h3ff78a5_11`)
 
 @info "Install AMGCL"
 UNZIP = joinpath(ADCME.BINDIR, "unzip")

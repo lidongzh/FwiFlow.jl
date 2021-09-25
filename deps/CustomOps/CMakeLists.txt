@@ -41,7 +41,7 @@ endif()
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
-include_directories(${TF_INC} ${EIGEN_INC}/eigen3 ${EIGEN_INC} ${CUDA_INC} ${LIBDIR}/../include ${LIBDIR}/../include/boost ../amgcl/)
+include_directories(${TF_INC} ${EIGEN_INC}/eigen3 ${EIGEN_INC} ${CUDA_INC} ${LIBDIR}/../pkgs/libboost-1.73.0-h3ff78a5_11/include/boost ${LIBDIR}/../pkgs/libboost-1.73.0-h3ff78a5_11/include/ ../amgcl/)
 link_directories(${LIBDIR} ${LIBCUDA})
 include_directories(FWI/Src/rapidjson)
 
