@@ -1,6 +1,6 @@
 # FwiFlow: Wave and Flow Inversion with Intrusive Automatic Differentiation
 
-![](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+![](https://github.com/lidongzh/FwiFlow.jl/actions/workflows/main.yml/badge.svg)
 
 | Quick Install                   | Documentation                                                |
 | ------------------------------- | ------------------------------------------------------------ |
