@@ -1,5 +1,4 @@
-# using ADCME
-using PyTensorFlow
+using ADCME
 using PyCall
 using LinearAlgebra
 using PyPlot
