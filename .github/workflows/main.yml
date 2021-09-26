@@ -27,8 +27,8 @@ jobs:
       - uses: julia-actions/setup-julia@v1
         with:
           version: 1.3.0
-      - run: julia -e 'println("Hello, World!")'
       - run: julia --project=docs/ -e 'using Pkg;Pkg.add("Documenter"); Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.instantiate()'
       - run: julia --project=docs/ docs/make.jl
+      - run: julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
       
