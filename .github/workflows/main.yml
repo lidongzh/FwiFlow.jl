@@ -27,7 +27,7 @@ jobs:
       - uses: Jimver/cuda-toolkit@v0.2.4
         id: cuda-toolkit
         with:
-          cuda: '10.2'
+          cuda: '10.2.89'
       - uses: julia-actions/setup-julia@v1
         with:
           version: 1.3.0
