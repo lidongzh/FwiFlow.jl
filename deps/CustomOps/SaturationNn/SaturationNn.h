@@ -562,7 +562,7 @@ void forward(
 
   // start Newton iterations
   // prevent division by zero
-  while (abs(res_norm - res_norm_old) > NEWTON_TOL * res_norm_old) {
+  while (fabs(res_norm - res_norm_old) > NEWTON_TOL * res_norm_old) {
     // while (res_norm > NEWTON_TOL) {
     res_norm_old = res_norm;
 
